@@ -11,8 +11,9 @@ args = parser.parse_args()
 # cmd = 'tail ' + args.stats + ' -n 100 | grep "QoS\|committedInsts::\|Slots::0\|ipc::\|HPT\|numCycles\|Overlapped"'
 
 x = sh.grep(sh.grep("system.cpu.committedInsts::0 *200[0-9]\{6\}",
-                    args.stats, '-m', "1", '-A', '50', '-B', '50'),
-            "QoS\|committedInsts::\|Slots::0\|ipc::\|HPT\|numCycles\|Overlapped")
+                    args.stats, '-m', "1", '-A', '600', '-B', '600'),
+            "QoS\|committedInsts::\|Slots::0\|ipc::\|HPT\|numCycles\|Overlapped\
+            \|rectified_waits")
 
 print x
 
