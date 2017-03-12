@@ -14,9 +14,10 @@ args = parser.parse_args()
 # cmd = 'tail ' + args.stats + ' -n 100 | grep "QoS\|committedInsts::\|Slots::0\|ipc::\|HPT\|numCycles\|Overlapped"'
 
 targets = [
-    'committedInsts::0',
+    'committedInsts::',
     #'committedInsts::1',
     'Slots::0',
+    'cpi::',
     'ipc::',
     #'HPT',
     'numCycles',
@@ -28,10 +29,11 @@ targets = [
     #'system.cpu.rename.*Cycles::0',
     #'system.cpu.itb.fetch_misses',
     #'system.cpu.itb.fetch_accesses',
-    'system.cpu.*_Slots',
-    'system.cpu.rename.*Full',
-    'system.cpu.*_utilization',
-    'overall_miss_rate',
+    'system.cpu.rename.*_Slots',
+    #'system.cpu.rename.*Full',
+    #'system.cpu.*_utilization',
+    #'l.*_miss_rate',
+    #'cache.*_miss_rate',
 ]
 
 def shorter(x):
@@ -104,13 +106,12 @@ print ''
 
 # rename cycles
 
-'''
 for line in str(x).split('\n'):
     if line.startswith('system.cpu.rename.'):
         first_half = line.split('#')[0].rstrip(' ')
         number = first_half.split(' ')[-1]
+        head = first_half.split(' ')[0]
         print number
-'''
 
 
 
