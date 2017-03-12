@@ -30,6 +30,8 @@ targets = [
     #'system.cpu.itb.fetch_misses',
     #'system.cpu.itb.fetch_accesses',
     'system.cpu.rename.*_Slots',
+    'system.cpu.HPTpredIPC::0',
+    'HPTQoS',
     #'system.cpu.rename.*Full',
     #'system.cpu.*_utilization',
     #'l.*_miss_rate',
