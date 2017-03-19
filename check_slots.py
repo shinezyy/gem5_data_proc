@@ -1,6 +1,8 @@
 import argparse
 import sh
 
+from targets import targets
+
 parser = argparse.ArgumentParser(description='check sum of slots')
 
 parser.add_argument('stats', metavar='stats',
@@ -12,31 +14,6 @@ parser.add_argument('tail', metavar='tail',
 args = parser.parse_args()
 
 # cmd = 'tail ' + args.stats + ' -n 100 | grep "QoS\|committedInsts::\|Slots::0\|ipc::\|HPT\|numCycles\|Overlapped"'
-
-targets = [
-    'committedInsts::',
-    #'committedInsts::1',
-    'Slots::0',
-    'cpi::',
-    'ipc::',
-    #'HPT',
-    'numCycles',
-    #'Overlapped',
-    #'rectified',
-    #'wait_to_miss::0',
-    #'system.cpu.iew.exec_branches::0',
-    #'system.cpu.iew.branchMispredicts::0',
-    #'system.cpu.rename.*Cycles::0',
-    #'system.cpu.itb.fetch_misses',
-    #'system.cpu.itb.fetch_accesses',
-    'system.cpu.rename.*_Slots',
-    'system.cpu.HPTpredIPC::0',
-    'HPTQoS',
-    #'system.cpu.rename.*Full',
-    #'system.cpu.*_utilization',
-    #'l.*_miss_rate',
-    #'cache.*_miss_rate',
-]
 
 def shorter(x):
     for line in str(x).split('\n'):

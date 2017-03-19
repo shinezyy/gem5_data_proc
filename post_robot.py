@@ -1,6 +1,9 @@
 import os
+import time
+
 from extract import extract_stat
 from mail import send
+from targets import targets
 
 script_dir = '/home/zhouyaoyang/projects/dev_pard_smt/smt_run'
 
@@ -8,7 +11,8 @@ st_stat_dir = '/home/zhouyaoyang/sim_st_0304'
 
 running_scrpits = [
     'select.sh',
-    'good.sh',
+    #'good.sh',
+    #'gcc.sh',
 ]
 
 targets = [
@@ -55,16 +59,19 @@ def extract_script(filename):
     return d
 
 
-s = ''
-for f in extract_dirs():
-    s += str(f['pair']) + '\n'
-    s += extract_stat(cat(f['path'], 'stats.txt'), True, targets,
-                      cat(cat(st_stat_dir, f['pair'][0]), 'stats.txt'))
+while True:
+    s = ''
+    for f in extract_dirs():
+        s += str(f['pair']) + '\n'
+        s += extract_stat(cat(f['path'], 'stats.txt'), True, targets,
+                          cat(cat(st_stat_dir, f['pair'][0]), 'stats.txt'))
 
-print s
+    print s
 
-sender = 'diamondzyy@163.com'
-receiver = 'diamondzyy@sina.com'
+    sender = 'diamondzyy@163.com'
+    receiver = 'diamondzyy@sina.com'
 
-send(sender, receiver, s)
+    # send(sender, receiver, s)
+    break
+    time.sleep(300)
 
