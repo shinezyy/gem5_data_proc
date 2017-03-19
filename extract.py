@@ -14,10 +14,11 @@ patterns = [
     '(numCycles)',
     '(rename\..+Slots)',
     '(cpu\.committedInsts::\d)',
-    '(fmt\.num.*Slots::0)',
+    'fmt\.(num.*Slots::0)',
     '(cpu\.ipc::\d)',
     '(cpu\.HPTpredIPC::0)',
     '(cpu\.HPTQoS)',
+    'fmt\.(mlp_rectification)',
 ]
 
 
@@ -29,9 +30,9 @@ def preproc_pattern(p):
 def named_stat():
     named_list = [
         ['numCycles', 'cycle'],
-        ['fmt.numBaseSlots::0', 'base'],
-        ['fmt.numWaitSlots::0', 'wait'],
-        ['fmt.numMissSlots::0', 'miss'],
+        ['numBaseSlots::0', 'base'],
+        ['numWaitSlots::0', 'wait'],
+        ['numMissSlots::0', 'miss'],
         ['cpu.HPTpredIPC::0', 'pred_ipc'],
     ]
     stat = dict()
