@@ -1,31 +1,17 @@
+#!/usr/bin/env python2.7
+
 import os
 import time
 import re
 
 from extract import extract_stat
 from mail import send
-from targets import targets
-
-script_dir = '/home/zhouyaoyang/projects/dev_pard_smt/smt_run'
-
-st_stat_dir = '/home/zhouyaoyang/sim_st_0304'
+from paths import *
 
 running_scrpits = [
     'select.sh',
     #'good.sh',
     #'gcc.sh',
-]
-
-targets = [
-    'committedInsts::',
-    'Slots::0',
-    # 'cpi::',
-    'ipc::',
-    'numCycles',
-    'system.cpu.rename.*_Slots',
-    'system.cpu.HPTpredIPC::0',
-    'HPTQoS',
-    # 'system.cpu.*_utilization',
 ]
 
 content = []
@@ -37,11 +23,11 @@ def cat(x, y):
 def extract_dirs():
     global content
     for script in running_scrpits:
-        if not os.path.isfile(cat(script_dir, script)):
-            print script + ' is not a file in ' + script_dir
+        if not os.path.isfile(cat(script_dir(), script)):
+            print script + ' is not a file in ' + script_dir()
             return None
         else:
-            content = content + extract_script(cat(script_dir, script))
+            content = content + extract_script(cat(script_dir(), script))
 
     return content
 
@@ -65,7 +51,7 @@ while True:
     for f in extract_dirs():
         s += str(f['pair']) + '\n'
         s += extract_stat(cat(f['path'], 'stats.txt'), True,
-                          cat(cat(st_stat_dir, f['pair'][0]), 'stats.txt'))
+                          cat(cat(st_stat_dir(), f['pair'][0]), 'stats.txt'))
 
     print s
 

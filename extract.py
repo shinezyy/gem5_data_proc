@@ -80,7 +80,7 @@ def extract_stat(stat_file, use_tail, st_stat_file):
         m = re.match('(system.cpu.ipc::0) +(\d+\.?\d*)', line)
         if not m is None:
             d['st_ipc'] = float(m.group(2))
-            ret += m.group(1).ljust(30) + m.group(2).rjust(20) + '\n'
+            ret += '----st.ipc'.ljust(30) + m.group(2).rjust(20) + '\n'
 
 
     ret += '\nSlot sanity: ' + \
