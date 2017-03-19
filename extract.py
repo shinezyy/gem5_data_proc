@@ -1,5 +1,5 @@
 import sh
-
+import re
 
 
 def shorter(x):
@@ -10,51 +10,81 @@ def shorter(x):
     return ret
 
 
-def extract_stat(stat_file, use_tail, targets, st_stat_file):
+patterns = [
+    '(numCycles)',
+    '(rename\..+Slots)',
+    '(cpu\.committedInsts::\d)',
+    '(fmt\.num.*Slots::0)',
+    '(cpu\.ipc::\d)',
+    '(cpu\.HPTpredIPC::0)',
+    '(cpu\.HPTQoS)',
+]
+
+
+def preproc_pattern(p):
+    p += ' +(\d+.?\d*)'
+    return re.compile(p)
+
+
+def named_stat():
+    named_list = [
+        ['numCycles', 'cycle'],
+        ['fmt.numBaseSlots::0', 'base'],
+        ['fmt.numWaitSlots::0', 'wait'],
+        ['fmt.numMissSlots::0', 'miss'],
+        ['cpu.HPTpredIPC::0', 'pred_ipc'],
+    ]
+    stat = dict()
+
+    for p in named_list:
+        stat[p[0].ljust(30)] = p[1]
+
+    return stat
+
+
+def extract_stat(stat_file, use_tail, st_stat_file):
+
+    global patterns
+
+    compiled = map(preproc_pattern, patterns)
 
     ret = ''
 
-    tstr = 'QoS'
-    for s in targets:
-        tstr += '\|'+s
-
     if use_tail == True:
-        raw_str = sh.grep(sh.tail(stat_file, '-n', '2000'), tstr)
+        raw_str = sh.tail(stat_file, '-n', '2000')
     else:
-        raw_str = sh.grep(sh.grep("system.cpu.committedInsts::0 *2[0-9]\{8\}",
-                        stat_file, '-m', "1", '-A', '1000', '-B', '600'), tstr)
+        raw_str = sh.grep("system.cpu.committedInsts::0 *2[0-9]\{8\}",
+                        stat_file, '-m', "1", '-A', '1000', '-B', '600')
 
 
     st_raw_str= sh.grep(sh.grep("system.cpu.committedInsts::0 *2[0-9]\{8\}",
                               st_stat_file, '-m', "1", '-A', '1000', '-B', '600'),
-                        'ipc::')
-
-    ret += shorter(raw_str)
-    ret += shorter(st_raw_str)
+                        'ipc::0')
 
     d = dict()
 
     for line in raw_str:
         line = str(line)
-        if line.startswith('system.cpu.numCycles'):
-           d['cycle'] = float(line.split()[1])
-        elif line.startswith('system.cpu.fmt.numBaseSlots::0'):
-            d['base'] = float(line.split()[1])
-        elif line.startswith('system.cpu.fmt.numWaitSlots::0'):
-            d['wait'] = float(line.split()[1])
-        elif line.startswith('system.cpu.fmt.numMissSlots::0'):
-            d['miss'] = float(line.split()[1])
-        elif line.startswith('system.cpu.HPTpredIPC::0'):
-            d['pred_ipc'] = float(line.split()[1])
+        for p in compiled:
+            m = p.search(line)
+            if not m is None:
+                d[m.group(1).ljust(30)] = m.group(2).rjust(20)
+                ret += m.group(1).ljust(30) + m.group(2).rjust(20) + '\n'
 
-    ret += 'Slot sanity: ' + \
-            str((d['base'] + d['wait'] + d['miss'])/ (8*d['cycle'])) + '\n'
+    named = named_stat()
+    for k in named:
+        d[named[k]] = float(d[k])
 
     for line in st_raw_str:
         line = str(line)
-        if line.startswith('system.cpu.ipc::0'):
-            d['st_ipc'] = float(line.split()[1])
+        m = re.match('(system.cpu.ipc::0) +(\d+\.?\d*)', line)
+        if not m is None:
+            d['st_ipc'] = float(m.group(2))
+            ret += m.group(1).ljust(30) + m.group(2).rjust(20) + '\n'
 
+
+    ret += '\nSlot sanity: ' + \
+            str((d['base'] + d['wait'] + d['miss'])/ (8*d['cycle'])) + '\n'
 
     ret += 'Prediction error: ' + \
             str((d['pred_ipc'] - d['st_ipc']) / d['st_ipc']) + '\n'
@@ -63,41 +93,3 @@ def extract_stat(stat_file, use_tail, targets, st_stat_file):
 
     return ret
 
-'''
-
-for line in x:
-    line = str(line)
-    if line.startswith('system.cpu.numCycles'):
-        d['system.cpu.numCycles'] = line.split()[1]
-    elif line.startswith('system.cpu.fmt.numBaseSlots::0'):
-        d['system.cpu.fmt.numBaseSlots::0'] = line.split()[1]
-    elif line.startswith('system.cpu.fmt.numWaitSlots::0'):
-        d['system.cpu.fmt.numWaitSlots::0'] = line.split()[1]
-    elif line.startswith('system.cpu.fmt.numMissSlots::0'):
-        d['system.cpu.fmt.numMissSlots::0'] = line.split()[1]
-    elif line.startswith('system.cpu.ipc::0'):
-        d['system.cpu.ipc::0'] = line.split()[1]
-    elif line.startswith('system.cpu.iew.exec_branches::0'):
-        d['hptBranch'] = line.split()[1]
-    elif line.startswith('system.cpu.iew.branchMispredicts::0'):
-        d['hptMiss'] = line.split()[1]
-    elif line.startswith('system.cpu.itb.fetch_accesses::0'):
-        itb_all = float(line.split()[1])
-    elif line.startswith('system.cpu.itb.fetch_misses::0'):
-        itb_miss = float(line.split()[1])
-
-base = float(d['system.cpu.fmt.numBaseSlots::0'])
-wait = float(d['system.cpu.fmt.numWaitSlots::0'])
-miss = float(d['system.cpu.fmt.numMissSlots::0'])
-cycle = float(d['system.cpu.numCycles'])
-ipc = float(d['system.cpu.ipc::0'])
-
-print (base + wait + miss)/ (8*cycle)
-
-qos = (base + miss) / (base + miss + wait)
-
-print "Predicted QoS:", qos
-
-print 'Predicted ST IPC:', ipc/qos
-
-'''

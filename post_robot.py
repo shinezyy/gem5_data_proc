@@ -1,5 +1,6 @@
 import os
 import time
+import re
 
 from extract import extract_stat
 from mail import send
@@ -48,10 +49,10 @@ def extract_script(filename):
     d = []
     with open(filename) as inf:
         for line in inf:
-            line = line.split('-b "')[1]
-            pair, path = line.split('"')
-            pair = pair.split('\\;')
-            path = path.split('-o')[1].split('-s')[0].strip(' ')
+            p = re.compile('.*"(.*)\\\;(.*)" -o (.*) -s')
+            m = p.match(line)
+            pair = [m.group(1), m.group(2)]
+            path = m.group(3)
             x = dict()
             x['pair'] = pair
             x['path'] = path
@@ -63,7 +64,7 @@ while True:
     s = ''
     for f in extract_dirs():
         s += str(f['pair']) + '\n'
-        s += extract_stat(cat(f['path'], 'stats.txt'), True, targets,
+        s += extract_stat(cat(f['path'], 'stats.txt'), True,
                           cat(cat(st_stat_dir, f['pair'][0]), 'stats.txt'))
 
     print s
