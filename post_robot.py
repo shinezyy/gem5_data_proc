@@ -57,6 +57,9 @@ def main():
     parser.add_argument('-b', '--brief', action='store_true',
                         help='display brief statistics')
 
+    parser.add_argument('-l', '--loop', action='store_true',
+                        help='infinite loop')
+
     args = parser.parse_args()
 
     while True:
@@ -73,7 +76,9 @@ def main():
         receiver = 'diamondzyy@sina.com'
 
         # send(sender, receiver, s)
-        time.sleep(300)
+        if not args.loop:
+            break
+        time.sleep(120)
 
 
 if __name__ == '__main__':
