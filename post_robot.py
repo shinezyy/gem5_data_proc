@@ -3,6 +3,7 @@
 import os
 import time
 import re
+import argparse
 
 from extract import extract_stat
 from mail import send
@@ -46,19 +47,34 @@ def extract_script(filename):
     return d
 
 
-while True:
-    s = ''
-    for f in extract_dirs():
-        s += str(f['pair']) + '\n'
-        s += extract_stat(cat(f['path'], 'stats.txt'), True,
-                          cat(cat(st_stat_dir(), f['pair'][0]), 'stats.txt'))
+def main():
+    parser = argparse.ArgumentParser(description='check sum of slots',
+                                prefix_chars='-')
 
-    print s
+    parser.add_argument('-t', '--tail', action='store_true',
+                        help='use statistics in tail of stats.txt')
 
-    sender = 'diamondzyy@163.com'
-    receiver = 'diamondzyy@sina.com'
+    parser.add_argument('-b', '--brief', action='store_true',
+                        help='display brief statistics')
 
-    # send(sender, receiver, s)
-    break
-    time.sleep(300)
+    args = parser.parse_args()
 
+    while True:
+        s = ''
+        for f in extract_dirs():
+            s += str(f['pair']) + '\n'
+            s += extract_stat(cat(f['path'], 'stats.txt'), args.tail,
+                              cat(cat(st_stat_dir(), f['pair'][0]), 'stats.txt'),
+                              args.brief)
+
+        print s
+
+        sender = 'diamondzyy@163.com'
+        receiver = 'diamondzyy@sina.com'
+
+        # send(sender, receiver, s)
+        time.sleep(300)
+
+
+if __name__ == '__main__':
+    main()

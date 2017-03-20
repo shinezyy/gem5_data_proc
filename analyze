@@ -7,12 +7,14 @@ import re
 from extract import extract_stat
 from paths import st_stat_dir
 
-parser = argparse.ArgumentParser(description='check sum of slots')
+parser = argparse.ArgumentParser(description='check sum of slots',
+                                prefix_chars='-')
 
-parser.add_argument('stats', metavar='stats',
+parser.add_argument('-s', '--stats',
+                    default='./stats.txt',
                     help='stats.txt to be converted')
 
-parser.add_argument('tail', metavar='tail',
+parser.add_argument('-t', '--tail', action='store_true',
                     help='use statistics in tail of stats.txt')
 
 args = parser.parse_args()

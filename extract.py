@@ -21,6 +21,14 @@ patterns = [
     'fmt\.(mlp_rectification)',
 ]
 
+brief_patterns = [
+    '(numCycles)',
+    '(cpu\.committedInsts::\d)',
+    'fmt\.(num.*Slots::0)',
+    '(cpu\.HPTpredIPC::0)',
+    'fmt\.(mlp_rectification)',
+]
+
 
 def preproc_pattern(p):
     p += ' +(\d+.?\d*)'
@@ -43,27 +51,29 @@ def named_stat():
     return stat
 
 
-def extract_stat(stat_file, use_tail, st_stat_file):
+def extract_stat(stat_file, use_tail, st_stat_file, brief = False):
 
     global patterns
+    global brief_patterns
 
-    compiled = map(preproc_pattern, patterns)
+    if brief:
+        compiled = map(preproc_pattern, brief_patterns)
+    else:
+        compiled = map(preproc_pattern, patterns)
+
 
     ret = ''
 
-    if use_tail == True:
+    # Get lines @ specified number of instructions
+    if use_tail:
         raw_str = sh.tail(stat_file, '-n', '2000')
     else:
         raw_str = sh.grep("system.cpu.committedInsts::0 *2[0-9]\{8\}",
                         stat_file, '-m', "1", '-A', '1000', '-B', '600')
 
-
-    st_raw_str= sh.grep(sh.grep("system.cpu.committedInsts::0 *2[0-9]\{8\}",
-                              st_stat_file, '-m', "1", '-A', '1000', '-B', '600'),
-                        'ipc::0')
-
     d = dict()
 
+    # convert lines to dict for further use
     for line in raw_str:
         line = str(line)
         for p in compiled:
@@ -72,23 +82,31 @@ def extract_stat(stat_file, use_tail, st_stat_file):
                 d[m.group(1).ljust(30)] = m.group(2).rjust(20)
                 ret += m.group(1).ljust(30) + m.group(2).rjust(20) + '\n'
 
-    named = named_stat()
-    for k in named:
-        d[named[k]] = float(d[k])
 
-    for line in st_raw_str:
-        line = str(line)
-        m = re.match('(system.cpu.ipc::0) +(\d+\.?\d*)', line)
-        if not m is None:
-            d['st_ipc'] = float(m.group(2))
-            ret += '----st.ipc'.ljust(30) + m.group(2).rjust(20) + '\n'
+    if not brief:
+        # Get ST IPC from speculated file
+        st_raw_str = sh.grep(sh.grep("system.cpu.committedInsts::0 *2[0-9]\{8\}",
+                                    st_stat_file, '-m', "1", '-A', '1000', '-B', '600'),
+                            'ipc::0')
 
+        for line in st_raw_str:
+            line = str(line)
+            m = re.match('(system.cpu.ipc::0) +(\d+\.?\d*)', line)
+            if not m is None:
+                d['st_ipc'] = float(m.group(2))
+                ret += '----st.ipc'.ljust(30) + m.group(2).rjust(20) + '\n'
 
-    ret += '\nSlot sanity: ' + \
-            str((d['base'] + d['wait'] + d['miss'])/ (8*d['cycle'])) + '\n'
+        # check slot sanity
+        named = named_stat()
+        for k in named:
+            d[named[k]] = float(d[k])
 
-    ret += 'Prediction error: ' + \
-            str((d['pred_ipc'] - d['st_ipc']) / d['st_ipc']) + '\n'
+        ret += '\nSlot sanity: ' + \
+                str((d['base'] + d['wait'] + d['miss'])/ (8*d['cycle'])) + '\n'
+
+        # compute prediction error
+        ret += 'Prediction error: ' + \
+                str((d['pred_ipc'] - d['st_ipc']) / d['st_ipc']) + '\n'
 
     ret += '\n==========================================================\n'
 
