@@ -10,7 +10,12 @@ from mail import send
 from paths import *
 
 running_scrpits = [
-    'select.sh',
+    #'select.sh',
+    #'bzip2.sh',
+    #'hmmer.sh',
+    #'gcc.sh',
+    #'perl.sh',
+    'sjeng.sh',
     #'good.sh',
     #'gcc.sh',
 ]

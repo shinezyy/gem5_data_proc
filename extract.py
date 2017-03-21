@@ -13,12 +13,15 @@ def shorter(x):
 patterns = [
     '(numCycles)',
     '(rename\..+Slots)',
+    '(iew\..+Slots)',
     '(cpu\.committedInsts::\d)',
     'fmt\.(num.*Slots::0)',
     '(cpu\.ipc::\d)',
     '(cpu\.HPTpredIPC::0)',
     '(cpu\.HPTQoS)',
     'fmt\.(mlp_rectification)',
+    'iew.(branchMispredicts::0)',
+    'iew.exec_(branches::0)',
 ]
 
 brief_patterns = [
@@ -42,6 +45,8 @@ def named_stat():
         ['numWaitSlots::0', 'wait'],
         ['numMissSlots::0', 'miss'],
         ['cpu.HPTpredIPC::0', 'pred_ipc'],
+        ['branchMispredicts::0', 'numBranchMiss'],
+        ['branches::0', 'numBranch'],
     ]
     stat = dict()
 
@@ -107,6 +112,10 @@ def extract_stat(stat_file, use_tail, st_stat_file, brief = False):
         # compute prediction error
         ret += 'Prediction error: ' + \
                 str((d['pred_ipc'] - d['st_ipc']) / d['st_ipc']) + '\n'
+
+        # compute branch misprediction rate
+        ret += 'Branch misprediction rate: ' + \
+                str(d['numBranchMiss'] / d['numBranch']) + '\n'
 
     ret += '\n==========================================================\n'
 
