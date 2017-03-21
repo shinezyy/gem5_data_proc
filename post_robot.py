@@ -6,6 +6,7 @@ import re
 import argparse
 
 from extract import extract_stat
+from specify import specify_stat
 from mail import send
 from paths import *
 
@@ -65,15 +66,25 @@ def main():
     parser.add_argument('-l', '--loop', action='store_true',
                         help='infinite loop')
 
+    parser.add_argument('-s', '--statname',
+                        help='specified stat name')
+
+    parser.add_argument('-x', '--excel', action='store_true',
+                        help='stat in oneline for Excel usage')
+
     args = parser.parse_args()
 
     while True:
         s = ''
         for f in extract_dirs():
-            s += str(f['pair']) + '\n'
-            s += extract_stat(cat(f['path'], 'stats.txt'), args.tail,
-                              cat(cat(st_stat_dir(), f['pair'][0]), 'stats.txt'),
-                              args.brief)
+            if not args.excel:
+                s += str(f['pair']) + '\n'
+                s += extract_stat(cat(f['path'], 'stats.txt'), args.tail,
+                                  cat(cat(st_stat_dir(), f['pair'][0]), 'stats.txt'),
+                                  args.brief)
+            else:
+                s += specify_stat(cat(f['path'], 'stats.txt'), args.tail,
+                                  args.statname) + ' '
 
         print s
 
