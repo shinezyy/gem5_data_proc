@@ -14,6 +14,10 @@ parser.add_argument('-s', '--stats',
                     default='./stats.txt',
                     help='stats.txt to be converted')
 
+parser.add_argument('-n', '--numinsts',
+                    default=0,
+                    help='inst number to be searched')
+
 parser.add_argument('-t', '--tail', action='store_true',
                     help='use statistics in tail of stats.txt')
 
@@ -38,4 +42,4 @@ def speculate_name():
 
 
 print extract_stat(args.stats, args.tail,
-                   st_stat_dir() + speculate_name() + '/stats.txt')
+                   st_stat_dir() + speculate_name() + '/stats.txt', args.numinsts)

@@ -12,13 +12,18 @@ from paths import *
 
 running_scrpits = [
     #'select.sh',
-    #'bzip2.sh',
+    'bzip2.sh',
     #'hmmer.sh',
     #'gcc.sh',
     #'perl.sh',
-    'sjeng.sh',
+    #'sjeng.sh',
     #'good.sh',
     #'gcc.sh',
+    #'gcc_bpp1.sh',
+    #'gcc_bpp.sh',
+    #'perl_bpp1.sh',
+    #'perl_bpp.sh',
+    #'self.sh',
 ]
 
 content = []
@@ -81,7 +86,7 @@ def main():
                 s += str(f['pair']) + '\n'
                 s += extract_stat(cat(f['path'], 'stats.txt'), args.tail,
                                   cat(cat(st_stat_dir(), f['pair'][0]), 'stats.txt'),
-                                  args.brief)
+                                  brief=args.brief)
             else:
                 s += specify_stat(cat(f['path'], 'stats.txt'), args.tail,
                                   args.statname) + ' '
