@@ -14,10 +14,9 @@ batch = [
     'sjeng',
     'libquantum',
     'astar',
-    'specrand',
 ]
 
-sample = rd.sample(xrange(100), 24)
+sample = rd.sample(xrange(81), 24)
 
 for s in sample:
-    print batch[s / 10], batch[s % 10]
+    print batch[s / 9], batch[s % 9]
