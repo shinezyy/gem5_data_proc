@@ -12,12 +12,12 @@ from paths import *
 
 running_scrpits = [
     #'select.sh',
-    'bzip2.sh',
-    'hmmer.sh',
+    #'bzip2.sh',
+    #'hmmer.sh',
     #'gcc.sh',
     #'rest.sh',
     #'perl.sh',
-    'sjeng.sh',
+    #'sjeng.sh',
     #'good.sh',
     #'gcc.sh',
     #'gcc_bpp1.sh',

@@ -47,15 +47,17 @@ def get_rand_list():
             ret.append(line.split())
     return ret
 
-for hpt, lpt in get_rand_list():
-    ready = False
-    for pd in possible_dirs:
-        if os.path.isfile(gen_stat_path(pd, hpt, lpt)):
-            try:
-                pred_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
-                                        False, 'system.cpu.HPTpredIPC::0')
-                ready = True
-                print hpt, lpt, 'is ready in', pd
-            except:
-                ready = ready
-    #print hpt, lpt, 'Not Ready'
+if __name__ == '__main__':
+
+    for hpt, lpt in get_rand_list():
+        ready = False
+        for pd in possible_dirs:
+            if os.path.isfile(gen_stat_path(pd, hpt, lpt)):
+                try:
+                    pred_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
+                                            False, 'system.cpu.HPTpredIPC::0')
+                    ready = True
+                    print hpt, lpt, 'is ready in', pd
+                except:
+                    ready = ready
+        #print hpt, lpt, 'Not Ready'
