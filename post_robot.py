@@ -12,9 +12,10 @@ from paths import *
 
 running_scrpits = [
     #'select.sh',
-    'bzip2.sh',
+    #'bzip2.sh',
     #'hmmer.sh',
     #'gcc.sh',
+    'rest.sh',
     #'perl.sh',
     #'sjeng.sh',
     #'good.sh',
@@ -50,6 +51,10 @@ def extract_script(filename):
             p = re.compile('.*"(.*)\\\;(.*)" -o (.*) -s')
             m = p.match(line)
             pair = [m.group(1), m.group(2)]
+
+            if pair[0] == 'specrand_i':
+                pair[0] = 'specrand'
+
             path = m.group(3)
             x = dict()
             x['pair'] = pair
