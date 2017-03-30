@@ -5,6 +5,7 @@ import time
 import re
 import argparse
 import sys
+import numpy as np
 
 from extract import extract_stat
 from specify import specify_stat
@@ -42,9 +43,15 @@ short = {
 }
 
 possible_dirs = [
+    # part all:
     '~/dyn_part_all',
     '~/dyn_bpp2',
+
+    # share tlb:
+    # '~/dyn_share_tlb',
 ]
+
+file_name = './stat/pred_ipc_error_part_all.csv'
 
 matrix = dict()
 
@@ -55,15 +62,13 @@ def gen_stat_path(p, hpt, lpt):
         lpt = short[lpt]
     return cat(cat(p, hpt+'_'+lpt), 'stats.txt')
 
-file_name = './stat/pred_ipc_error.csv'
-
 with open(file_name, 'w') as f:
     # write headers
     header = 'concernedBenchmark, ' + ', '.join([lpt for lpt in batch]) + '\n'
     print header
     f.write(header)
 
-    error_overall = 0
+    error_overall = []
 
     for hpt in concerned:
         errors = []
@@ -74,19 +79,23 @@ with open(file_name, 'w') as f:
                     try:
                         pred_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
                                                 False, 'system.cpu.HPTpredIPC::0')
+                        print pred_ipc
                     except:
+                        print hpt, lpt
                         print 'Unexpected error:', sys.exc_info()
                         pred_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
                                                 True, 'system.cpu.HPTpredIPC::0')
+                        print pred_ipc
 
                     real_ipc = specify_stat(cat(cat(st_stat_dir(), hpt),
                                                 'stats.txt'),
                                             False, 'system.cpu.HPTpredIPC::0')
 
                     error = abs(float(pred_ipc) - float(real_ipc))/float(real_ipc)
-                    error_overall += error
-
                     errors.append(error)
+                    error_overall.append(error)
+
         f.write(hpt + ', ' + ', '.join([str(error) for error in errors]) + '\n')
-    print error_overall/ (len(concerned)*len(batch))
+
+    print 'avg:', np.mean(error_overall, axis=0), 'std:', np.std(error_overall, axis=0)
 
