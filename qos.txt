@@ -1,0 +1,12 @@
+perlbench sjeng
+gcc bzip2
+libquantum libquantum
+gobmk libquantum
+perlbench bzip2
+libquantum astar
+bzip2 libquantum
+hmmer gobmk
+mcf astar
+gcc libquantum
+hmmer astar
+gobmk sjeng
