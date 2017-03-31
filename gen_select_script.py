@@ -1,12 +1,13 @@
 template = '../run_gem5_alpha_spec06_benchmark.sh -b "{}\;{}"' + \
         ' -o {}/{} -s --smt -v fast -a ALPHA_{}'
 
-#conf = 'FC'
-conf = 'DYN'
-odir = '~/hard'
+#conf = 'DYN'
+conf = 'FC'
+#odir = '~/hard'
+odir = '~/fc_70'
 # inf = 'rand.txt'
-# inf = 'qos.txt'
-inf = 'hard.txt'
+inf = 'qos.txt'
+#inf = 'hard.txt'
 
 with open(inf) as f, open('./select.sh', 'w') as of:
     for line in f:
@@ -16,4 +17,4 @@ with open(inf) as f, open('./select.sh', 'w') as of:
         print cmd
 
 
-print 'generate run scripts from', inf, 'with arch', conf
+print 'generate run scripts from', inf, 'with arch', conf, 'to dir', odir

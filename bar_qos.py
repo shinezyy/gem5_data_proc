@@ -35,7 +35,7 @@ possible_dirs = [
 #file_name = './stat/pred_ipc_error_share_tlb.txt'
 #file_name = './stat/pred_ipc_error_share_bp.txt'
 #file_name = './stat/pred_ipc_error_part_all.txt'
-file_name = './stat/qos80_part_all_fc.txt'
+file_name = './stat/qos90_part_all_fc.txt'
 
 def gen_stat_path(p, hpt, lpt):
     return cat(cat(p, hpt+'_'+lpt), 'stats.txt')

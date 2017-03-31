@@ -58,5 +58,5 @@ if __name__ == '__main__':
                     count += 1
                 except:
                     ready = ready
-        #print hpt, lpt, 'Not Ready'
+                    print hpt, lpt, 'Not Ready'
     print count, 'ready'
