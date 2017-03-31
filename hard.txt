@@ -1,0 +1,11 @@
+bzip2 bzip2
+bzip2 gcc
+bzip2 sjeng
+bzip2 gobmk
+sjeng sjeng
+sjeng libquantum
+sjeng perlbench
+libquantum libquantum
+libquantum gcc
+libquantum sjeng
+libquantum gobmk
