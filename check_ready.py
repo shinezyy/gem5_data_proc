@@ -18,11 +18,11 @@ def cat(x, y):
 
 possible_dirs = [
     # part all:
-    #'~/dyn_part_all',
+    #'~/dyn_part_all2',
     #'~/dyn_bpp2',
 
     # share tlb:
-    '~/dyn_share_tlb',
+    '~/dyn_share_tlb2',
 ]
 
 short = {
@@ -33,10 +33,6 @@ short = {
 matrix = dict()
 
 def gen_stat_path(p, hpt, lpt):
-    if hpt in short:
-        hpt = short[hpt]
-    if lpt in short:
-        lpt = short[lpt]
     return cat(cat(p, hpt+'_'+lpt), 'stats.txt')
 
 def get_rand_list():

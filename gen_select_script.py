@@ -1,11 +1,17 @@
 template = '../run_gem5_alpha_spec06_benchmark.sh -b "{}\;{}"' + \
-        ' -o {}/{} -s --smt -v fast -a ALPHA_DYN'
+        ' -o {}/{} -s --smt -v fast -a ALPHA_{}'
 
-odir = '~/dyn_share_tlb2'
+conf = 'FC'
+odir = '~/fc'
+# inf = 'rand.txt'
+inf = 'qos.txt'
 
-
-with open('rand.txt') as f:
+with open(inf) as f, open('./select.sh', 'w') as of:
     for line in f:
         t1, t2 = line.split()
-        print template.format(t1, t2, odir, t1 + '_' + t2)
+        cmd = template.format(t1, t2, odir, t1 + '_' + t2, conf)
+        of.write(cmd+'\n')
+        print cmd
 
+
+print 'generate run scripts from', inf, 'with arch', conf
