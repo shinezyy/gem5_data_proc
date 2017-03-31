@@ -18,15 +18,20 @@ def cat(x, y):
 
 possible_dirs = [
     # part all:
-    #'~/dyn_part_all',
+    #'~/dyn_part_all2',
     #'~/dyn_bpp2',
 
     # share tlb:
-    '~/dyn_share_tlb',
-    '~/dyn_share_tlb2',
+    #'~/dyn_share_tlb',
+    #'~/dyn_share_tlb2',
+
+    # share bp:
+    '~/dyn_share_bp',
 ]
 
-file_name = './stat/pred_ipc_error_share_tlb.txt'
+#file_name = './stat/pred_ipc_error_share_tlb.txt'
+file_name = './stat/pred_ipc_error_share_bp.txt'
+#file_name = './stat/pred_ipc_error_part_all.txt'
 
 def gen_stat_path(p, hpt, lpt):
     return cat(cat(p, hpt+'_'+lpt), 'stats.txt')
@@ -49,7 +54,7 @@ for line in get_rand_list():
             real_ipc = specify_stat(cat(cat(st_stat_dir(), hpt),
                                         'stats.txt'),
                                     False, 'system.cpu.HPTpredIPC::0')
-            error = abs(float(pred_ipc) - float(real_ipc))/float(real_ipc)
+            error = (float(pred_ipc) - float(real_ipc))/float(real_ipc)
     error_overall.append(error)
     line.append(str(error))
     result.append(line)
@@ -60,3 +65,4 @@ print result
 with open(file_name, 'w') as f:
     for line in result:
         f.write(', '.join([x for x in line]) + '\n')
+print 'saved from {} to {}'.format(possible_dirs[0], file_name)
