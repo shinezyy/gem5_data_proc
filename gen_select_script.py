@@ -1,10 +1,12 @@
 template = '../run_gem5_alpha_spec06_benchmark.sh -b "{}\;{}"' + \
         ' -o {}/{} -s --smt -v fast -a ALPHA_{}'
 
-conf = 'FC'
-odir = '~/fc'
+#conf = 'FC'
+conf = 'DYN'
+odir = '~/hard'
 # inf = 'rand.txt'
-inf = 'qos.txt'
+# inf = 'qos.txt'
+inf = 'hard.txt'
 
 with open(inf) as f, open('./select.sh', 'w') as of:
     for line in f:

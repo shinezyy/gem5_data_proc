@@ -22,7 +22,8 @@ possible_dirs = [
     #'~/dyn_bpp2',
 
     # share tlb:
-    '~/dyn_share_tlb2',
+    #'~/dyn_share_tlb2',
+    '~/fc',
 ]
 
 short = {
@@ -36,7 +37,7 @@ def gen_stat_path(p, hpt, lpt):
     return cat(cat(p, hpt+'_'+lpt), 'stats.txt')
 
 def get_rand_list():
-    rand_list = './rand.txt'
+    rand_list = './qos.txt'
     ret = []
     with open(rand_list) as f:
         for line in f:
@@ -44,7 +45,7 @@ def get_rand_list():
     return ret
 
 if __name__ == '__main__':
-
+    count = 0
     for hpt, lpt in get_rand_list():
         ready = False
         for pd in possible_dirs:
@@ -54,6 +55,8 @@ if __name__ == '__main__':
                                             False, 'system.cpu.HPTpredIPC::0')
                     ready = True
                     print hpt, lpt, 'is ready in', pd
+                    count += 1
                 except:
                     ready = ready
         #print hpt, lpt, 'Not Ready'
+    print count, 'ready'
