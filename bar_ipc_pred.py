@@ -51,10 +51,10 @@ for line in get_rand_list():
                 print 'Unexpected error:', sys.exc_info()
                 pred_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
                                         True, 'system.cpu.HPTpredIPC::0')
-            real_ipc = specify_stat(cat(cat(st_stat_dir(), hpt),
+            st_ipc = specify_stat(cat(cat(st_stat_dir(), hpt),
                                         'stats.txt'),
-                                    False, 'system.cpu.HPTpredIPC::0')
-            error = (float(pred_ipc) - float(real_ipc))/float(real_ipc)
+                                    False, 'system.cpu.ipc::0')
+            error = (float(pred_ipc) - float(st_ipc))/float(st_ipc)
     error_overall.append(error)
     line.append(str(error))
     result.append(line)
