@@ -2,9 +2,9 @@ template = '../run_gem5_alpha_spec06_benchmark.sh -b "{}\;{}"' + \
         ' -o {}/{} -s --smt -v fast -a ALPHA_{}'
 
 #conf = 'DYN'
-conf = 'FC'
+conf = 'CC'
 #odir = '~/hard'
-odir = '~/fc_70'
+odir = '~/cc_90'
 # inf = 'rand.txt'
 inf = 'qos.txt'
 #inf = 'hard.txt'

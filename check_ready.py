@@ -23,7 +23,9 @@ possible_dirs = [
 
     # share tlb:
     #'~/dyn_share_tlb2',
-    '~/fc',
+
+    # controlled:
+    '~/cc_90',
 ]
 
 short = {

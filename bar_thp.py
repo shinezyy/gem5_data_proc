@@ -19,7 +19,6 @@ def cat(x, y):
 possible_dirs = [
     # part all:
     #'~/dyn_part_all2',
-    #'~/dyn_bpp2',
 
     # share tlb:
     #'~/dyn_share_tlb',
@@ -29,7 +28,7 @@ possible_dirs = [
     #'~/dyn_share_bp',
 
     # front end control:
-    #'~/fc_70',
+    #'~/fc_90',
 
     # combined control:
     '~/cc_90',
@@ -38,8 +37,11 @@ possible_dirs = [
 #file_name = './stat/pred_ipc_error_share_tlb.txt'
 #file_name = './stat/pred_ipc_error_share_bp.txt'
 #file_name = './stat/pred_ipc_error_part_all.txt'
-#file_name = './stat/qos70_part_all_fc.txt'
-file_name = './stat/qos90_part_all_cc.txt'
+#file_name = './stat/qos90_part_all_fc.txt'
+#file_name = './stat/qos90_part_all_cc.txt'
+#file_name = './stat/dyn_thp.txt'
+#file_name = './stat/fc_thp.txt'
+file_name = './stat/cc_thp.txt'
 
 def gen_stat_path(p, hpt, lpt):
     return cat(cat(p, hpt+'_'+lpt), 'stats.txt')
@@ -53,24 +55,21 @@ for line in get_rand_list():
     for pd in possible_dirs:
         if os.path.isfile(gen_stat_path(pd, hpt, lpt)):
             try:
-                smt_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
-                                        False, 'system.cpu.ipc::0')
-                pred_qos = specify_stat(gen_stat_path(pd, hpt, lpt),
-                                        False, 'system.cpu.HPTQoS')
+                hpt_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
+                                       False, 'system.cpu.committedInsts::0')
+                lpt_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
+                                       False, 'system.cpu.committedInsts::1')
             except:
                 print 'Unexpected error:', sys.exc_info()
-                smt_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
-                                        True, 'system.cpu.ipc::0')
-                pred_qos = specify_stat(gen_stat_path(pd, hpt, lpt),
-                                        True, 'system.cpu.HPTQoS')
+                hpt_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
+                                       True, 'system.cpu.committedInsts::0')
+                lpt_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
+                                       True, 'system.cpu.committedInsts::1')
 
-            st_ipc = specify_stat(cat(cat(st_stat_dir(), hpt),
-                                        'stats.txt'),
-                                    False, 'system.cpu.ipc::0')
-            qos = float(smt_ipc)/float(st_ipc)
+            thp = float(hpt_ipc) + float(lpt_ipc)
 
-    line.append(str(qos))
-    line.append(pred_qos)
+    line.append(hpt_ipc)
+    line.append(lpt_ipc)
     result.append(line)
 
 # print 'avg:', np.mean(error_overall, axis=0), 'std:', np.std(error_overall, axis=0)
