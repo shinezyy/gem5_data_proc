@@ -42,4 +42,4 @@ def speculate_name():
 
 
 print extract_stat(args.stats, args.tail,
-                   st_stat_dir() + speculate_name() + '/stats.txt', args.numinsts)
+                   st_stat_dir() + speculate_name() + '_perlbench/stats.txt', args.numinsts)

@@ -98,12 +98,12 @@ def extract_stat(stat_file, use_tail, st_stat_file, num_insts=0, brief = False):
 
     if not brief:
         # Get ST IPC from speculated file
-        '''
         st_raw_str = sh.grep(sh.grep("system.cpu.committedInsts::0 *2[0-9]\{8\}",
                                     st_stat_file, '-m', "1", '-A', '1000', '-B', '600'),
                             'ipc::0')
         '''
         st_raw_str = sh.tail(st_stat_file, '-n', '2000')
+        '''
 
         for line in st_raw_str:
             line = str(line)

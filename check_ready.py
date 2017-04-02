@@ -20,13 +20,16 @@ possible_dirs = [
     # part all:
     #'~/dyn_part_all2',
     #'~/dyn_bpp2',
+    #'~/dyn_64_lsq_hard',
 
     # share tlb:
     #'~/dyn_share_tlb2',
 
     # controlled:
-    '~/cc_90',
+    '~/sim_st_64_lsq',
 ]
+
+pairs = './hard.txt'
 
 short = {
     'perlbench' : 'perl',
@@ -38,17 +41,16 @@ matrix = dict()
 def gen_stat_path(p, hpt, lpt):
     return cat(cat(p, hpt+'_'+lpt), 'stats.txt')
 
-def get_rand_list():
-    rand_list = './qos.txt'
+def get_rand_list(p):
     ret = []
-    with open(rand_list) as f:
+    with open(p) as f:
         for line in f:
             ret.append(line.split())
     return ret
 
 if __name__ == '__main__':
     count = 0
-    for hpt, lpt in get_rand_list():
+    for hpt, lpt in get_rand_list(pairs):
         ready = False
         for pd in possible_dirs:
             if os.path.isfile(gen_stat_path(pd, hpt, lpt)):
