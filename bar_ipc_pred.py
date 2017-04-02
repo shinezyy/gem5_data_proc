@@ -18,9 +18,9 @@ def cat(x, y):
 
 possible_dirs = [
     # part all:
-    '~/dyn_part_all2',
+    #'~/dyn_part_all2',
     #'~/dyn_bpp2',
-    #'~/dyn_96_SQ',
+    '~/dyn_64_lsq_hard',
 
     # share tlb:
     #'~/dyn_share_tlb',
@@ -30,17 +30,19 @@ possible_dirs = [
     #'~/dyn_share_bp',
 ]
 
+pairs = './hard.txt'
+
 #file_name = './stat/pred_ipc_error_share_tlb.txt'
 #file_name = './stat/pred_ipc_error_share_bp.txt'
-file_name = './stat/pred_ipc_error_part_all.txt'
-#file_name = './stat/pred_ipc_error_part_all_96_sq.txt'
+#file_name = './stat/pred_ipc_error_part_all.txt'
+file_name = './stat/pred_ipc_error_part_all_96_sq.txt'
 
 def gen_stat_path(p, hpt, lpt):
     return cat(cat(p, hpt+'_'+lpt), 'stats.txt')
 
 result = []
 
-for line in get_rand_list():
+for line in get_rand_list(pairs):
     error_overall = []
     error = 10000
     hpt, lpt = line
@@ -53,10 +55,14 @@ for line in get_rand_list():
                 print 'Unexpected error:', sys.exc_info()
                 pred_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
                                         True, 'system.cpu.HPTpredIPC::0')
-            st_ipc = specify_stat(cat(cat(st_stat_dir(), hpt),
+            st_ipc = specify_stat(cat(cat(st_stat_dir(),
+                                          hpt + '_perlbench'),
                                         'stats.txt'),
                                     False, 'system.cpu.ipc::0')
             error = (float(pred_ipc) - float(st_ipc))/float(st_ipc)
+        else:
+            print gen_stat_path(pd, hpt, lpt), 'is not file'
+
     error_overall.append(error)
     line.append(str(error))
     result.append(line)

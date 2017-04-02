@@ -20,13 +20,13 @@ possible_dirs = [
     # part all:
     #'~/dyn_part_all2',
     #'~/dyn_bpp2',
-    #'~/dyn_64_lsq_hard',
+    '~/dyn_64_lsq_hard',
 
     # share tlb:
     #'~/dyn_share_tlb2',
 
     # controlled:
-    '~/sim_st_64_lsq',
+    #'~/sim_st_64_lsq',
 ]
 
 pairs = './hard.txt'

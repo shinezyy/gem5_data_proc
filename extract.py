@@ -51,6 +51,7 @@ def named_stat():
         ['cpu.HPTpredIPC::0', 'pred_ipc'],
         ['branchMispredicts::0', 'numBranchMiss'],
         ['branches::0', 'numBranch'],
+        ['cpu.committedInsts::0', 'hpt_insts'],
     ]
     stat = dict()
 
@@ -97,25 +98,49 @@ def extract_stat(stat_file, use_tail, st_stat_file, num_insts=0, brief = False):
 
 
     if not brief:
+
+        named = named_stat()
+        for k in named:
+            d[named[k]] = float(d[k])
+
         # Get ST IPC from speculated file
-        st_raw_str = sh.grep(sh.grep("system.cpu.committedInsts::0 *2[0-9]\{8\}",
-                                    st_stat_file, '-m', "1", '-A', '1000', '-B', '600'),
-                            'ipc::0')
+
+        dyn_insts_now = int(d['hpt_insts'])
+        # print 'getting around num_insts', dyn_insts_now
+        num_digits = len(str(dyn_insts_now))
+        msd = dyn_insts_now / 10 ** (num_digits-3)
+
+        for x in range(msd - 10, msd + 10):
+            try:
+                first = sh.grep("system.cpu.committedInsts::0" +
+                    " *{}".format(x) + "[0-9]\{6\}",
+                    st_stat_file, '-m', "1", '-A', '1000', '-B', '600')
+            except:
+                continue
+            # print first
+            if first:
+                # print 'hit at *{}'.format(x) + "[0-9]\{5\}"
+                # st_raw_str = sh.grep(first, 'ipc::0')
+                st_raw_str = str(first)
+                break
+
         '''
         st_raw_str = sh.tail(st_stat_file, '-n', '2000')
         '''
 
-        for line in st_raw_str:
-            line = str(line)
+        for line in st_raw_str.split('\n'):
             m = re.match('(system.cpu.ipc::0) +(\d+\.?\d*)', line)
             if not m is None:
                 d['st_ipc'] = float(m.group(2))
-                ret += '----st.ipc'.ljust(30) + m.group(2).rjust(20) + '\n'
 
-        # check slot sanity
-        named = named_stat()
-        for k in named:
-            d[named[k]] = float(d[k])
+            x = re.match('system\.(cpu.committedInsts::0) + (\d*)', line)
+            if not x is None:
+                # print 'Matched'
+                d['st_insts'] = float(x.group(2))
+
+        ret += '----st.ipc (around instructions {})'. \
+                format(d['st_insts']).ljust(30) \
+                    + str(d['st_ipc']) + '\n'
 
         ret += '\nSlot sanity: ' + \
                 str((d['base'] + d['wait'] + d['miss'])/ (8*d['cycle'])) + '\n'

@@ -12,11 +12,11 @@ conf = confs['dyn']
 
 #odir = '~/hard'
 #odir = '~/sim_st_64_lsq'
-odir = '~/dyn_64_lsq_hard'
+odir = '~/dyn_64_lsq'
 
-#inf = 'rand.txt'
+inf = 'rand.txt'
 #inf = 'sim_st.txt'
-inf = 'hard.txt'
+#inf = 'hard.txt'
 #inf = 'qos.txt'
 
 with open(inf) as f, open('./select.sh', 'w') as of:
