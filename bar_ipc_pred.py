@@ -18,20 +18,22 @@ def cat(x, y):
 
 possible_dirs = [
     # part all:
-    #'~/dyn_part_all2',
+    '~/dyn_part_all2',
     #'~/dyn_bpp2',
+    #'~/dyn_96_SQ',
 
     # share tlb:
     #'~/dyn_share_tlb',
     #'~/dyn_share_tlb2',
 
     # share bp:
-    '~/dyn_share_bp',
+    #'~/dyn_share_bp',
 ]
 
 #file_name = './stat/pred_ipc_error_share_tlb.txt'
-file_name = './stat/pred_ipc_error_share_bp.txt'
-#file_name = './stat/pred_ipc_error_part_all.txt'
+#file_name = './stat/pred_ipc_error_share_bp.txt'
+file_name = './stat/pred_ipc_error_part_all.txt'
+#file_name = './stat/pred_ipc_error_part_all_96_sq.txt'
 
 def gen_stat_path(p, hpt, lpt):
     return cat(cat(p, hpt+'_'+lpt), 'stats.txt')
