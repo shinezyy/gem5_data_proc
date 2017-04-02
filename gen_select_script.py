@@ -4,9 +4,10 @@ template = '../run_gem5_alpha_spec06_benchmark.sh -b "{}\;{}"' + \
 #conf = 'DYN'
 conf = 'CC'
 #odir = '~/hard'
-odir = '~/dyn_96_SQ'
+#odir = '~/dyn_96_SQ'
+odir = '~/sim_st_64_lsq'
 # inf = 'rand.txt'
-inf = 'qos.txt'
+inf = 'sim_st.txt'
 #inf = 'hard.txt'
 
 with open(inf) as f, open('./select.sh', 'w') as of:
