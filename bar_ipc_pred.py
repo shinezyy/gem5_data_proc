@@ -18,10 +18,10 @@ def cat(x, y):
 
 possible_dirs = [
     # part all:
-    #'~/dyn_part_all2',
+    '~/dyn_part_all2',
     #'~/dyn_bpp2',
     #'~/dyn_64_lsq_hard',
-    '~/dyn_64_lsq_special3',
+    #'~/dyn_64_lsq_special3',
 
     # share tlb:
     #'~/dyn_share_tlb',
@@ -36,9 +36,9 @@ pairs = './rand.txt'
 
 #file_name = './stat/pred_ipc_error_share_tlb.txt'
 #file_name = './stat/pred_ipc_error_share_bp.txt'
-#file_name = './stat/pred_ipc_error_part_all.txt'
+file_name = './stat/pred_ipc_error_part_all.txt'
 #file_name = './stat/pred_ipc_error_part_all_64_lsq.txt'
-file_name = './stat/pred_ipc_error_part_all_64_spec3.txt'
+#file_name = './stat/pred_ipc_error_part_all_64_spec3.txt'
 
 def gen_stat_path(p, hpt, lpt):
     return cat(cat(p, hpt+'_'+lpt), 'stats.txt')
@@ -59,7 +59,8 @@ for line in get_rand_list(pairs):
                 pred_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
                                         True, 'system.cpu.HPTpredIPC::0')
             st_ipc = specify_stat(cat(cat(st_stat_dir(),
-                                          hpt + '_perlbench'),
+                                          hpt),
+                                          #hpt + '_perlbench'),
                                         'stats.txt'),
                                     False, 'system.cpu.ipc::0')
             error = (float(pred_ipc) - float(st_ipc))/float(st_ipc)

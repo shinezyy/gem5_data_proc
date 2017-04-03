@@ -110,7 +110,8 @@ def extract_stat(stat_file, use_tail, st_stat_file, num_insts=0, brief = False):
         num_digits = len(str(dyn_insts_now))
         msd = dyn_insts_now / 10 ** (num_digits-3)
 
-        for x in range(msd - 10, msd + 100):
+        for x in range(0, 1000):
+            x = msd + (x/2) * ((-1) ** x)
             try:
                 t = " *{}".format(x) + "[0-9]\{" + str(num_digits-3) + "\} "
                 print t
