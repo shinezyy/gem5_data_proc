@@ -81,8 +81,8 @@ def extract_stat(stat_file, use_tail, st_stat_file, num_insts=0, brief = False):
         raw_str = sh.grep("system.cpu.committedInsts::0 *2[0-9]\{8\}",
                         stat_file, '-m', "1", '-A', '1000', '-B', '600')
     else:
-        raw_str = sh.grep("\"system.cpu.committedInsts::0 *" +\
-                          str(num_insts) + "[0-9]\{7\} \"",
+        raw_str = sh.grep("system.cpu.committedInsts::0 *" +\
+                          str(num_insts) + "[0-9]\{6\}",
                           stat_file, '-m', "1", '-A', '1000', '-B', '600')
 
     d = dict()
@@ -110,10 +110,10 @@ def extract_stat(stat_file, use_tail, st_stat_file, num_insts=0, brief = False):
         num_digits = len(str(dyn_insts_now))
         msd = dyn_insts_now / 10 ** (num_digits-3)
 
-        for x in range(msd - 10, msd + 10):
+        for x in range(msd - 10, msd + 100):
             try:
                 t = " *{}".format(x) + "[0-9]\{" + str(num_digits-3) + "\} "
-                # print t
+                print t
                 first = sh.grep("system.cpu.committedInsts::0" + t,
                     st_stat_file, '-m', "1", '-A', '1000', '-B', '600')
             except:

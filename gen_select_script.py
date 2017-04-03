@@ -12,7 +12,7 @@ conf = confs['dyn']
 
 #odir = '~/hard'
 #odir = '~/sim_st_64_lsq'
-odir = '~/dyn_64_lsq'
+odir = '~/dyn_64_lsq_2'
 
 inf = 'rand.txt'
 #inf = 'sim_st.txt'

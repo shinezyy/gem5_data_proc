@@ -20,7 +20,9 @@ possible_dirs = [
     # part all:
     #'~/dyn_part_all2',
     #'~/dyn_bpp2',
-    '~/dyn_64_lsq_hard',
+    #'~/dyn_64_lsq_hard',
+    '~/dyn_64_lsq_special3',
+    #'~/dyn_64_lsq',
 
     # share tlb:
     #'~/dyn_share_tlb2',
@@ -29,7 +31,7 @@ possible_dirs = [
     #'~/sim_st_64_lsq',
 ]
 
-pairs = './hard.txt'
+pairs = './rand.txt'
 
 short = {
     'perlbench' : 'perl',

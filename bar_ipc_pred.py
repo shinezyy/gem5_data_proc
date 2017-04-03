@@ -20,7 +20,8 @@ possible_dirs = [
     # part all:
     #'~/dyn_part_all2',
     #'~/dyn_bpp2',
-    '~/dyn_64_lsq_hard',
+    #'~/dyn_64_lsq_hard',
+    '~/dyn_64_lsq_special3',
 
     # share tlb:
     #'~/dyn_share_tlb',
@@ -30,12 +31,14 @@ possible_dirs = [
     #'~/dyn_share_bp',
 ]
 
-pairs = './hard.txt'
+#pairs = './hard.txt'
+pairs = './rand.txt'
 
 #file_name = './stat/pred_ipc_error_share_tlb.txt'
 #file_name = './stat/pred_ipc_error_share_bp.txt'
 #file_name = './stat/pred_ipc_error_part_all.txt'
-file_name = './stat/pred_ipc_error_part_all_96_sq.txt'
+#file_name = './stat/pred_ipc_error_part_all_64_lsq.txt'
+file_name = './stat/pred_ipc_error_part_all_64_spec3.txt'
 
 def gen_stat_path(p, hpt, lpt):
     return cat(cat(p, hpt+'_'+lpt), 'stats.txt')
