@@ -32,21 +32,29 @@ possible_dirs = [
     #'~/fc_70',
 
     # combined control:
-    '~/cc_90',
+    #'~/hard_cc_90',
+    #'~/qos80_cc_64_lsq',
+    #'~/qos90_fc_64_lsq',
+    #'~/timely_update_cc_64_lsq/cc_64_lsq'
+    #'~/old_results_2017_0403/cc_90'
+    '~/cc_80'
 ]
 
 #file_name = './stat/pred_ipc_error_share_tlb.txt'
 #file_name = './stat/pred_ipc_error_share_bp.txt'
 #file_name = './stat/pred_ipc_error_part_all.txt'
 #file_name = './stat/qos70_part_all_fc.txt'
-file_name = './stat/qos90_part_all_cc.txt'
+#file_name = './stat/qos90_64_fc.txt'
+file_name = './stat/qos80_cc.txt'
+#file_name = './stat/qos90_fc.txt'
+#file_name = './stat/qos80_part_all_cc.txt'
 
 def gen_stat_path(p, hpt, lpt):
     return cat(cat(p, hpt+'_'+lpt), 'stats.txt')
 
 result = []
 
-for line in get_rand_list():
+for line in get_rand_list('./rand.txt'):
     qos = 0
     pred_qos = 0
     hpt, lpt = line
@@ -64,14 +72,20 @@ for line in get_rand_list():
                 pred_qos = specify_stat(gen_stat_path(pd, hpt, lpt),
                                         True, 'system.cpu.HPTQoS')
 
-            st_ipc = specify_stat(cat(cat(st_stat_dir(), hpt),
-                                        'stats.txt'),
-                                    False, 'system.cpu.ipc::0')
-            qos = float(smt_ipc)/float(st_ipc)
+            st_ipc = specify_stat(cat(cat(st_stat_dir(),
+                                          hpt),
+                                          #hpt + '_perlbench'),
+                                      'stats.txt'),
+                                  False, 'system.cpu.ipc::0')
+            if smt_ipc and st_ipc:
+                qos = float(smt_ipc)/float(st_ipc)
+            else:
+                qos = 10000
 
-    line.append(str(qos))
-    line.append(pred_qos)
-    result.append(line)
+    if (pred_qos):
+        line.append(str(qos))
+        line.append(pred_qos)
+        result.append(line)
 
 # print 'avg:', np.mean(error_overall, axis=0), 'std:', np.std(error_overall, axis=0)
 print result

@@ -18,8 +18,9 @@ def cat(x, y):
 
 possible_dirs = [
     # part all:
-    '~/dyn_part_all2',
+    #'~/dyn_part_all2',
     #'~/dyn_bpp2',
+    '~/dyn_64_lsq_special3',
 
     # share tlb:
     #'~/dyn_share_tlb',
@@ -40,7 +41,7 @@ result = []
 
 threshold = 0.9
 
-for line in get_rand_list():
+for line in get_rand_list('./rand.txt'):
     hpt, lpt = line
     for pd in possible_dirs:
         if os.path.isfile(gen_stat_path(pd, hpt, lpt)):
@@ -50,11 +51,12 @@ for line in get_rand_list():
             smt_ipc = float(specify_stat(gen_stat_path(pd, hpt, lpt),
                                           False, 'cpu.ipc::0'))
 
-            st_ipc = float(specify_stat(cat(cat(st_stat_dir(), hpt),
+            st_ipc = float(specify_stat(cat(cat(st_stat_dir(),
+                                                hpt + '_perlbench'),
                                         'stats.txt'),
                                     False, 'system.cpu.HPTpredIPC::0'))
             real_qos = smt_ipc/st_ipc
 
             if real_qos < threshold:
-                print hpt, lpt
+                print hpt, lpt #, real_qos
 

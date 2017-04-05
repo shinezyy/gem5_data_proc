@@ -40,6 +40,11 @@ def speculate_name():
     else:
         return re.match('.*/(\w+)$', cwd, re.M).group(1)
 
+st_dir = st_stat_dir() + speculate_name() +\
+        '/stats.txt'
+# '_perlbench/stats.txt',
 
-print extract_stat(args.stats, args.tail,
-                   st_stat_dir() + speculate_name() + '_perlbench/stats.txt', args.numinsts)
+print st_dir
+
+print extract_stat(args.stats, args.tail, st_dir,
+                   args.numinsts)
