@@ -164,13 +164,13 @@ def extract_stat(stat_file, use_tail, st_stat_file, num_insts=0, brief = False):
         ret += '\nSlot sanity: ' + \
                 str((d['base'] + d['wait'] + d['miss'])/ (8*d['cycle'])) + '\n'
 
-        # compute prediction error
-        ret += 'Prediction error: ' + \
-                str((d['pred_ipc'] - d['st_ipc']) / d['st_ipc']) + '\n'
-
         # compute branch misprediction rate
         ret += 'Branch misprediction rate: ' + \
                 str(d['numBranchMiss'] / d['numBranch']) + '\n'
+
+        # compute prediction error
+        ret += 'QoS Prediction error: ' + \
+                str((d['pred_ipc'] - d['st_ipc']) / d['st_ipc']) + '\n'
 
     ret += '\n==========================================================\n'
 
