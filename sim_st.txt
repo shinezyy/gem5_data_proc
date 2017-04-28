@@ -1,9 +1,0 @@
-perlbench perlbench
-bzip2 perlbench
-gcc perlbench
-mcf perlbench
-gobmk perlbench
-hmmer perlbench
-sjeng perlbench
-libquantum perlbench
-astar perlbench
