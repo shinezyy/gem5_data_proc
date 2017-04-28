@@ -2,6 +2,8 @@ import sys
 import os
 from os.path import join as pjoin
 from os.path import expanduser as expu
+import re
+from copy import deepcopy
 
 
 def user_verify():
@@ -12,6 +14,40 @@ def user_verify():
 
 def left_is_older(x, y):
     return os.path.getmtime(x) < os.path.getmtime(y)
+
+# reverse a file
+
+def reverse_readline(filename: str, buf_size=8192):
+    """a generator that returns the lines of a file in reverse order"""
+    with open(filename) as fh:
+        segment = None
+        offset = 0
+        fh.seek(0, os.SEEK_END)
+        file_size = remaining_size = fh.tell()
+        while remaining_size > 0:
+            offset = min(file_size, offset + buf_size)
+            fh.seek(file_size - offset)
+            buffer = fh.read(min(remaining_size, buf_size))
+            remaining_size -= buf_size
+            lines = buffer.split('\n')
+            # the first line of the buffer is probably not a complete line so
+            # we'll save it and append it to the last line of the next buffer
+            # we read
+            if segment is not None:
+                # if the previous chunk starts right from the beginning of line
+                # do not concact the segment to the last line of new chunk
+                # instead, yield the segment first 
+                if buffer[-1] is not '\n':
+                    lines[-1] += segment
+                else:
+                    yield segment
+            segment = lines[0]
+            for index in range(len(lines) - 1, 0, -1):
+                if len(lines[index]):
+                    yield lines[index]
+        # Don't yield None if the file was empty
+        if segment is not None:
+            yield segment
 
 
 # scan pairs and filters:
@@ -72,4 +108,52 @@ def print_line():
     print('---------------------------------------------------------------')
 
 
-# def get_stat():
+def get_stat_around(stat_file: str, insts: int=200*(10**6), cycles: int = None)-> list:
+    old_buff = []
+    buff = []
+
+    old_insts = None
+    old_cycles = None
+    new_insts = None
+    new_cycles = None
+
+    p_insts = re.compile('cpu.committedInsts::0\s+(\d+)\s+#')
+    p_cycles = re.compile('cpu.numCycles\s+(\d+)\s+#')
+
+    for line in reverse_readline(expu(stat_file)):
+        buff.append(line)
+
+        if line.startswith('---------- Begin Simulation Statistics ----------'):
+            if cycles:
+                pass
+            else:
+                if insts >= new_insts:
+                    if old_insts is None:
+                        return buff
+                    elif abs(insts - old_insts) > abs(new_insts - insts):
+                        return buff
+                    else:
+                        return old_buff
+                else:
+                    old_insts = new_insts
+                    old_cycles = new_cylces
+                    old_buff = deepcopy(buff)
+                    buff.clear()
+
+        elif line.startswith('system.cpu.committedInsts::0'):
+            new_insts = int(p_insts.search(line).group(1))
+        elif line.startswith('system.cpu.numCycles'):
+            new_cylces = int(p_cycles.search(line).group(1))
+
+    return old_buff
+
+
+
+def get_stat(stat_file: str, target: str) -> str:
+    assert(os.path.isfile(expu(stat_file)))
+    lines = get_stat_around(stat_file, 200*(10**6))
+    for line in list(reversed(lines)):
+        if line.startswith('system.cpu.committedInsts::0'):
+            print(line)
+
+
