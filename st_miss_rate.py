@@ -58,7 +58,7 @@ with open(file_name, 'w') as f:
 
         miss_rates = []
         for b in benchmarks:
-            miss_rate = specify_stat(gen_stat_path(st_stat_dir(), b),
+            miss_rate = specify_stat(gen_stat_path(st_stat_dir, b),
                                     False, targets[k])
             miss_rates.append(miss_rate)
 

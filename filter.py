@@ -51,7 +51,7 @@ for line in get_rand_list('./rand.txt'):
             smt_ipc = float(specify_stat(gen_stat_path(pd, hpt, lpt),
                                           False, 'cpu.ipc::0'))
 
-            st_ipc = float(specify_stat(cat(cat(st_stat_dir(),
+            st_ipc = float(specify_stat(cat(cat(st_stat_dir,
                                                 hpt + '_perlbench'),
                                         'stats.txt'),
                                     False, 'system.cpu.HPTpredIPC::0'))

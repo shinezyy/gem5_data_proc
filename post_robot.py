@@ -74,7 +74,7 @@ def main():
             if not args.excel:
                 s += str(f['pair']) + '\n'
                 s += extract_stat(cat(f['path'], 'stats.txt'), args.tail,
-                                  cat(cat(st_stat_dir(), f['pair'][0]), 'stats.txt'),
+                                  cat(cat(st_stat_dir, f['pair'][0]), 'stats.txt'),
                                   brief=args.brief)
             else:
                 s += specify_stat(cat(f['path'], 'stats.txt'), args.tail,

@@ -87,7 +87,7 @@ with open(file_name, 'w') as f:
                                                 True, 'system.cpu.HPTpredIPC::0')
                         print(pred_ipc)
 
-                    real_ipc = specify_stat(cat(cat(st_stat_dir(), hpt),
+                    real_ipc = specify_stat(cat(cat(st_stat_dir, hpt),
                                                 'stats.txt'),
                                             False, 'system.cpu.HPTpredIPC::0')
 

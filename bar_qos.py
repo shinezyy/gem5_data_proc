@@ -72,7 +72,7 @@ for line in get_rand_list('./rand.txt'):
                 pred_qos = specify_stat(gen_stat_path(pd, hpt, lpt),
                                         True, 'system.cpu.HPTQoS')
 
-            st_ipc = specify_stat(cat(cat(st_stat_dir(),
+            st_ipc = specify_stat(cat(cat(st_stat_dir,
                                           hpt),
                                           #hpt + '_perlbench'),
                                       'stats.txt'),

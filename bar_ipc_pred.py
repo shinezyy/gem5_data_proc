@@ -63,7 +63,7 @@ for line in get_rand_list(pairs):
                 print('Unexpected error:', sys.exc_info())
                 pred_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
                                         True, 'system.cpu.HPTpredIPC::0')
-            st_ipc = specify_stat(cat(cat(st_stat_dir(),
+            st_ipc = specify_stat(cat(cat(st_stat_dir,
                                           #hpt),
                                           hpt + '_perlbench'),
                                         'stats.txt'),

@@ -104,6 +104,14 @@ def print_option(opt):
     print('')
 
 
+def print_2_tuple(x, y):
+    print(x.ljust(20), y.rjust(20))
+
+def print_dict(d):
+    for k in d:
+        print_2_tuple(k, d[k])
+
+
 def print_line():
     print('---------------------------------------------------------------')
 

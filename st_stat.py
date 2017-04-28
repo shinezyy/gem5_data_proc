@@ -16,7 +16,7 @@ def regenerate_st_stat(pairs: list, cache: str) -> None:
     ]
     matrix = {}
     for p in pairs:
-        matrix[p] = c.get_stats(pjoin(st_stat_dir(), p, 'stats.txt'),
+        matrix[p] = c.get_stats(pjoin(st_stat_dir, p, 'stats.txt'),
                               st_targets, re_targets=True)
     df = pd.DataFrame(matrix)
     df.to_csv(cache, index=True)
@@ -26,8 +26,8 @@ def regenerate_st_stat(pairs: list, cache: str) -> None:
 
 
 def make_st_stat_cache() -> None:
-    pairs = c.pairs(st_stat_dir(), False)
-    stat_files = [pjoin(st_stat_dir(), x, 'stats.txt') \
+    pairs = c.pairs(st_stat_dir, False)
+    stat_files = [pjoin(st_stat_dir, x, 'stats.txt') \
                   for x in pairs]
 
     stat_timestamps = [os.path.getmtime(x) for x in stat_files]
