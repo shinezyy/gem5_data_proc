@@ -9,23 +9,7 @@ from extract import extract_stat
 from specify import specify_stat
 from mail import send
 from paths import *
-
-running_scrpits = [
-    'select.sh',
-    #'bzip2.sh',
-    #'hmmer.sh',
-    #'gcc.sh',
-    #'rest.sh',
-    #'perl.sh',
-    #'sjeng.sh',
-    #'good.sh',
-    #'gcc.sh',
-    #'gcc_bpp1.sh',
-    #'gcc_bpp.sh',
-    #'perl_bpp1.sh',
-    #'perl_bpp.sh',
-    #'self.sh',
-]
+import commont as c
 
 content = []
 
