@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.6
 
 import os
 import time
@@ -65,7 +65,7 @@ def gen_stat_path(p, hpt, lpt):
 with open(file_name, 'w') as f:
     # write headers
     header = 'concernedBenchmark, ' + ', '.join([lpt for lpt in batch]) + '\n'
-    print header
+    print(header)
     f.write(header)
 
     error_overall = []
@@ -79,13 +79,13 @@ with open(file_name, 'w') as f:
                     try:
                         pred_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
                                                 False, 'system.cpu.HPTpredIPC::0')
-                        print pred_ipc
+                        print(pred_ipc)
                     except:
-                        print hpt, lpt
-                        print 'Unexpected error:', sys.exc_info()
+                        print(hpt, lpt)
+                        print('Unexpected error:', sys.exc_info())
                         pred_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
                                                 True, 'system.cpu.HPTpredIPC::0')
-                        print pred_ipc
+                        print(pred_ipc)
 
                     real_ipc = specify_stat(cat(cat(st_stat_dir(), hpt),
                                                 'stats.txt'),
@@ -97,5 +97,5 @@ with open(file_name, 'w') as f:
 
         f.write(hpt + ', ' + ', '.join([str(error) for error in errors]) + '\n')
 
-    print 'avg:', np.mean(error_overall, axis=0), 'std:', np.std(error_overall, axis=0)
+    print('avg:', np.mean(error_overall, axis=0), 'std:', np.std(error_overall, axis=0))
 

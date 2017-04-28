@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.6
 
 import os
 import time
@@ -60,9 +60,9 @@ if __name__ == '__main__':
                     pred_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
                                             False, 'system.cpu.HPTpredIPC::0')
                     ready = True
-                    print hpt, lpt, 'is ready in', pd
+                    print(hpt, lpt, 'is ready in', pd)
                     count += 1
                 except:
                     ready = ready
-                    print hpt, lpt, 'Not Ready'
-    print count, 'ready'
+                    print(hpt, lpt, 'Not Ready')
+    print(count, 'ready')

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.6
 
 import os
 import time
@@ -58,5 +58,5 @@ for line in get_rand_list('./rand.txt'):
             real_qos = smt_ipc/st_ipc
 
             if real_qos < threshold:
-                print hpt, lpt #, real_qos
+                print(hpt, lpt) #, real_qos
 

@@ -67,9 +67,9 @@ def extract_stat(stat_file, use_tail, st_stat_file, num_insts=0, brief = False):
     global brief_patterns
 
     if brief:
-        compiled = map(preproc_pattern, brief_patterns)
+        compiled = list(map(preproc_pattern, brief_patterns))
     else:
-        compiled = map(preproc_pattern, patterns)
+        compiled = list(map(preproc_pattern, patterns))
 
 
     ret = ''
@@ -91,7 +91,7 @@ def extract_stat(stat_file, use_tail, st_stat_file, num_insts=0, brief = False):
             x = int(num_insts) + (x/2) * ((-1) ** x)
             try:
                 t = " *{}".format(x) + "[0-9]\{" + str(5) + "\} "
-                print t
+                print(t)
                 first = sh.grep("system.cpu.committedInsts::0" + t,
                                 stat_file, '-m', "1", '-A',
                                 '1000', '-B', '600')
@@ -131,7 +131,7 @@ def extract_stat(stat_file, use_tail, st_stat_file, num_insts=0, brief = False):
             x = msd + (x/2) * ((-1) ** x)
             try:
                 t = " *{}".format(x) + "[0-9]\{" + str(num_digits-3) + "\} "
-                print t
+                print(t)
                 first = sh.grep("system.cpu.committedInsts::0" + t,
                     st_stat_file, '-m', "1", '-A', '1000', '-B', '600')
             except:

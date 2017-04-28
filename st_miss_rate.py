@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.6
 
 import os
 import time
@@ -50,7 +50,7 @@ targets = {
 with open(file_name, 'w') as f:
     header = ' ' + ', ' + \
             ', '.join([benchmark for benchmark in benchmarks]) + '\n'
-    print header
+    print(header)
     f.write(header)
 
     for k in targets:

@@ -5,7 +5,7 @@ from os.path import expanduser as expu
 
 
 def user_verify():
-    ok = raw_input('Is that OK? (y/n)')
+    ok = input('Is that OK? (y/n)')
     if ok != 'y':
         sys.exit()
 
@@ -34,14 +34,14 @@ def pairs(stat_dir, return_path=True):
 
 def stat_filt(dirs):
     # type: (list) -> list
-    return filter(lambda f: os.path.isfile(expu(pjoin(f, 'stats.txt'))), dirs)
+    return [f for f in dirs if os.path.isfile(expu(pjoin(f, 'stats.txt')))]
 
 def time_filt(dirs):
     # type: (list) -> list
     def newer_than_gem5(d):
         stat = pjoin(expu(d), 'stats.txt')
         return left_is_older(pjoin(os.environ['gem5_build'], 'gem5.fast'), stat)
-    return filter(newer_than_gem5, dirs)
+    return list(filter(newer_than_gem5, dirs))
 
 
 # prints:
@@ -50,26 +50,26 @@ def print_list(l):
     cur_line_len = 0
     for x in l:
         if cur_line_len + len(str(x)) > 70:
-            print ''
+            print('')
             cur_line_len = 0
-        print x, '\t',
+        print(x, '\t', end=' ')
         cur_line_len += len(str(x))
-    print ''
+    print('')
 
 
 def print_option(opt):
     cur_line_len = 0
     for line in opt:
         if line.startswith('-') or cur_line_len + len(line) > 80:
-            print ''
+            print('')
             cur_line_len = 0
         cur_line_len += len(line)
-        print line,
-    print ''
+        print(line, end=' ')
+    print('')
 
 
 def print_line():
-    print '---------------------------------------------------------------'
+    print('---------------------------------------------------------------')
 
 
 # def get_stat():

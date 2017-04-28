@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.6
 
 import os
 import time
@@ -49,7 +49,7 @@ for line in get_rand_list():
     line.append(str(error))
     result.append(line)
 
-print result
+print(result)
 
 with open(file_name, 'w') as f:
     for line in result:

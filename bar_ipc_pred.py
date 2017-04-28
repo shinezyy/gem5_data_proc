@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.6
 
 import os
 import time
@@ -60,7 +60,7 @@ for line in get_rand_list(pairs):
                 pred_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
                                         False, 'system.cpu.HPTpredIPC::0')
             except:
-                print 'Unexpected error:', sys.exc_info()
+                print('Unexpected error:', sys.exc_info())
                 pred_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
                                         True, 'system.cpu.HPTpredIPC::0')
             st_ipc = specify_stat(cat(cat(st_stat_dir(),
@@ -71,24 +71,24 @@ for line in get_rand_list(pairs):
             try:
                 error = (float(pred_ipc) - float(st_ipc))/float(st_ipc)
             except:
-                print 'Unexpected error:', sys.exc_info()
+                print('Unexpected error:', sys.exc_info())
         else:
-            print gen_stat_path(pd, hpt, lpt), 'is not file'
+            print(gen_stat_path(pd, hpt, lpt), 'is not file')
     error_overall.append(abs(error))
 
     line.append(str(error))
     result.append(line)
 
-print error_overall
-print 'avg:', np.mean(error_overall, axis=0), 'std:', np.std(error_overall, axis=0)
-print result
+print(error_overall)
+print('avg:', np.mean(error_overall, axis=0), 'std:', np.std(error_overall, axis=0))
+print(result)
 
 if file_name:
     with open(file_name, 'w') as f:
         for line in result:
             f.write(', '.join([x for x in line]) + '\n')
-    print 'saved from {} to {}'.format(possible_dirs[0], file_name)
+    print('saved from {} to {}'.format(possible_dirs[0], file_name))
 else:
     for line in result:
-        print ', '.join([x for x in line]) + '\n'
+        print(', '.join([x for x in line]) + '\n')
 

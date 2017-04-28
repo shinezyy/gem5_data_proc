@@ -35,7 +35,7 @@ with open(inf) as f, open('./all_simpoint.sh', 'w') as of:
         #                      'CC', conf)
         cmd = template.format(line, line)
         of.write(cmd+'\n')
-        print cmd
+        print(cmd)
 
 
-print 'generate run scripts from', inf # , 'with conf', conf, 'to dir', odir
+print('generate run scripts from', inf) # , 'with conf', conf, 'to dir', odir

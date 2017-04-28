@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.6
 
 import os
 import time
@@ -66,7 +66,7 @@ for line in get_rand_list('./rand.txt'):
                 pred_qos = specify_stat(gen_stat_path(pd, hpt, lpt),
                                         False, 'system.cpu.HPTQoS')
             except:
-                print 'Unexpected error:', sys.exc_info()
+                print('Unexpected error:', sys.exc_info())
                 smt_ipc = specify_stat(gen_stat_path(pd, hpt, lpt),
                                         True, 'system.cpu.ipc::0')
                 pred_qos = specify_stat(gen_stat_path(pd, hpt, lpt),
@@ -88,9 +88,9 @@ for line in get_rand_list('./rand.txt'):
         result.append(line)
 
 # print 'avg:', np.mean(error_overall, axis=0), 'std:', np.std(error_overall, axis=0)
-print result
+print(result)
 
 with open(file_name, 'w') as f:
     for line in result:
         f.write(', '.join([x for x in line]) + '\n')
-print 'saved from {} to {}'.format(possible_dirs[0], file_name)
+print('saved from {} to {}'.format(possible_dirs[0], file_name))

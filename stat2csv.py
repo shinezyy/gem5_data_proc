@@ -17,15 +17,15 @@ with open(args.use) as inf:
         k = line.split()[0]
         attrs[k] = 0
 
-print attrs
+print(attrs)
 
 idx = 0
 attrs_list = []
 num_sim = -1
 with open(args.stats) as inf, open(args.csv, 'w') as outf:
     for x in sorted(attrs):
-        print >> outf, x, ',',
-    print >>outf, 'local_ipc_0, local_ipc_1'
+        print(x, ',', end=' ', file=outf)
+    print('local_ipc_0, local_ipc_1', file=outf)
     for line in inf:
         x = line.split()
         if not len(x):
@@ -41,23 +41,23 @@ with open(args.stats) as inf, open(args.csv, 'w') as outf:
             elif num_sim > 0 and num_sim < 4:
                 attrs_list.append(attrs)
                 attrs = attrs.fromkeys(attrs, 0)
-                print len(attrs_list)
+                print(len(attrs_list))
             else:
                 for x in sorted(attrs):
-                    print >>outf, attrs[x], ',',
+                    print(attrs[x], ',', end=' ', file=outf)
                 local_ipc_0 = (float(attrs['system.cpu.committedInsts::0'])
                                - float(attrs_list[2]
                                        ['system.cpu.committedInsts::0']))/ \
                         (float(attrs['system.cpu.numCycles'])
                          - float(attrs_list[2]['system.cpu.numCycles']))
-                print >>outf, local_ipc_0, ',',
+                print(local_ipc_0, ',', end=' ', file=outf)
 
                 local_ipc_1 = (float(attrs['system.cpu.committedInsts::1'])
                                - float(attrs_list[2]
                                        ['system.cpu.committedInsts::1']))/ \
                         (float(attrs['system.cpu.numCycles'])
                          - float(attrs_list[2]['system.cpu.numCycles']))
-                print >>outf, local_ipc_1
+                print(local_ipc_1, file=outf)
 
                 attrs_list[0] = attrs_list[1]
                 attrs_list[1] = attrs_list[2]

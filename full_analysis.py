@@ -19,4 +19,4 @@ for line in x:
         table.append(line.split('#')[0])
 
 for line in table:
-    print line
+    print(line)

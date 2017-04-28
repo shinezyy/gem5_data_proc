@@ -6,5 +6,5 @@ with open('./x') as f:
     b = f.readline()
     miss = int(b.split('         ')[1])
 
-    print "calculated performance: ",
-    print float(base+miss)/(base+miss+wait)
+    print("calculated performance: ", end=' ')
+    print(float(base+miss)/(base+miss+wait))

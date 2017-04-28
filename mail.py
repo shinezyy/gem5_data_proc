@@ -11,7 +11,7 @@ from email.mime.image import MIMEImage
 
 
 def send(sender, receiver, content):
-    print 'Sending from', sender, 'to', receiver
+    print('Sending from', sender, 'to', receiver)
     msg = MIMEMultipart()
     msg['From'] = Header(sender)
     msg['To'] = Header(receiver)
@@ -29,7 +29,7 @@ def send(sender, receiver, content):
         smtp.login(sender, passwd)
         smtp.sendmail(sender, receiver, msg.as_string())
         smtp.quit()
-        print 'Sent'
-    except smtplib.SMTPException, err:
-        print 'Failed'
-        print err
+        print('Sent')
+    except smtplib.SMTPException as err:
+        print('Failed')
+        print(err)

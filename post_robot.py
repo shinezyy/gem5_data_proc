@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.6
 
 import os
 import time
@@ -21,7 +21,7 @@ def extract_dirs():
     global content
     for script in running_scrpits:
         if not os.path.isfile(cat(script_dir(), script)):
-            print script + ' is not a file in ' + script_dir()
+            print(script + ' is not a file in ' + script_dir())
             return None
         else:
             content = content + extract_script(cat(script_dir(), script))
@@ -80,7 +80,7 @@ def main():
                 s += specify_stat(cat(f['path'], 'stats.txt'), args.tail,
                                   args.statname) + ' '
 
-        print s
+        print(s)
 
         sender = 'diamondzyy@163.com'
         receiver = 'diamondzyy@sina.com'
