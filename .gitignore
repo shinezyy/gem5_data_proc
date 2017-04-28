@@ -90,3 +90,4 @@ ENV/
 
 stat
 *.sh
+cache_*

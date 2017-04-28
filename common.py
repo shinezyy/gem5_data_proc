@@ -65,8 +65,8 @@ def pairs(stat_dir, return_path=True):
     if return_path:
         return [x for x in pair_dirs if os.path.isdir(expu(x)) and '_' in x]
     else:
-        return [dir_to_pair(x[1]) for x in zip(pair_dirs, pairs_s) \
-                if os.path.isdir(expu(x[0])) and '_' in x[0]]
+        return [x[1] for x in zip(pair_dirs, pairs_s) \
+                if os.path.isdir(expu(x[0]))]
 
 def stat_filt(dirs):
     # type: (list) -> list
@@ -108,7 +108,7 @@ def print_line():
     print('---------------------------------------------------------------')
 
 
-def get_stat_around(stat_file: str, insts: int=200*(10**6), cycles: int = None)-> list:
+def get_stats_around(stat_file: str, insts: int=200*(10**6), cycles: int = None)-> list:
     old_buff = []
     buff = []
 
@@ -149,11 +149,32 @@ def get_stat_around(stat_file: str, insts: int=200*(10**6), cycles: int = None)-
 
 
 
-def get_stat(stat_file: str, target: str) -> str:
+def get_stats(stat_file: str, targets: list,
+              insts: int=200*(10**6), re_targets=False) -> dict:
     assert(os.path.isfile(expu(stat_file)))
-    lines = get_stat_around(stat_file, 200*(10**6))
-    for line in list(reversed(lines)):
-        if line.startswith('system.cpu.committedInsts::0'):
-            print(line)
+    lines = get_stats_around(stat_file, insts)
+
+    patterns = {}
+    if re_targets:
+        meta_pattern = re.compile('.*\((.+)\).*')
+        for t in targets:
+            meta = meta_pattern.search(t).group(1)
+            patterns[meta] = re.compile(t+'\s+(\d+\.?\d*)\s+#')
+    else:
+        for t in targets:
+            patterns[t] = re.compile(t+'\s+(\d+\.?\d*)\s+#')
+
+    # print(patterns)
+    stats = {}
+
+    for line in lines:
+        for k in patterns:
+            m = patterns[k].search(line)
+            if not m is None:
+                if re_targets:
+                    stats[k] = m.group(2)
+                else:
+                    stats[k] = m.group(1)
+    return stats
 
 
