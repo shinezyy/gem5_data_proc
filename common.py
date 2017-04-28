@@ -172,7 +172,7 @@ def get_stats(stat_file: str, targets: list,
             m = patterns[k].search(line)
             if not m is None:
                 if re_targets:
-                    stats[k] = m.group(2)
+                    stats[m.group(1)] = m.group(2)
                 else:
                     stats[k] = m.group(1)
     return stats
