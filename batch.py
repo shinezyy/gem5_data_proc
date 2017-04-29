@@ -60,7 +60,7 @@ def main():
 
     paths = c.pairs(opt.stat_dir)
     paths = c.stat_filt(paths)
-    paths = c.time_filt(paths)
+    # paths = c.time_filt(paths)
     paths = [pjoin(x, 'stats.txt') for x in paths]
     pairs = c.pairs(opt.stat_dir, return_path=False)
 
@@ -72,14 +72,13 @@ def main():
         d = c.get_stats(path, brief_targets, re_targets=True)
         matrix[pair] = further_proc(pair, d, opt.verbose)
 
-    df = pd.DataFrame(matrix)
+    df = pd.DataFrame.from_dict(matrix, orient='index')
+    #errors = df['QoS prediction error'].values
+    df.sort_values(['QoS prediction error'], ascending=False, inplace=True)
+    print('Mean: {}'.format(np.mean(np.abs(errors))))
 
     if opt.output:
         df.to_csv(opt.output, index=True)
-
-    errors = df.loc['QoS prediction error'].values
-    print('Mean: {}'.format(np.mean(np.abs(errors))))
-    print(errors[np.where(np.abs(errors) > opt.error_bound)])
 
 
 if __name__ == '__main__':
