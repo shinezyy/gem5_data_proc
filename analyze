@@ -36,7 +36,11 @@ if opt.num_insts:
 else:
     num_insts = max_insts
 
-hpt = re.search('(\w+)_\w+$', curdir).group(1)
+m = re.search('(\w+)_\w+$', curdir)
+if m:
+    hpt = m.group(1)
+else:
+    hpt = re.search('(\w+)$', curdir).group(1)
 
 d = c.get_stats(opt.stats, standard_targets, num_insts, re_targets=True)
 c.add_st_ipc(hpt, d)

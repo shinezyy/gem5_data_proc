@@ -10,12 +10,12 @@ standard_targets = [
     'fmt\.(mlp_rectification)',
     # 'iew.(branchMispredicts::0)',
     # 'iew.exec_(branches::0)',
-    'rename\.(.+FullEvents::\d)',
+    'rename\.(.+FullEvents::0)',
     '(dcache.*_m)iss_rate::0',
     '(l2.*_m)iss_rate::0',
-    '(iq_util)ization::[01]',
-    '(rob_util)ization::[01]',
-    'lsq\.(.+_util)ization::[01]',
+    '(iq_util)ization::[0]',
+    '(rob_util)ization::[0]',
+    'lsq\.(.+_util)ization::[0]',
 ]
 
 brief_targets = [
