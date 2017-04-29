@@ -105,6 +105,11 @@ def print_option(opt):
 
 
 def print_2_tuple(x, y):
+    x = str(x)
+    if isinstance(y, float):
+        y = '{:6f}'.format(y)
+    else:
+        y = str(y)
     print(x.ljust(20), y.rjust(20))
 
 def print_dict(d):
@@ -180,9 +185,15 @@ def get_stats(stat_file: str, targets: list,
             m = patterns[k].search(line)
             if not m is None:
                 if re_targets:
-                    stats[m.group(1)] = m.group(2)
+                    if '.' in m.group(2):
+                        stats[m.group(1)] = float(m.group(2))
+                    else:
+                        stats[m.group(1)] = int(m.group(2))
                 else:
-                    stats[k] = m.group(1)
+                    if '.' in m.group(1):
+                        stats[k] = float(m.group(1))
+                    else:
+                        stats[k] = int(m.group(1))
     return stats
 
 
