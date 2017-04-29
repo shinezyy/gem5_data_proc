@@ -52,6 +52,10 @@ def main():
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='whether output intermediate result'
                        )
+    parser.add_argument('-b', '--error-bound', action='store', type=float,
+                        default=0.0,
+                        help='Threshold to output an entry'
+                       )
     opt = parser.parse_args()
 
     paths = c.pairs(opt.stat_dir)
@@ -74,8 +78,8 @@ def main():
         df.to_csv(opt.output, index=True)
 
     errors = df.loc['QoS prediction error'].values
-    print(errors)
     print('Mean: {}'.format(np.mean(np.abs(errors))))
+    print(errors[np.where(np.abs(errors) > opt.error_bound)])
 
 
 if __name__ == '__main__':
