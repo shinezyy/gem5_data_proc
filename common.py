@@ -4,6 +4,10 @@ from os.path import join as pjoin
 from os.path import expanduser as expu
 import re
 from copy import deepcopy
+import numpy as np
+import pandas as pd
+from st_stat import make_st_stat_cache
+from paths import *
 
 
 def user_verify():
@@ -36,7 +40,7 @@ def reverse_readline(filename: str, buf_size=8192):
             if segment is not None:
                 # if the previous chunk starts right from the beginning of line
                 # do not concact the segment to the last line of new chunk
-                # instead, yield the segment first 
+                # instead, yield the segment first
                 if buffer[-1] is not '\n':
                     lines[-1] += segment
                 else:
@@ -110,7 +114,7 @@ def print_2_tuple(x, y):
         y = '{:6f}'.format(y)
     else:
         y = str(y)
-    print(x.ljust(20), y.rjust(20))
+    print(x.ljust(25), y.rjust(20))
 
 def print_dict(d):
     for k in d:
@@ -121,7 +125,8 @@ def print_line():
     print('---------------------------------------------------------------')
 
 
-def get_stats_around(stat_file: str, insts: int=200*(10**6), cycles: int = None)-> list:
+def get_raw_stats_around(stat_file: str, insts: int=200*(10**6),
+                         cycles: int = None)-> list:
     old_buff = []
     buff = []
 
@@ -161,11 +166,17 @@ def get_stats_around(stat_file: str, insts: int=200*(10**6), cycles: int = None)
     return old_buff
 
 
+def to_num(x: str) -> (int, float):
+    if '.' in x:
+        return float(x)
+    else:
+        return int(x)
+
 
 def get_stats(stat_file: str, targets: list,
               insts: int=200*(10**6), re_targets=False) -> dict:
     assert(os.path.isfile(expu(stat_file)))
-    lines = get_stats_around(stat_file, insts)
+    lines = get_raw_stats_around(stat_file, insts)
 
     patterns = {}
     if re_targets:
@@ -185,15 +196,35 @@ def get_stats(stat_file: str, targets: list,
             m = patterns[k].search(line)
             if not m is None:
                 if re_targets:
-                    if '.' in m.group(2):
-                        stats[m.group(1)] = float(m.group(2))
-                    else:
-                        stats[m.group(1)] = int(m.group(2))
+                    stats[m.group(1)] = to_num(m.group(2))
                 else:
-                    if '.' in m.group(1):
-                        stats[k] = float(m.group(1))
-                    else:
-                        stats[k] = int(m.group(1))
+                    stats[k] = to_num(m.group(1))
     return stats
 
+
+def add_st_ipc(hpt: str, d: dict) -> None:
+    num_insts = int(d['committedInsts::0'])
+    if num_insts == 200*10**6:
+        make_st_stat_cache()
+        df = pd.read_csv(st_cache, index_col=0)
+        d['ST_IPC'] = df.loc['ipc::0'][hpt]
+    else:
+        t = ['cpu\.(ipc::0)']
+        st_d = get_stats(
+            pjoin(st_stat_dir, hpt, 'stats.txt'), t,
+            num_insts, re_targets=True
+        )
+
+        d['ST_IPC'] = st_d['ipc::0']
+
+def add_ipc_pred(d: dict) -> None:
+    real_ipc = float(d['ST_IPC'])
+    pred_ipc = float(d['HPTpredIPC'])
+    d['QoS prediction error'] = (pred_ipc - real_ipc) / real_ipc
+
+def add_slot_sanity(d: dict) -> None:
+    d['slot sanity'] = \
+            (float(d['numMissSlots::0']) + \
+             float(d['numWaitSlots::0']) + \
+             float(d['numBaseSlots::0'])) / (float(d['numCycles']) * 8)
 

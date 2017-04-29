@@ -1,50 +1,46 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.6
 
-import argparse
 import os
+from os.path import join as pjoin
+import time
 import re
+import argparse
+import pandas as pd
+import numpy as np
 
-from extract import extract_stat
-from paths import st_stat_dir
+from paths import *
+import common as c
+from target_stats import *
+from st_stat import make_st_stat_cache
+
+
 
 parser = argparse.ArgumentParser(description='check sum of slots',
                                 prefix_chars='-')
-
 parser.add_argument('-s', '--stats',
                     default='./stats.txt',
                     help='stats.txt to be converted')
-
-parser.add_argument('-n', '--numinsts',
+parser.add_argument('-n', '--num-insts',
                     default=0,
                     help='inst number to be searched')
 
-parser.add_argument('-t', '--tail', action='store_true',
-                    help='use statistics in tail of stats.txt')
 
-args = parser.parse_args()
+opt = parser.parse_args()
+curdir = os.getcwd()
+make_st_stat_cache()
 
-def speculate_name():
-    d = {
-        # 'perl': 'perlbench',
-        # 'libq': 'libquantum',
-    }
+max_insts = 200*10**6
 
-    cwd = os.getcwd()
-    m = re.match('.*/(\w+)_\w+$', cwd, re.M)
-    if not m is None:
-        short_name = m.group(1)
-        if d.has_key(short_name):
-            return d[short_name]
-        else:
-            return short_name
-    else:
-        return re.match('.*/(\w+)$', cwd, re.M).group(1)
+if opt.num_insts:
+    num_insts = opt.num_insts
+else:
+    num_insts = max_insts
 
-st_dir = st_stat_dir + speculate_name() +\
-        '/stats.txt'
-# '_perlbench/stats.txt',
+hpt = re.search('(\w+)_\w+$', curdir).group(1)
 
-print st_dir
+d = c.get_stats(opt.stats, standard_targets, num_insts, re_targets=True)
+c.add_st_ipc(hpt, d)
+c.add_ipc_pred(d)
+c.add_slot_sanity(d)
+c.print_dict(d)
 
-print extract_stat(args.stats, args.tail, st_dir,
-                   args.numinsts)

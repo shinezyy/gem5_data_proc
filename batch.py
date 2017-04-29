@@ -15,22 +15,10 @@ from st_stat import make_st_stat_cache
 
 
 def further_proc(pair: str, d: dict, verbose: bool) -> None:
-    if int(d['committedInsts::0']) < 200*10**6:
-        print('Run of {} has not finished, will hide its stats'.format(pair))
-        return
-
     hpt = pair.split('_')[0]
-    df = pd.read_csv(st_cache, index_col=0)
-    d['ST_IPC'] = str(df.loc['ipc::0'][hpt])
-
-    # compute prediction error
-    real_ipc = float(d['ST_IPC'])
-    pred_ipc = float(d['HPTpredIPC'])
-    d['QoS prediction error'] = (pred_ipc - real_ipc) / real_ipc
-
-    # check slot sanity
-    d['slot sanity'] = (float(d['numMissSlots::0']) + float(d['numWaitSlots::0']) + \
-         float(d['numBaseSlots::0'])) / (float(d['numCycles']) * 8)
+    c.add_st_ipc(hpt, d)
+    c.add_ipc_pred(d)
+    c.add_slot_sanity(d)
 
     if verbose:
         c.print_line()
@@ -70,16 +58,18 @@ def main():
 
     for pair, path in zip(pairs, paths):
         d = c.get_stats(path, brief_targets, re_targets=True)
-        matrix[pair] = further_proc(pair, d, opt.verbose)
+        if len(d):
+            matrix[pair] = further_proc(pair, d, opt.verbose)
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
-    #errors = df['QoS prediction error'].values
-    df.sort_values(['QoS prediction error'], ascending=False, inplace=True)
+    errors = df['QoS prediction error'].values
     print('Mean: {}'.format(np.mean(np.abs(errors))))
+    df.sort_values(['QoS prediction error'], ascending=False, inplace=True)
 
     if opt.output:
         df.to_csv(opt.output, index=True)
 
+    print(df['QoS prediction error'])
 
 if __name__ == '__main__':
     main()
