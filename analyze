@@ -17,12 +17,13 @@ from st_stat import make_st_stat_cache
 
 parser = argparse.ArgumentParser(description='check sum of slots',
                                 prefix_chars='-')
-parser.add_argument('-s', '--stats',
-                    default='./stats.txt',
+parser.add_argument('-s', '--stats', default='./stats.txt',
                     help='stats.txt to be converted')
 parser.add_argument('-n', '--num-insts',
                     default=0,
                     help='inst number to be searched')
+parser.add_argument('-b', '--brief', action='store_true',
+                    help='brief information')
 
 
 opt = parser.parse_args()
@@ -42,7 +43,11 @@ if m:
 else:
     hpt = re.search('(\w+)$', curdir).group(1)
 
-d = c.get_stats(opt.stats, standard_targets, num_insts, re_targets=True)
+used_target = standard_targets
+if opt.brief:
+    used_target = brief_targets
+
+d = c.get_stats(opt.stats, used_target, num_insts, re_targets=True)
 c.add_st_ipc(hpt, d)
 c.add_ipc_pred(d)
 c.add_slot_sanity(d)
