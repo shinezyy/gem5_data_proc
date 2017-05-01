@@ -69,7 +69,7 @@ def main():
     if opt.output:
         df.to_csv(opt.output, index=True)
 
-    print(df['QoS prediction error'])
+    print(df['QoS prediction error'][abs(df['QoS prediction error']) > opt.error_bound])
 
 if __name__ == '__main__':
     main()

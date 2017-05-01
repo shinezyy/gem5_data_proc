@@ -1,6 +1,6 @@
 import os
 
-st_stat_dir = '/home/zhouyaoyang/sim_st_0421/'
+st_stat_dir = '/home/zhouyaoyang/sim_st_0430/'
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 

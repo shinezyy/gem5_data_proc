@@ -24,6 +24,8 @@ parser.add_argument('-n', '--num-insts',
                     help='inst number to be searched')
 parser.add_argument('-b', '--brief', action='store_true',
                     help='brief information')
+parser.add_argument('-d', '--breakdown-targets', action='store_true',
+                    help='breakdown information')
 
 
 opt = parser.parse_args()
@@ -46,10 +48,14 @@ else:
 used_target = standard_targets
 if opt.brief:
     used_target = brief_targets
+elif opt.breakdown_targets:
+    used_target = slot_targets
 
 d = c.get_stats(opt.stats, used_target, num_insts, re_targets=True)
-c.add_st_ipc(hpt, d)
-c.add_ipc_pred(d)
-c.add_slot_sanity(d)
+if used_target == standard_targets:
+    c.add_st_ipc(hpt, d)
+    c.add_ipc_pred(d)
+    c.add_slot_sanity(d)
+
 c.print_dict(d)
 
