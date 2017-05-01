@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser(description='check sum of slots',
 parser.add_argument('-s', '--stats', default='./stats.txt',
                     help='stats.txt to be converted')
 parser.add_argument('-n', '--num-insts',
-                    default=0,
+                    default=0, type=int,
                     help='inst number to be searched')
 parser.add_argument('-b', '--brief', action='store_true',
                     help='brief information')
@@ -44,6 +44,8 @@ if m:
     hpt = m.group(1)
 else:
     hpt = re.search('(\w+)$', curdir).group(1)
+
+standard_targets += cache_targets
 
 used_target = standard_targets
 if opt.brief:

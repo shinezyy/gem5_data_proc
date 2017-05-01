@@ -1,8 +1,6 @@
 standard_targets = [
     '(numCycles)',
-    '(rename\..+)_Slots',
     'rename\.(.+FullEvents::0)',
-    '(iew\..+)_Slots',
     'cpu\.(committedInsts::\d)',
     'fmt\.(num.*Slots::0)',
     '(cpu\.ipc::\d)',
