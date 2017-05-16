@@ -58,6 +58,7 @@ if used_target == standard_targets:
     c.add_st_ipc(hpt, d)
     c.add_ipc_pred(d)
     c.add_slot_sanity(d)
+    c.add_qos(d)
 
 c.print_dict(d)
 

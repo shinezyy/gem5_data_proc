@@ -220,11 +220,16 @@ def add_st_ipc(hpt: str, d: dict) -> None:
 def add_ipc_pred(d: dict) -> None:
     real_ipc = float(d['ST_IPC'])
     pred_ipc = float(d['HPTpredIPC'])
-    d['QoS prediction error'] = (pred_ipc - real_ipc) / real_ipc
+    d['IPC prediction error'] = (pred_ipc - real_ipc) / real_ipc
 
 def add_slot_sanity(d: dict) -> None:
     d['slot sanity'] = \
             (float(d['numMissSlots::0']) + \
              float(d['numWaitSlots::0']) + \
              float(d['numBaseSlots::0'])) / (float(d['numCycles']) * 8)
+
+def add_qos(d: dict) -> None:
+    solo_ipc = float(d['ST_IPC'])
+    smt_ipc = float(d['ipc::0'])
+    d['QoS'] = smt_ipc / solo_ipc
 

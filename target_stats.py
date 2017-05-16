@@ -3,7 +3,7 @@ standard_targets = [
     'rename\.(.+FullEvents::0)',
     'cpu\.(committedInsts::\d)',
     'fmt\.(num.*Slots::0)',
-    '(cpu\.ipc::\d)',
+    'cpu\.(ipc::\d)',
     'cpu\.(HPTpredIPC)::0',
     '(cpu\.HPTQoS)',
     'fmt\.(mlp_rectification)',
@@ -42,6 +42,7 @@ brief_targets = [
     'fmt\.(num.*Slots::0)',
     'cpu\.(HPTpredIPC)::0',
     'fmt\.(mlp_rectification)',
+    'cpu\.(ipc::0)',
 ]
 
 

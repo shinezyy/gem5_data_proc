@@ -19,6 +19,7 @@ def further_proc(pair: str, d: dict, verbose: bool) -> None:
     c.add_st_ipc(hpt, d)
     c.add_ipc_pred(d)
     c.add_slot_sanity(d)
+    c.add_qos(d)
 
     if verbose:
         c.print_line()
@@ -62,14 +63,14 @@ def main():
             matrix[pair] = further_proc(pair, d, opt.verbose)
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
-    errors = df['QoS prediction error'].values
+    errors = df['IPC prediction error'].values
     print('Mean: {}'.format(np.mean(np.abs(errors))))
-    df.sort_values(['QoS prediction error'], ascending=False, inplace=True)
+    # df.sort_values(['QoS prediction error'], ascending=False, inplace=True)
 
     if opt.output:
         df.to_csv(opt.output, index=True)
 
-    print(df['QoS prediction error'][abs(df['QoS prediction error']) > opt.error_bound])
+    print(df['IPC prediction error'][abs(df['IPC prediction error']) > opt.error_bound])
 
 if __name__ == '__main__':
     main()
