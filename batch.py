@@ -15,11 +15,12 @@ from st_stat import make_st_stat_cache
 
 
 def further_proc(pair: str, d: dict, verbose: bool) -> None:
-    hpt = pair.split('_')[0]
-    c.add_st_ipc(hpt, d)
+    hpt, lpt = pair.split('_')
+    # c.add_st_ipc(hpt, d)
+    c.add_overall_qos(hpt, lpt, d)
     c.add_ipc_pred(d)
     c.add_slot_sanity(d)
-    c.add_qos(d)
+    # c.add_qos(d)
 
     if verbose:
         c.print_line()
@@ -70,7 +71,7 @@ def main():
     if opt.output:
         df.to_csv(opt.output, index=True)
 
-    print(df['IPC prediction error'][abs(df['IPC prediction error']) > opt.error_bound])
+    print(df['overall QoS'][abs(df['IPC prediction error']) > opt.error_bound])
 
 if __name__ == '__main__':
     main()

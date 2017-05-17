@@ -39,11 +39,13 @@ if opt.num_insts:
 else:
     num_insts = max_insts
 
-m = re.search('(\w+)_\w+$', curdir)
+m = re.search('(\w+)_(\w+)$', curdir)
 if m:
     hpt = m.group(1)
+    lpt = m.group(2)
 else:
     hpt = re.search('(\w+)$', curdir).group(1)
+    lpt = None
 
 standard_targets += cache_targets
 
@@ -55,10 +57,13 @@ elif opt.breakdown_targets:
 
 d = c.get_stats(opt.stats, used_target, num_insts, re_targets=True)
 if used_target == standard_targets:
-    c.add_st_ipc(hpt, d)
+    if lpt:
+        c.add_overall_qos(d)
+    else:
+        c.add_st_ipc(hpt, d, 0)
+        c.add_qos(0, d)
     c.add_ipc_pred(d)
     c.add_slot_sanity(d)
-    c.add_qos(d)
 
 c.print_dict(d)
 

@@ -202,12 +202,12 @@ def get_stats(stat_file: str, targets: list,
     return stats
 
 
-def add_st_ipc(hpt: str, d: dict) -> None:
-    num_insts = int(d['committedInsts::0'])
+def add_st_ipc(hpt: str, d: dict, tid: int) -> None:
+    num_insts = int(d['committedInsts::' + str(tid)])
     if num_insts == 200*10**6:
         make_st_stat_cache()
         df = pd.read_csv(st_cache, index_col=0)
-        d['ST_IPC'] = df.loc['ipc::0'][hpt]
+        d['st_ipc_{}'.format(tid)] = df.loc['ipc::0'][hpt]
     else:
         t = ['cpu\.(ipc::0)']
         st_d = get_stats(
@@ -215,10 +215,10 @@ def add_st_ipc(hpt: str, d: dict) -> None:
             num_insts, re_targets=True
         )
 
-        d['ST_IPC'] = st_d['ipc::0']
+        d['st_ipc_{}'.format(tid)] = st_d['ipc::0']
 
 def add_ipc_pred(d: dict) -> None:
-    real_ipc = float(d['ST_IPC'])
+    real_ipc = float(d['st_ipc_0'])
     pred_ipc = float(d['HPTpredIPC'])
     d['IPC prediction error'] = (pred_ipc - real_ipc) / real_ipc
 
@@ -228,8 +228,15 @@ def add_slot_sanity(d: dict) -> None:
              float(d['numWaitSlots::0']) + \
              float(d['numBaseSlots::0'])) / (float(d['numCycles']) * 8)
 
-def add_qos(d: dict) -> None:
-    solo_ipc = float(d['ST_IPC'])
-    smt_ipc = float(d['ipc::0'])
-    d['QoS'] = smt_ipc / solo_ipc
+def add_qos(tid: int, d: dict) -> None:
+    solo_ipc = float(d['st_ipc_' + str(tid)])
+    smt_ipc = float(d['ipc::' + str(tid)])
+    d['QoS_' + str(tid)] = smt_ipc / solo_ipc
 
+def add_overall_qos(hpt: str, lpt: str, d: dict) -> None:
+    add_st_ipc(hpt, d, 0)
+    add_st_ipc(lpt, d, 1)
+    add_qos(0, d)
+    add_qos(1, d)
+
+    d['overall QoS'] = d['QoS_0'] + d['QoS_1']
