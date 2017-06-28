@@ -1,6 +1,6 @@
 standard_targets = [
     '(numCycles)',
-    'rename\.(.+FullEvents::0)',
+    # 'rename\.(.+FullEvents::\d)',
     'cpu\.(committedInsts::\d)',
     'fmt\.(num.*Slots::0)',
     'cpu\.(ipc::\d)',
@@ -46,3 +46,6 @@ brief_targets = [
 ]
 
 
+special_targets = [
+    '(cpu\.HPTQoS)',
+]

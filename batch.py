@@ -46,6 +46,9 @@ def main():
                         default=0.0,
                         help='Threshold to output an entry'
                        )
+    parser.add_argument('--st', action='store_true',
+                        help='processing ST stats'
+                       )
     opt = parser.parse_args()
 
     paths = c.pairs(opt.stat_dir)
@@ -59,19 +62,26 @@ def main():
     matrix = {}
 
     for pair, path in zip(pairs, paths):
-        d = c.get_stats(path, brief_targets, re_targets=True)
+        d = c.get_stats(path, special_targets, re_targets=True)
         if len(d):
-            matrix[pair] = further_proc(pair, d, opt.verbose)
+            if not opt.st:
+                matrix[pair] = further_proc(pair, d, opt.verbose)
+            else:
+                matrix[pair] = d
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
-    errors = df['IPC prediction error'].values
-    print('Mean: {}'.format(np.mean(np.abs(errors))))
-    # df.sort_values(['QoS prediction error'], ascending=False, inplace=True)
+
+    if not opt.st:
+        errors = df['IPC prediction error'].values
+        print('Mean: {}'.format(np.mean(np.abs(errors))))
+        # df.sort_values(['QoS prediction error'], ascending=False, inplace=True)
+
+        print(df['overall QoS'][abs(df['IPC prediction error']) > opt.error_bound])
 
     if opt.output:
         df.to_csv(opt.output, index=True)
 
-    print(df['overall QoS'][abs(df['IPC prediction error']) > opt.error_bound])
+    print(df)
 
 if __name__ == '__main__':
     main()

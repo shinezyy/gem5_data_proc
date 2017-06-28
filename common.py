@@ -67,7 +67,8 @@ def pairs(stat_dir, return_path=True):
     pairs_s = [x for x in os.listdir(expu(stat_dir))]
     pair_dirs = [pjoin(stat_dir, x) for x in pairs_s]
     if return_path:
-        return [x for x in pair_dirs if os.path.isdir(expu(x)) and '_' in x]
+        # return [x for x in pair_dirs if os.path.isdir(expu(x)) and '_' in x]
+        return [x for x in pair_dirs if os.path.isdir(expu(x))]
     else:
         return [x[1] for x in zip(pair_dirs, pairs_s) \
                 if os.path.isdir(expu(x[0]))]
