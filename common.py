@@ -139,30 +139,60 @@ def get_raw_stats_around(stat_file: str, insts: int=200*(10**6),
     p_insts = re.compile('cpu.committedInsts::0\s+(\d+)\s+#')
     p_cycles = re.compile('cpu.numCycles\s+(\d+)\s+#')
 
-    for line in reverse_readline(expu(stat_file)):
-        buff.append(line)
+    if insts > 500*(10**6):
+        for line in reverse_readline(expu(stat_file)):
+            buff.append(line)
 
-        if line.startswith('---------- Begin Simulation Statistics ----------'):
-            if cycles:
-                pass
-            else:
-                if insts >= new_insts:
-                    if old_insts is None:
-                        return buff
-                    elif abs(insts - old_insts) > abs(new_insts - insts):
-                        return buff
-                    else:
-                        return old_buff
+            if line.startswith('---------- Begin Simulation Statistics ----------'):
+                if cycles:
+                    pass
                 else:
-                    old_insts = new_insts
-                    old_cycles = new_cylces
-                    old_buff = deepcopy(buff)
-                    buff.clear()
+                    if insts >= new_insts:
+                        if old_insts is None:
+                            return buff
+                        elif abs(insts - old_insts) > abs(new_insts - insts):
+                            return buff
+                        else:
+                            return old_buff
+                    else:
+                        old_insts = new_insts
+                        old_cycles = new_cylces
+                        old_buff = deepcopy(buff)
+                        buff.clear()
 
-        elif line.startswith('system.cpu.committedInsts::0'):
-            new_insts = int(p_insts.search(line).group(1))
-        elif line.startswith('system.cpu.numCycles'):
-            new_cylces = int(p_cycles.search(line).group(1))
+            elif line.startswith('system.cpu.committedInsts::0'):
+                new_insts = int(p_insts.search(line).group(1))
+            elif line.startswith('system.cpu.numCycles'):
+                new_cylces = int(p_cycles.search(line).group(1))
+
+    else:
+        with open(expu(stat_file)) as f:
+            for line in f:
+                buff.append(line)
+
+                if line.startswith('---------- End Simulation Statistics   ----------'):
+                    if cycles:
+                        pass
+                    else:
+                        if insts <= new_insts:
+                            if old_insts is None:
+                                return buff
+                            elif abs(insts - old_insts) > abs(new_insts - insts):
+                                return buff
+                            else:
+                                return old_buff
+                        else:
+                            old_insts = new_insts
+                            old_cycles = new_cylces
+                            old_buff = deepcopy(buff)
+                            buff.clear()
+
+                elif line.startswith('system.cpu.committedInsts::0'):
+                    new_insts = int(p_insts.search(line).group(1))
+                elif line.startswith('system.cpu.numCycles'):
+                    new_cylces = int(p_cycles.search(line).group(1))
+
+
 
     return old_buff
 

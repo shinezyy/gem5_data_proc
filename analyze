@@ -58,7 +58,7 @@ elif opt.breakdown_targets:
 d = c.get_stats(opt.stats, used_target, num_insts, re_targets=True)
 if used_target == standard_targets:
     if lpt:
-        c.add_overall_qos(d)
+        c.add_overall_qos(hpt, lpt, d)
     else:
         c.add_st_ipc(hpt, d, 0)
         c.add_qos(0, d)

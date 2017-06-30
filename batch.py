@@ -62,7 +62,7 @@ def main():
     matrix = {}
 
     for pair, path in zip(pairs, paths):
-        d = c.get_stats(path, special_targets, re_targets=True)
+        d = c.get_stats(path, brief_targets, re_targets=True)
         if len(d):
             if not opt.st:
                 matrix[pair] = further_proc(pair, d, opt.verbose)
@@ -81,7 +81,8 @@ def main():
     if opt.output:
         df.to_csv(opt.output, index=True)
 
-    print(df)
+    if opt.st:
+        print(df)
 
 if __name__ == '__main__':
     main()
