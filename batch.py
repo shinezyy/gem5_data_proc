@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.6
 
 import os
+import sys
 from os.path import join as pjoin
 import time
 import re
@@ -49,13 +50,21 @@ def main():
     parser.add_argument('--st', action='store_true',
                         help='processing ST stats'
                        )
+    parser.add_argument('--pair-filter', action='store', default='',
+                        help='file than filt pairs'
+                       )
     opt = parser.parse_args()
 
-    paths = c.pairs(opt.stat_dir)
+    pairs = c.pairs(opt.stat_dir, return_path=False)
+
+    if (opt.pair_filter):
+        pairs = c.pair_filt(pairs, opt.pair_filter)
+
+    paths = c.pair_to_full_path(opt.stat_dir, pairs)
+
     paths = c.stat_filt(paths)
     # paths = c.time_filt(paths)
     paths = [pjoin(x, 'stats.txt') for x in paths]
-    pairs = c.pairs(opt.stat_dir, return_path=False)
 
     make_st_stat_cache()
 

@@ -28,6 +28,8 @@ cache_targets = [
 branch_targets = [
     'iew\.(branchMispredicts::0)',
     'iew\.exec_(branches::0)',
+    'iew\.iewExec(LoadInsts::0)',
+    'iew\.exec_(stores::0)',
     'thread(0\.squashedLoads)',
     'thread(0\.squashedStores)',
     '(iqSquashedInstsIssued)',

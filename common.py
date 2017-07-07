@@ -77,6 +77,23 @@ def stat_filt(dirs):
     # type: (list) -> list
     return [f for f in dirs if os.path.isfile(expu(pjoin(f, 'stats.txt')))]
 
+def pair_to_full_path(path, pairs):
+    return [expu(pjoin(path, p)) for p in pairs]
+
+def pair_filt(pairs: list, fname: str):
+    with open(fname) as f:
+        selected_pairs = f.readlines()
+        proc_pairs = []
+        for p in selected_pairs:
+            p = p.rstrip().replace(' ', '_')
+            proc_pairs.append(p)
+        new_list = []
+        for p in pairs:
+            if p in proc_pairs:
+                new_list.append(p)
+        return new_list
+
+
 def time_filt(dirs):
     # type: (list) -> list
     def newer_than_gem5(d):
@@ -275,5 +292,12 @@ def add_overall_qos(hpt: str, lpt: str, d: dict) -> None:
 def add_branch_mispred(d: dict) -> None:
     branches = float(d['branches::0'])
     mispred = float(d['branchMispredicts::0'])
-
     d['mispredict rate::0'] = mispred / branches;
+
+    loads = float(d['LoadInsts::0'])
+    mloads = float(d['0.squashedLoads'])
+    stores = float(d['stores::0'])
+    mstores = float(d['0.squashedStores'])
+
+    d['miss load rate'] = mloads / loads
+    d['miss store rate'] = mstores / stores
