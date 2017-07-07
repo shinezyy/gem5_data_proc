@@ -271,3 +271,9 @@ def add_overall_qos(hpt: str, lpt: str, d: dict) -> None:
     add_qos(1, d)
 
     d['overall QoS'] = d['QoS_0'] + d['QoS_1']
+
+def add_branch_mispred(d: dict) -> None:
+    branches = float(d['branches::0'])
+    mispred = float(d['branchMispredicts::0'])
+
+    d['mispredict rate::0'] = mispred / branches;

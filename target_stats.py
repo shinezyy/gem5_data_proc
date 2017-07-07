@@ -11,11 +11,11 @@ standard_targets = [
 
 slot_targets = [
     'cpu\.(committedInsts::\d)',
-    # '(fetch\..+)_Slots',
+    '(fetch\..+)_Slots',
     '(decode\..+)_Slots',
     '(rename\..+)_Slots',
-    '(rename\..+W)aits::0',
-    '(rename\..+F)ullEvents::0',
+    #'(rename\..+W)aits::0',
+    #'(rename\..+F)ullEvents::0',
     '(iew\..+)_Slots',
 ]
 
@@ -26,8 +26,12 @@ cache_targets = [
 ]
 
 branch_targets = [
-    'iew.(branchMispredicts::0)',
-    'iew.exec_(branches::0)',
+    'iew\.(branchMispredicts::0)',
+    'iew\.exec_(branches::0)',
+    'thread(0\.squashedLoads)',
+    'thread(0\.squashedStores)',
+    '(iqSquashedInstsIssued)',
+    '(commitSquashedInsts)',
 ]
 
 util_targets = [

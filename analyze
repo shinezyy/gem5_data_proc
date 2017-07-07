@@ -26,6 +26,10 @@ parser.add_argument('-b', '--brief', action='store_true',
                     help='brief information')
 parser.add_argument('-d', '--breakdown-targets', action='store_true',
                     help='breakdown information')
+parser.add_argument('--branch', action='store_true',
+                    help='branch prediction information')
+parser.add_argument('--cache', action='store_true',
+                    help='cache miss information')
 
 
 opt = parser.parse_args()
@@ -47,7 +51,11 @@ else:
     hpt = re.search('(\w+)$', curdir).group(1)
     lpt = None
 
-standard_targets += cache_targets
+if opt.cache:
+    standard_targets += cache_targets
+
+if opt.branch:
+    standard_targets += branch_targets
 
 used_target = standard_targets
 if opt.brief:
@@ -64,6 +72,8 @@ if used_target == standard_targets:
         c.add_qos(0, d)
     c.add_ipc_pred(d)
     c.add_slot_sanity(d)
+    if opt.branch:
+        c.add_branch_mispred(d)
 
 c.print_dict(d)
 

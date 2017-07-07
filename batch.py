@@ -81,8 +81,8 @@ def main():
     if opt.output:
         df.to_csv(opt.output, index=True)
 
-    if opt.st:
-        print(df)
+    print('filted QoS')
+    print(df['QoS_0'][df['QoS_0'] < 0.9])
 
 if __name__ == '__main__':
     main()
