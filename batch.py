@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -18,8 +18,8 @@ from st_stat import make_st_stat_cache
 def further_proc(pair: str, d: dict, verbose: bool) -> None:
     hpt, lpt = pair.split('_')
     # c.add_st_ipc(hpt, d)
-    c.add_overall_qos(hpt, lpt, d)
-    c.add_ipc_pred(d)
+    # c.add_overall_qos(hpt, lpt, d)
+    # c.add_ipc_pred(d)
     c.add_slot_sanity(d)
     # c.add_qos(d)
 
@@ -66,7 +66,7 @@ def main():
     # paths = c.time_filt(paths)
     paths = [pjoin(x, 'stats.txt') for x in paths]
 
-    make_st_stat_cache()
+    # make_st_stat_cache()
 
     matrix = {}
 
@@ -79,6 +79,7 @@ def main():
                 matrix[pair] = d
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
+    print(df)
 
     if not opt.st:
         errors = df['IPC prediction error'].values
@@ -90,8 +91,8 @@ def main():
     if opt.output:
         df.to_csv(opt.output, index=True)
 
-    print('filted QoS')
-    print(df['QoS_0'][df['QoS_0'] < 0.9])
+    # print('filted QoS')
+    # print(df['QoS_0'][df['QoS_0'] < 0.9])
 
 if __name__ == '__main__':
     main()

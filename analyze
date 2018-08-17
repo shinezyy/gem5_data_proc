@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 import os
 from os.path import join as pjoin
@@ -34,7 +34,7 @@ parser.add_argument('--cache', action='store_true',
 
 opt = parser.parse_args()
 curdir = os.getcwd()
-make_st_stat_cache()
+# make_st_stat_cache()
 
 max_insts = 200*10**6
 

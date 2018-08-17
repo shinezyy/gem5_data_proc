@@ -92,3 +92,4 @@ stat
 *.sh
 cache_*
 /fig_data
+*.csv

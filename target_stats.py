@@ -43,12 +43,7 @@ util_targets = [
 ]
 
 brief_targets = [
-    '(numCycles)',
-    'cpu\.(committedInsts::\d)',
-    'fmt\.(num.*Slots::0)',
-    'cpu\.(HPTpredIPC)::0',
-    'fmt\.(mlp_rectification)',
-    'cpu\.(ipc::\d)',
+    'switch_cpus\.(ipc)',
 ]
 
 
