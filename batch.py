@@ -62,7 +62,7 @@ def main():
 
     paths = c.pair_to_full_path(opt.stat_dir, pairs)
 
-    paths = c.stat_filt(paths)
+    pairs, paths = c.stat_filt(pairs, paths)
     # paths = c.time_filt(paths)
     paths = [pjoin(x, 'stats.txt') for x in paths]
 
@@ -77,6 +77,7 @@ def main():
                 matrix[pair] = further_proc(pair, d, opt.verbose)
             else:
                 matrix[pair] = d
+    print(matrix)
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
     print(df)

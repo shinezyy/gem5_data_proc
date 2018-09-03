@@ -44,6 +44,11 @@ util_targets = [
 
 brief_targets = [
     'switch_cpus\.(ipc)',
+    'switch_cpus\.(committedInsts)',
+    # 'switch_cpus\.iew\.(IQFullUtil::1)',
+    # 'switch_cpus\.iew\.(IQFullUtil::2)',
+    'switch_cpus\.iew\.(IQFullReason::2)',
+    'switch_cpus\.iew\.(iewIQFullEvents)',
 ]
 
 

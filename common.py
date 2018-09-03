@@ -73,9 +73,15 @@ def pairs(stat_dir, return_path=True):
         return [x[1] for x in zip(pair_dirs, pairs_s) \
                 if os.path.isdir(expu(x[0]))]
 
-def stat_filt(dirs):
+def stat_filt(pairs, dirs):
     # type: (list) -> list
-    return [f for f in dirs if os.path.isfile(expu(pjoin(f, 'stats.txt')))]
+    new_pairs = []
+    new_paths =[]
+    for pair, path in zip(pairs, dirs):
+        if os.path.isfile(expu(pjoin(path, 'stats.txt'))):
+            new_pairs.append(pair)
+            new_paths.append(path)
+    return new_pairs, new_paths
 
 def pair_to_full_path(path, pairs):
     return [expu(pjoin(path, p)) for p in pairs]
