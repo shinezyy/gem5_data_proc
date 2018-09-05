@@ -1,10 +1,18 @@
 import pandas as pd
 import numpy as np
+import os
+from os.path import join as pjoin
 
-origin = pd.read_csv('./origin.csv', index_col=0).values
-tpi = pd.read_csv('./tpi.csv', index_col=0).values
+baseline = pd.read_csv('./data/CAM-IQ-96.csv', index_col=0)
 
-rel_ipc = tpi/origin
-print(rel_ipc)
-
-print('mean =', np.mean(rel_ipc))
+for f in os.listdir('./data'):
+    if f.endswith('.csv') and f != 'CAM-IQ-96.csv':
+        path = pjoin('./data', f)
+        ipcs = pd.read_csv(path, index_col=0)
+        print(f)
+        try:
+            result = ipcs.values / baseline.values
+            print(result)
+            print(result.mean())
+        except Exception as e:
+            pass

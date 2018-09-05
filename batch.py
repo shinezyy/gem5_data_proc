@@ -47,6 +47,10 @@ def main():
                         default=0.0,
                         help='Threshold to output an entry'
                        )
+    parser.add_argument('-i', '--ipc-only', action='store_true',
+                        default=0.0,
+                        help='Only extract ipc'
+                       )
     parser.add_argument('--st', action='store_true',
                         help='processing ST stats'
                        )
@@ -71,13 +75,15 @@ def main():
     matrix = {}
 
     for pair, path in zip(pairs, paths):
-        d = c.get_stats(path, brief_targets, re_targets=True)
+        if opt.ipc_only:
+            d = c.get_stats(path, ipc_target, re_targets=True)
+        else:
+            d = c.get_stats(path, brief_targets, re_targets=True)
         if len(d):
             if not opt.st:
                 matrix[pair] = further_proc(pair, d, opt.verbose)
             else:
                 matrix[pair] = d
-    print(matrix)
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
     print(df)
