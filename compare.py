@@ -11,8 +11,9 @@ for f in os.listdir('./data'):
         ipcs = pd.read_csv(path, index_col=0)
         print(f)
         try:
-            result = ipcs.values / baseline.values
+            result = pd.DataFrame(ipcs.values / baseline.values,
+                    columns=baseline.columns, index=baseline.index)
             print(result)
-            print(result.mean())
+            print('mean =', result.values.mean())
         except Exception as e:
             pass
