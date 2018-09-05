@@ -5,15 +5,19 @@ from os.path import join as pjoin
 
 baseline = pd.read_csv('./data/CAM-IQ-96.csv', index_col=0)
 
+result = None
 for f in os.listdir('./data'):
     if f.endswith('.csv') and f != 'CAM-IQ-96.csv':
         path = pjoin('./data', f)
         ipcs = pd.read_csv(path, index_col=0)
         print(f)
-        try:
+        if result is None:
             result = pd.DataFrame(ipcs.values / baseline.values,
-                    columns=baseline.columns, index=baseline.index)
-            print(result)
-            print('mean =', result.values.mean())
-        except Exception as e:
-            pass
+                    columns=[f], index=baseline.index)
+        else:
+            result.loc[:, f] = pd.Series((ipcs.values / baseline.values)[:, 0],
+                    index=baseline.index, )
+
+result.loc['mean'] = result.values.mean(axis=0)
+result.to_csv('./results/compare.csv', float_format='%.3f')
+print(result)
