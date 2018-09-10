@@ -86,7 +86,7 @@ def main():
                 matrix[pair] = d
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
-    print(df)
+    print(df.sort_index(1))
 
     if not opt.st:
         errors = df['IPC prediction error'].values
