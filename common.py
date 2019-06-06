@@ -257,19 +257,19 @@ def get_stats(stat_file: str, targets: list,
 
 
 def add_st_ipc(hpt: str, d: dict, tid: int) -> None:
-    num_insts = int(d['committedInsts::' + str(tid)])
+    num_insts = int(d['committedInsts'])
     if num_insts == 200*10**6:
         make_st_stat_cache()
         df = pd.read_csv(st_cache, index_col=0)
-        d['st_ipc_{}'.format(tid)] = df.loc['ipc::0'][hpt]
+        d['st_ipc_{}'.format(tid)] = df.loc['ipc'][hpt]
     else:
-        t = ['cpu\.(ipc::0)']
+        t = ['cpu\.(ipc)']
         st_d = get_stats(
             pjoin(st_stat_dir, hpt, 'stats.txt'), t,
             num_insts, re_targets=True
         )
 
-        d['st_ipc_{}'.format(tid)] = st_d['ipc::0']
+        d['st_ipc_{}'.format(tid)] = st_d['ipc']
 
 def add_ipc_pred(d: dict) -> None:
     real_ipc = float(d['st_ipc_0'])
@@ -296,14 +296,7 @@ def add_overall_qos(hpt: str, lpt: str, d: dict) -> None:
     d['overall QoS'] = d['QoS_0'] + d['QoS_1']
 
 def add_branch_mispred(d: dict) -> None:
-    branches = float(d['branches::0'])
-    mispred = float(d['branchMispredicts::0'])
-    d['mispredict rate::0'] = mispred / branches;
-
-    loads = float(d['LoadInsts::0'])
-    mloads = float(d['0.squashedLoads'])
-    stores = float(d['stores::0'])
-    mstores = float(d['0.squashedStores'])
-
-    d['miss load rate'] = mloads / loads
-    d['miss store rate'] = mstores / stores
+    branches = float(d['branches'])
+    mispred = float(d['branchMispredicts'])
+    d['mispredict rate'] = mispred / branches;
+    d['MPKI'] = int(mispred / float(d['Insts']) * 1000);

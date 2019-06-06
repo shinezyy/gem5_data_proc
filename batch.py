@@ -20,7 +20,7 @@ def further_proc(pair: str, d: dict, verbose: bool) -> None:
     # c.add_st_ipc(hpt, d)
     # c.add_overall_qos(hpt, lpt, d)
     # c.add_ipc_pred(d)
-    c.add_slot_sanity(d)
+    # c.add_slot_sanity(d)
     # c.add_qos(d)
 
     if verbose:
@@ -40,6 +40,8 @@ def main():
     parser.add_argument('-o', '--output', action='store',
                         help='csv to save results'
                        )
+    parser.add_argument('--branch', action='store_true')
+
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='whether output intermediate result'
                        )
@@ -78,7 +80,13 @@ def main():
         if opt.ipc_only:
             d = c.get_stats(path, ipc_target, re_targets=True)
         else:
-            d = c.get_stats(path, brief_targets, re_targets=True)
+            targets = brief_targets
+            if opt.branch:
+                targets += branch_targets
+            d = c.get_stats(path, targets, re_targets=True)
+            if opt.branch:
+                c.add_branch_mispred(d)
+
         if len(d):
             if not opt.st:
                 matrix[pair] = further_proc(pair, d, opt.verbose)
