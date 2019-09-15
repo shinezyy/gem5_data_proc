@@ -1,13 +1,16 @@
 brief_targets = [
     'cpus\.(ipc)',
     'cpus\.committed(Insts)',
-    'cpus\.num(Cycles)'
+    #'cpus\.num(Cycles)'
+]
+ipc_target = [
+    'cpus\.(ipc)',
 ]
 
 
 standard_targets = [
     '(numCycles)',
-    'cpus\.(committedInsts)',
+    'cpus\.committed(Insts)',
     'cpus\.(ipc)',
 ]
 
@@ -18,8 +21,8 @@ cache_targets = [
 ]
 
 branch_targets = [
-    'iew\.(branchMispredicts)',
-    'iew\.exec_(branches)',
+    'd?iewc?\.?(branchMispredicts)',
+    'd?iewc?\.?exec_(branches)',
     # 'iew\.iewExec(LoadInsts)',
     # 'iew\.exec_(stores)',
     # 'thread(0\.squashedLoads)',
@@ -27,3 +30,9 @@ branch_targets = [
     # '(iqSquashedInstsIssued)',
     # '(commitSquashedInsts)',
 ]
+fanout_targets = [
+        'diewc\.(largeFanoutInsts)',
+        'diewc\.(falseNegativeLF)',
+        'diewc\.(falsePositiveLF)',
+        'diewc\.(forwarders)Committed',
+        ]

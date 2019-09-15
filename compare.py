@@ -3,11 +3,12 @@ import numpy as np
 import os
 from os.path import join as pjoin
 
-baseline = pd.read_csv('./data/CAM-IQ-96.csv', index_col=0)
+baseline_name = 'o3-4-issue.csv'
+baseline = pd.read_csv(f'./data/{baseline_name}', index_col=0)
 
 result = None
 for f in os.listdir('./data'):
-    if f.endswith('.csv') and f != 'CAM-IQ-96.csv':
+    if f.endswith('.csv') and f != baseline_name:
         path = pjoin('./data', f)
         ipcs = pd.read_csv(path, index_col=0)
         print(f)

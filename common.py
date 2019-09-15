@@ -73,12 +73,12 @@ def pairs(stat_dir, return_path=True):
         return [x[1] for x in zip(pair_dirs, pairs_s) \
                 if os.path.isdir(expu(x[0]))]
 
-def stat_filt(pairs, dirs):
+def stat_filt(pairs, dirs, stat_name='stats.txt'):
     # type: (list) -> list
     new_pairs = []
     new_paths =[]
     for pair, path in zip(pairs, dirs):
-        if os.path.isfile(expu(pjoin(path, 'stats.txt'))):
+        if os.path.isfile(expu(pjoin(path, stat_name))):
             new_pairs.append(pair)
             new_paths.append(path)
     return new_pairs, new_paths
@@ -256,6 +256,37 @@ def get_stats(stat_file: str, targets: list,
     return stats
 
 
+def get_stats_file_name(d: str):
+    assert(os.path.isdir(d))
+    results = []
+    for f in os.listdir(d):
+        if os.path.isfile(pjoin(d, f)) and f.endswith('stats.txt'):
+            results.append(f)
+
+    if len(results) > 1:
+        print("Multiple stats file found!")
+        assert False
+
+    elif len(results) == 1:
+        return results[0]
+
+    else:
+        return None
+
+
+
+def get_stats_from_parent_dir(d: str, *args, **kwargs):
+    ret = {}
+    assert(os.path.isdir(d))
+    for sub_d in os.listdir(d):
+        if os.path.isdir(pjoin(d, sub_d)):
+            bmk = sub_d
+            stat_file = get_stats_file_name(pjoin(d, sub_d))
+            if stat_file is not None:
+                ret[sub_d] = get_stats(pjoin(d, sub_d, stat_file), *args, **kwargs)
+    return ret
+
+
 def add_st_ipc(hpt: str, d: dict, tid: int) -> None:
     num_insts = int(d['committedInsts'])
     if num_insts == 200*10**6:
@@ -300,3 +331,11 @@ def add_branch_mispred(d: dict) -> None:
     mispred = float(d['branchMispredicts'])
     d['mispredict rate'] = mispred / branches;
     d['MPKI'] = int(mispred / float(d['Insts']) * 1000);
+
+def add_fanout(d: dict) -> None:
+    large_fanout = float(d.get('largeFanoutInsts', 0))
+    d['LF_rate'] = large_fanout / float(d.get('Insts', 200 * 10**6))
+    d['FP_rate'] = float(d.get('falsePositiveLF', 0)) / large_fanout
+    d['FN_rate'] = float(d.get('falseNegativeLF', 0)) / large_fanout
+    del d['falsePositiveLF']
+    del d['falseNegativeLF']

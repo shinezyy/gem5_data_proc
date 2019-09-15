@@ -59,6 +59,12 @@ def main():
     parser.add_argument('--pair-filter', action='store', default='',
                         help='file than filt pairs'
                        )
+    parser.add_argument('-f', '--stat-file', action='store',
+                        help='name of stats file', default='stats.txt'
+                       )
+    parser.add_argument('-l', '--fanout', action='store_true',
+                        help='print fanout'
+                       )
     opt = parser.parse_args()
 
     pairs = c.pairs(opt.stat_dir, return_path=False)
@@ -68,40 +74,42 @@ def main():
 
     paths = c.pair_to_full_path(opt.stat_dir, pairs)
 
-    pairs, paths = c.stat_filt(pairs, paths)
+    pairs, paths = c.stat_filt(pairs, paths, opt.stat_file)
     # paths = c.time_filt(paths)
-    paths = [pjoin(x, 'stats.txt') for x in paths]
+    paths = [pjoin(x, opt.stat_file) for x in paths]
 
     # make_st_stat_cache()
 
     matrix = {}
 
     for pair, path in zip(pairs, paths):
+        print(pair)
         if opt.ipc_only:
             d = c.get_stats(path, ipc_target, re_targets=True)
         else:
             targets = brief_targets
             if opt.branch:
                 targets += branch_targets
+            if opt.fanout:
+                targets += fanout_targets
             d = c.get_stats(path, targets, re_targets=True)
-            if opt.branch:
-                c.add_branch_mispred(d)
 
         if len(d):
             if not opt.st:
                 matrix[pair] = further_proc(pair, d, opt.verbose)
             else:
                 matrix[pair] = d
+            if opt.branch:
+                c.add_branch_mispred(d)
+            if opt.fanout:
+                c.add_fanout(d)
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
-    print(df.sort_index(1))
+    df = df.sort_index(1)
+    if len(df):
+        df.loc['mean'] = df.mean()
 
-    if not opt.st:
-        errors = df['IPC prediction error'].values
-        print('Mean: {}'.format(np.mean(np.abs(errors))))
-        # df.sort_values(['QoS prediction error'], ascending=False, inplace=True)
-
-        print(df['overall QoS'][abs(df['IPC prediction error']) > opt.error_bound])
+    print(df)
 
     if opt.output:
         df.to_csv(opt.output, index=True)
