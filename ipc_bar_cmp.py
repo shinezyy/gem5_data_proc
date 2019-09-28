@@ -26,8 +26,26 @@ baseline = extract(baseline)
 
 df = pd.DataFrame([experiment, baseline])
 
-plt.bar(np.arange(len(df.columns)) - 0.3, df.iloc[0].values, width=0.3 )
-plt.bar(np.arange(len(df.columns)), df.iloc[1].values, width=0.3)
-plt.xticks(np.arange(len(df.columns)), df.columns, rotation=90)
+relative = df.iloc[0]/df.iloc[1]
+relative = relative.fillna(1)
+print(relative)
 
-plt.show()
+ideal = []
+for n in relative:
+    if n > 1.0:
+        ideal.append(n)
+    else:
+        ideal.append(1.0)
+
+
+mean = [np.mean(relative), 1]
+geomean = [np.array(relative).prod() ** (1/len(relative)), 1]
+df['mean'] = mean
+df['geomean'] = geomean
+print(df)
+
+# plt.bar(np.arange(len(df.columns)) - 0.3, df.iloc[0].values, width=0.3 )
+# plt.bar(np.arange(len(df.columns)), df.iloc[1].values, width=0.3)
+# plt.xticks(np.arange(len(df.columns)), df.columns, rotation=90)
+# 
+# plt.show()

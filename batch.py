@@ -14,6 +14,8 @@ import common as c
 from target_stats import *
 from st_stat import make_st_stat_cache
 
+pd.set_option('precision', 3)
+
 
 def further_proc(pair: str, d: dict, verbose: bool) -> None:
     hpt, lpt = pair.split('_')
@@ -108,6 +110,8 @@ def main():
     df = df.sort_index(1)
     if len(df):
         df.loc['mean'] = df.mean()
+
+    df = df.fillna(0)
 
     print(df)
 

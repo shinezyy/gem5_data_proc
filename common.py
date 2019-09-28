@@ -333,8 +333,9 @@ def add_branch_mispred(d: dict) -> None:
     d['MPKI'] = int(mispred / float(d['Insts']) * 1000);
 
 def add_fanout(d: dict) -> None:
-    large_fanout = float(d.get('largeFanoutInsts', 0))
+    large_fanout = float(d.get('largeFanoutInsts', 0)) + 1.0
     d['LF_rate'] = large_fanout / float(d.get('Insts', 200 * 10**6))
+    print(large_fanout)
     d['FP_rate'] = float(d.get('falsePositiveLF', 0)) / large_fanout
     d['FN_rate'] = float(d.get('falseNegativeLF', 0)) / large_fanout
     del d['falsePositiveLF']

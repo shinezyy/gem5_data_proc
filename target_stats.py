@@ -35,4 +35,15 @@ fanout_targets = [
         'diewc\.(falseNegativeLF)',
         'diewc\.(falsePositiveLF)',
         'diewc\.(forwarders)Committed',
+        #'diewc\.(firstLevelFw)',
+        #'diewc\.(secondaryLevelFw)',
+        #'diewc\.(gainFromReshape)',
+        'diewc\.(reshapeContrib)',
+        'diewc\.(nonCriticalForward)',
+        #'diewc\.(negativeContrib)',
+        'diewc\.(wkDelayedCycles)',
+
+        'cpus\.(squashedFUTime)',
+        'dataflow_queue\.(readyWaitTime)::total',
+        'dataflow_queue(oldWaitYoung)',
         ]

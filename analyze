@@ -31,7 +31,6 @@ parser.add_argument('--branch', action='store_true',
 parser.add_argument('--cache', action='store_true',
                     help='cache miss information')
 
-
 opt = parser.parse_args()
 curdir = os.getcwd()
 # make_st_stat_cache()
