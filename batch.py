@@ -15,6 +15,8 @@ from target_stats import *
 from st_stat import make_st_stat_cache
 
 pd.set_option('precision', 3)
+pd.set_option('display.max_rows', 40)
+pd.set_option('display.min_rows', 40)
 
 
 def further_proc(pair: str, d: dict, verbose: bool) -> None:
@@ -59,13 +61,16 @@ def main():
                         help='processing ST stats'
                        )
     parser.add_argument('--pair-filter', action='store', default='',
-                        help='file than filt pairs'
+                        help='file that filt pairs'
                        )
     parser.add_argument('-f', '--stat-file', action='store',
                         help='name of stats file', default='stats.txt'
                        )
     parser.add_argument('-l', '--fanout', action='store_true',
                         help='print fanout'
+                       )
+    parser.add_argument('-k', '--breakdown', action='store_true',
+                        help='print breakdown'
                        )
     opt = parser.parse_args()
 
@@ -85,7 +90,7 @@ def main():
     matrix = {}
 
     for pair, path in zip(pairs, paths):
-        print(pair)
+        # print(pair)
         if opt.ipc_only:
             d = c.get_stats(path, ipc_target, re_targets=True)
         else:
@@ -94,6 +99,8 @@ def main():
                 targets += branch_targets
             if opt.fanout:
                 targets += fanout_targets
+            if opt.breakdown:
+                targets += breakdown_targets
             d = c.get_stats(path, targets, re_targets=True)
 
         if len(d):
@@ -107,10 +114,11 @@ def main():
                 c.add_fanout(d)
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
+    df = df.sort_index()
     df = df.sort_index(1)
     df = df.sort_values(['ipc'])
-    for x in df.index:
-        print(x)
+    # for x in df.index:
+    #     print(x)
     if len(df):
         df.loc['mean'] = df.mean()
 

@@ -7,6 +7,9 @@ ipc_target = [
     'cpus\.(ipc)',
 ]
 
+flow_target = [
+        'dataflow_queue\.(WKFlow)Usage::total'
+        ]
 
 standard_targets = [
     '(numCycles)',
@@ -46,4 +49,11 @@ fanout_targets = [
         'cpus\.(squashedFUTime)',
         'dataflow_queue\.(readyWaitTime)::total',
         'dataflow_queue(oldWaitYoung)',
+        ]
+breakdown_targets= [
+        'diewc\.(queueingD)elay',
+        'diewc\.(ssrD)elay',
+        'diewc\.(pendingD)elay',
+        'diewc\.FU(ContentionD)elay',
+        'dataflow_queue\.(HalfSquash)es',
         ]

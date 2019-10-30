@@ -275,12 +275,18 @@ def get_stats_file_name(d: str):
 
 
 
-def get_stats_from_parent_dir(d: str, *args, **kwargs):
+def get_stats_from_parent_dir(d: str, selected_benchmarks: [], *args, **kwargs):
     ret = {}
     assert(os.path.isdir(d))
     for sub_d in os.listdir(d):
         if os.path.isdir(pjoin(d, sub_d)):
-            bmk = sub_d
+            if '_' in sub_d:
+                bmk = sub_d.split('_')[0]
+            else:
+                bmk = sub_d
+            if selected_benchmarks is not None and bmk not in selected_benchmarks:
+                continue
+
             stat_file = get_stats_file_name(pjoin(d, sub_d))
             if stat_file is not None:
                 ret[sub_d] = get_stats(pjoin(d, sub_d, stat_file), *args, **kwargs)
@@ -335,7 +341,7 @@ def add_branch_mispred(d: dict) -> None:
 def add_fanout(d: dict) -> None:
     large_fanout = float(d.get('largeFanoutInsts', 0)) + 1.0
     d['LF_rate'] = large_fanout / float(d.get('Insts', 200 * 10**6))
-    print(large_fanout)
+    # print(large_fanout)
     d['FP_rate'] = float(d.get('falsePositiveLF', 0)) / large_fanout
     d['FN_rate'] = float(d.get('falseNegativeLF', 0)) / large_fanout
     del d['falsePositiveLF']

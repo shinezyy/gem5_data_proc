@@ -6,19 +6,39 @@ import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import argparse
 
-assert len(sys.argv) == 3
+parser = argparse.ArgumentParser(usage='experiment_dir baseline_dir -f filter')
 
-experiment = sys.argv[1]
-baseline = sys.argv[2]
+parser.add_argument('-f', '--filter', action='store', default=None,
+        help='benchmark filter file')
 
-experiment = c.get_stats_from_parent_dir(experiment, t.ipc_target, re_targets=True)
-baseline = c.get_stats_from_parent_dir(baseline, t.ipc_target, re_targets=True)
+parser.add_argument('dirs', action='store', nargs=2,
+        help='experiment_dir baseline_dir')
+
+args = parser.parse_args()
+experiment = args.dirs[0]
+baseline = args.dirs[1]
+
+selected_benchmarks = []
+if args.filter is not None:
+    with open(args.filter) as f:
+        for line in f:
+            if not line.startswith("#"):
+                selected_benchmarks.append(line.strip())
+else:
+    selected_benchmarks = None
+
+
+experiment = c.get_stats_from_parent_dir(experiment, selected_benchmarks,
+        t.ipc_target, re_targets=True)
+baseline = c.get_stats_from_parent_dir(baseline, selected_benchmarks,
+        t.ipc_target, re_targets=True)
 
 def extract(d: dict):
     ret = {}
     for k, v in d.items():
-        ret[k] = v['ipc']
+        ret[k] = v.get('ipc', 1)
     return ret
 
 experiment = extract(experiment)
@@ -28,7 +48,6 @@ df = pd.DataFrame([experiment, baseline])
 
 relative = df.iloc[0]/df.iloc[1]
 relative = relative.fillna(1)
-print(relative)
 
 ideal = []
 for n in relative:
@@ -37,6 +56,8 @@ for n in relative:
     else:
         ideal.append(1.0)
 
+# relative = ideal
+print(relative)
 
 mean = [np.mean(relative), 1]
 geomean = [np.array(relative).prod() ** (1/len(relative)), 1]
