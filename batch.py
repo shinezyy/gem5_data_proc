@@ -14,9 +14,10 @@ import common as c
 from target_stats import *
 from st_stat import make_st_stat_cache
 
+show_lins = 62
 pd.set_option('precision', 3)
-pd.set_option('display.max_rows', 40)
-pd.set_option('display.min_rows', 40)
+pd.set_option('display.max_rows', show_lins)
+pd.set_option('display.min_rows', show_lins)
 
 
 def further_proc(pair: str, d: dict, verbose: bool) -> None:
@@ -72,6 +73,15 @@ def main():
     parser.add_argument('-k', '--breakdown', action='store_true',
                         help='print breakdown'
                        )
+    parser.add_argument('--op', action='store_true',
+                        help='print operand busy state'
+                       )
+    parser.add_argument('--flow', action='store_true',
+                        help='print bandwidth usages'
+                       )
+    parser.add_argument('-p', '--packet', action='store_true',
+                        help='print type and number of different packets'
+                       )
     opt = parser.parse_args()
 
     pairs = c.pairs(opt.stat_dir, return_path=False)
@@ -101,6 +111,12 @@ def main():
                 targets += fanout_targets
             if opt.breakdown:
                 targets += breakdown_targets
+            if opt.op:
+                targets += operand_targets
+            if opt.packet:
+                targets += packet_targets
+            if opt.flow:
+                targets += flow_target
             d = c.get_stats(path, targets, re_targets=True)
 
         if len(d):
