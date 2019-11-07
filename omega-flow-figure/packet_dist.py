@@ -44,11 +44,12 @@ fig, ax = plt.subplots()
 ax.set_ylim((0, 1.1))
 width = 0.85
 
-colors = ['#454545', '#016201', '#fefe01', '#820000', '#7d5c80', 'black']
+colors = ['#7d5c80', '#016201', '#fefe01', '#820000', '#cccccc', 'black']
 cumulative = np.array([0.0] * len(df))
 rects = []
 for i in range(5):
-    rect = plt.bar(df.index, df[names[i]].values, bottom=cumulative, color=colors[i], width=width)
+    rect = plt.bar(df.index, df[names[i]].values, bottom=cumulative,
+            edgecolor='black', color=colors[i], width=width)
     rects.append(rect)
     cumulative += df[names[i]].values
 
