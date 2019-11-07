@@ -93,3 +93,5 @@ stat
 cache_*
 /fig_data
 *.csv
+*.png
+*.eps
