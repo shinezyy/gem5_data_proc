@@ -58,6 +58,7 @@ operand_targets = [
 
         ]
 packet_targets = [
+        'dataflow_queue\.(KeySrcP)acket',
         'dataflow_queue\.(SrcOpP)ackets',
         'dataflow_queue\.(DestOpP)ackets',
         'dataflow_queue\.(MemP)ackets',

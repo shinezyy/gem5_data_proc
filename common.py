@@ -336,7 +336,7 @@ def add_branch_mispred(d: dict) -> None:
     branches = float(d['branches'])
     mispred = float(d['branchMispredicts'])
     d['mispredict rate'] = mispred / branches;
-    d['MPKI'] = int(mispred / float(d['Insts']) * 1000);
+    d['MPKI'] = mispred / float(d['Insts']) * 1000;
 
 def add_fanout(d: dict) -> None:
     large_fanout = float(d.get('largeFanoutInsts', 0)) + 1.0

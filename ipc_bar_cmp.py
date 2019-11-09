@@ -63,6 +63,7 @@ mean = [np.mean(relative), 1]
 geomean = [np.array(relative).prod() ** (1/len(relative)), 1]
 df['mean'] = mean
 df['geomean'] = geomean
+df['inv_mean'] = np.mean(1/relative)
 print(df)
 
 # plt.bar(np.arange(len(df.columns)) - 0.3, df.iloc[0].values, width=0.3 )
