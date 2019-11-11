@@ -355,3 +355,6 @@ def get_spec2017_fp():
     with open(os.path.expanduser('~/gem5-results-2017/fp.txt')) as f:
         return [x for x in f.read().split('\n') if len(x) > 1]
 
+def add_packet(d: dict) -> None:
+    d['IPC_bound_by_packets'] = d['Insts'] / (d['TotalP']/3.1)
+    d['IPC_bound_by_insts'] = min(d['Insts'] / (d['KeySrcP']/4), 4.0)

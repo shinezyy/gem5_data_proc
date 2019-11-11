@@ -18,7 +18,7 @@ stat_dirs = {
         'Xbar4-SpecSB': '~/gem5-results-2017/xbar4-rand-hint',
         # 'Xbar4*2-SpecSB': '~/gem5-results-2017/dedi-xbar4-rand-hint',
         'Omega16-OPR-SpecSB': '~/gem5-results-2017/omega-rand-hint',
-        'Xbar16-OPR-SpecSB': '~/gem5-results-2017/xbar-rand-hint',
+        # 'Xbar16-OPR-SpecSB': '~/gem5-results-2017/xbar-rand-hint',
         }
 configs_ordered = [x for x in stat_dirs]
 
@@ -32,7 +32,7 @@ for b in benchmarks:
         points.append(f'{b}_{i}')
 
 fig, ax = plt.subplots()
-fig.set_size_inches(18.5, 5, forward=True)
+fig.set_size_inches(10, 5, forward=True)
 width = 0.8
 interval = 0.2
 

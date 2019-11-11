@@ -35,6 +35,8 @@ df.drop('TotalP', axis=1, inplace=True)
 names = df.columns.values.tolist()
 names.remove('DestOpP')
 names.append('DestOpP')
+names.remove('KeySrcP')
+names.append('KeySrcP')
 print(type(names))
 print(names)
 df = df.reindex(columns=names)
@@ -44,10 +46,12 @@ fig, ax = plt.subplots()
 ax.set_ylim((0, 1.1))
 width = 0.85
 
-colors = ['#7d5c80', '#016201', '#fefe01', '#820000', '#cccccc', 'black']
+colors = ['#7d5c80', '#016201', '#fefe01', 'orange', '#cccccc', '#820000']
 cumulative = np.array([0.0] * len(df))
 rects = []
-for i in range(5):
+for i in range(6):
+    if names[i] == 'KeySrcP':
+        cumulative = np.array([0.0] * len(df))
     rect = plt.bar(df.index, df[names[i]].values, bottom=cumulative,
             edgecolor='black', color=colors[i], width=width)
     rects.append(rect)
@@ -77,7 +81,7 @@ ax.set_xticklabels(benchmarks_ordered, minor=True, rotation=90)
 
 ax.set_ylabel('Percentage of packet types')
 ax.set_xlabel('Simulation points from SPEC 2017')
-ax.legend(rects, names, fontsize='small', ncol=5)
+ax.legend(rects, names, fontsize='small', ncol=6)
 
 plt.tight_layout()
 for f in ['eps', 'png']:

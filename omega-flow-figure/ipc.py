@@ -14,7 +14,7 @@ import common as c
 import target_stats as t
 
 prefix = '~/gem5-results-2017/'
-full = True
+full = False
 if full:
     suffix = '-full'
 else:
@@ -24,21 +24,21 @@ stat_dirs = {
         'Xbar4': 'xbar4-rand',
         'Xbar4-SpecSB': 'xbar4-rand-hint',
         # 'Xbar4*2-SpecSB': 'dedi-xbar4-rand-hint',
-        'Omega16': 'omega',
+        #'Omega16': 'omega',
         'Omega16-OPR': 'omega-rand',
         'Omega16-OPR-SpecSB': 'omega-rand-hint',
-        'Xbar16': 'xbar',
-        'Xbar16-OPR': 'xbar-rand',
-        'Xbar16-OPR-SpecSB': 'xbar-rand-hint',
-        'Ideal-OOO': 'ruu-4-issue',
+        #'Xbar16': 'xbar',
+        #'Xbar16-OPR': 'xbar-rand',
+        #'Xbar16-OPR-SpecSB': 'xbar-rand-hint',
+        #'Ideal-OOO': 'ruu-4-issue',
         }
 for k in stat_dirs:
     stat_dirs[k] = osp.join(prefix, f'{stat_dirs[k]}{suffix}')
 
 configs_ordered = [x for x in stat_dirs]
 
-colors = ['white', '#454545', '#fefe01', '#820000', '#00c100', '#7d5c80', 'black',
-        'pink', 'orange']
+colors = ['#454545', '#820000', '#00c100', 'orange', '#7d5c80', 'black',
+        'pink', '#fefe01', 'orange']
 
 benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 
@@ -48,9 +48,9 @@ for b in benchmarks:
         points.append(f'{b}_{i}')
 
 fig, ax = plt.subplots()
-fig.set_size_inches(18.5, 5, forward=True)
-width = 0.8
-interval = 0.2
+fig.set_size_inches(10, 5, forward=True)
+width = 0.6
+interval = 0.4
 
 rects = []
 
@@ -77,7 +77,8 @@ for config in configs_ordered:
     tick_starts = np.arange(0, num_points * num_configs, (width + interval) * num_configs) + shift
     # print(tick_starts)
     rect = plt.bar(tick_starts,
-        df['ipc'].values, edgecolor='black',
+        df['ipc'].values,
+        # edgecolor='black',
         color=colors[i], width=width)
     rects.append(rect)
     shift += width + interval

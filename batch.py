@@ -128,6 +128,8 @@ def main():
                 c.add_branch_mispred(d)
             if opt.fanout:
                 c.add_fanout(d)
+            if opt.packet:
+                c.add_packet(d)
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
     df = df.sort_index()

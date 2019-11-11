@@ -13,17 +13,32 @@ sys.path.append('..')
 import common as c
 import target_stats as t
 
-baseline_stat_dir = '~/gem5-results-2017/xbar4-rand'
+prefix = '~/gem5-results-2017/'
+full = False
+if full:
+    suffix = '-full'
+else:
+    suffix = ''
 stat_dirs = {
-        'Xbar4-SpecSB': '~/gem5-results-2017/xbar4-rand-hint',
-        # 'Xbar4*2-SpecSB': '~/gem5-results-2017/dedi-xbar4-rand-hint',
-        'Omega16-OPR': '~/gem5-results-2017/omega-rand',
-        'Omega16-OPR-SpecSB': '~/gem5-results-2017/omega-rand-hint',
-        # 'Xbar16-OPR': '~/gem5-results-2017/xbar-rand',
+        # 'Xbar4': 'xbar4',
+        'Xbar4': 'xbar4-rand',
+        # 'Xbar4-SpecSB': 'xbar4-rand-hint',
+        # 'Xbar4*2-SpecSB': 'dedi-xbar4-rand-hint',
+        # 'Omega16': 'omega',
+        # 'Omega16-OPR': 'omega-rand',
+        # 'Omega16-OPR-SpecSB': 'omega-rand-hint',
+        # 'Xbar16': 'xbar',
+        # 'Xbar16-OPR': 'xbar-rand',
+        # 'Xbar16-OPR-SpecSB': 'xbar-rand-hint',
+        # 'Ideal-OOO': 'ruu-4-issue',
         }
+for k in stat_dirs:
+    stat_dirs[k] = osp.join(prefix, f'{stat_dirs[k]}{suffix}')
+
 configs_ordered = [x for x in stat_dirs]
 
-colors = ['black', 'g', '#820000', '#00c100', 'white', '#fefe01', 'black', '#604080']
+colors = ['#454545', '#820000', '#fefe01', '#00c100', '#7d5c80', 'black',
+        'pink', 'orange']
 
 benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 
@@ -33,53 +48,45 @@ for b in benchmarks:
         points.append(f'{b}_{i}')
 
 fig, ax = plt.subplots()
-fig.set_size_inches(8, 4, forward=True)
-width = 0.9
-interval = 0.1
+fig.set_size_inches(10, 5, forward=True)
+width = 0.6
+interval = 0.4
 
 rects = []
 
 shift = 0.0
 i = 0
 num_points = 0
-num_configs = len(stat_dirs)
+bounds = ['IPC_bound_by_packets', 'IPC_bound_by_insts']
+num_configs = len(bounds)
 
-
-stat_files = [osp.join(baseline_stat_dir, point, 'stats.txt') for point in points]
-matrix = {}
-for point, stat_file in zip(points, stat_files):
-    d = c.get_stats(stat_file, t.breakdown_targets, re_targets=True)
-    matrix[point] = d
-baseline_df = pd.DataFrame.from_dict(matrix, orient='index')
-baseline = baseline_df['queueingD'].values
-
-for config in configs_ordered:
-    stat_dir = stat_dirs[config]
+for bound in bounds:
+    stat_dir = stat_dirs['Xbar4']
     stat_dir = osp.expanduser(stat_dir)
     stat_files = [osp.join(stat_dir, point, 'stats.txt') for point in points]
 
     matrix = {}
     for point, stat_file in zip(points, stat_files):
-        d = c.get_stats(stat_file, t.breakdown_targets, re_targets=True)
+        d = c.get_stats(stat_file, t.standard_targets + t.packet_targets, re_targets=True)
+        c.add_packet(d)
         matrix[point] = d
     df = pd.DataFrame.from_dict(matrix, orient='index')
     if num_points == 0:
         num_points = len(df)
 
-    print(len(df))
+    # print(len(df))
 
     tick_starts = np.arange(0, num_points * num_configs, (width + interval) * num_configs) + shift
-    print(tick_starts)
+    # print(tick_starts)
     rect = plt.bar(tick_starts,
-        1 - df['queueingD'].values/baseline,
-        # edgecolor='black',
+        df[bound].values, edgecolor='black',
         color=colors[i], width=width)
     rects.append(rect)
     shift += width + interval
     i += 1
 
 ax.set_xlim((-0.6, num_points * num_configs))
-ax.set_ylim((0, 1.1))
+ax.set_ylim((0, 4.5))
 
 benchmarks_ordered = []
 for point in df.index:
@@ -105,21 +112,19 @@ for tick in ax.xaxis.get_minor_ticks():
     tick.label1.set_horizontalalignment('left')
 
 xticklabels = [''] * num_points
-print(len(xticklabels))
+# print(len(xticklabels))
 for i, benchmark in enumerate(benchmarks_ordered):
     xticklabels[i*3 + 1] = benchmark
 
 ax.set_xticklabels(xticklabels, minor=True, rotation=90)
 
-ax.set_ylabel('Relative queueing cycles reduction')
+ax.set_ylabel('IPC upper bound with different configurations')
 ax.set_xlabel('Simulation points from SPEC 2017')
-ax.legend(rects, configs_ordered, fontsize='small', ncol=5)
-
-fig.suptitle('Queueing time reduction', fontsize='large')
+ax.legend(rects, bounds, fontsize='small', ncol=num_configs)
 
 plt.tight_layout()
 for f in ['eps', 'png']:
-    plt.savefig(f'./{f}/queueing.{f}', format=f'{f}')
+    plt.savefig(f'./{f}/upper.{f}', format=f'{f}')
 
 plt.show()
 
