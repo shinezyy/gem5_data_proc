@@ -356,5 +356,6 @@ def get_spec2017_fp():
         return [x for x in f.read().split('\n') if len(x) > 1]
 
 def add_packet(d: dict) -> None:
-    d['IPC_bound_by_packets'] = d['Insts'] / (d['TotalP']/3.1)
-    d['IPC_bound_by_insts'] = min(d['Insts'] / (d['KeySrcP']/4), 4.0)
+    d['by_bw'] = d['Insts'] / (d['TotalP']/3.1)
+    d['by_chasing'] = d['Insts'] / (d['TotalP']/4.0)
+    d['by_crit_ptr'] = min(d['Insts'] / (d['KeySrcP']/4), 4.0, d['TotalP']/10.0)
