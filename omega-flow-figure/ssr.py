@@ -22,7 +22,7 @@ stat_dirs = {
         }
 configs_ordered = [x for x in stat_dirs]
 
-colors = ['white', '#454545', '#fefe01', '#820000', '#00c100', '#7d5c80', 'black']
+colors = ['#454545', '#fefe01', '#820000', '#00c100', '#7d5c80', 'black']
 
 benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 
@@ -69,8 +69,11 @@ for config in configs_ordered:
 
     tick_starts = np.arange(0, num_points * num_configs, (width + interval) * num_configs) + shift
     print(tick_starts)
+    plt.bar(tick_starts,
+        [1.0] * num_points, edgecolor='grey',
+        color='white', width=width)
     rect = plt.bar(tick_starts,
-        1 - df['ssrD'].values/baseline, edgecolor='black',
+        df['ssrD'].values/baseline, edgecolor='black',
         color=colors[i], width=width)
     rects.append(rect)
     shift += width + interval
@@ -109,7 +112,7 @@ for i, benchmark in enumerate(benchmarks_ordered):
 
 ax.set_xticklabels(xticklabels, minor=True, rotation=90)
 
-ax.set_ylabel('Relative serialized wakeup delay cycles reduction')
+ax.set_ylabel('Serialized wakeup delay cycles reduction')
 ax.set_xlabel('Simulation points from SPEC 2017')
 ax.legend(rects, configs_ordered, fontsize='small', ncol=5)
 
