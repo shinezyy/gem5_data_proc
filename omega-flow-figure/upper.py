@@ -8,12 +8,12 @@ import matplotlib as mpl
 import seaborn as sns
 
 import sys
-sys.path.append('..')
+sys.path.append('.')
 
 import common as c
 import target_stats as t
 
-prefix = '~/gem5-results-2017/'
+prefix = '../'
 full = False
 if full:
     suffix = '-full'

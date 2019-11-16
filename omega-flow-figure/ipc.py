@@ -8,12 +8,12 @@ import matplotlib as mpl
 import seaborn as sns
 
 import sys
-sys.path.append('..')
+sys.path.append('.')
 
 import common as c
 import target_stats as t
 
-prefix = '~/gem5-results-2017/'
+prefix = '../'
 full = False
 if full:
     suffix = '-full'
@@ -75,6 +75,8 @@ for config in configs_ordered:
     # print(len(df))
 
     tick_starts = np.arange(0, num_points * num_configs, (width + interval) * num_configs) + shift
+
+    print(df['ipc'].values[:10])
     # print(tick_starts)
     rect = plt.bar(tick_starts,
         df['ipc'].values,

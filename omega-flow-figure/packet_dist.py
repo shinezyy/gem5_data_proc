@@ -8,12 +8,12 @@ import matplotlib as mpl
 import seaborn as sns
 
 import sys
-sys.path.append('..')
+sys.path.append('.')
 
 import common as c
 import target_stats as t
 
-stat_dir = osp.expanduser('~/gem5-results-2017/xbar-rand-hint')
+stat_dir = osp.expanduser('../xbar-rand-hint')
 
 benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 points = []

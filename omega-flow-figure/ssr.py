@@ -8,17 +8,17 @@ import matplotlib as mpl
 import seaborn as sns
 
 import sys
-sys.path.append('..')
+sys.path.append('.')
 
 import common as c
 import target_stats as t
 
-baseline_stat_dir = '~/gem5-results-2017/xbar4'
+baseline_stat_dir = '../xbar4'
 stat_dirs = {
-        'Xbar4-SpecSB': '~/gem5-results-2017/xbar4-rand-hint',
-        # 'Xbar4*2-SpecSB': '~/gem5-results-2017/dedi-xbar4-rand-hint',
-        'Omega16-OPR-SpecSB': '~/gem5-results-2017/omega-rand-hint',
-        # 'Xbar16-OPR-SpecSB': '~/gem5-results-2017/xbar-rand-hint',
+        'Xbar4-SpecSB': '../xbar4-rand-hint',
+        # 'Xbar4*2-SpecSB': '../dedi-xbar4-rand-hint',
+        'Omega16-OPR-SpecSB': '../omega-rand-hint',
+        # 'Xbar16-OPR-SpecSB': '../xbar-rand-hint',
         }
 configs_ordered = [x for x in stat_dirs]
 
