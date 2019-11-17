@@ -2,7 +2,6 @@
 
 import os.path as osp
 import sys
-
 sys.path.append('.')
 
 import matplotlib as mpl
@@ -13,6 +12,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 import common as c
+import graphs
 import target_stats as t
 
 show_lins = 62
@@ -43,21 +43,12 @@ for k in stat_dirs:
 
 configs_ordered = ['Xbar4', 'Omega16-OPR-SpecSB', 'Ideal-OOO']
 
-colors = ["r","gray"]
-
 benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 
 points = []
 for b in benchmarks:
     for i in range(0, 3):
         points.append(f'{b}_{i}')
-
-fig, ax = plt.subplots()
-fig.set_size_inches(14, 4, forward=True)
-width = 0.6
-interval = 0.4
-
-rects = []
 
 num_points = 0
 num_configs = len(stat_dirs)
@@ -111,57 +102,23 @@ if do_normalization:
     data_all = np.array([data_all[0] / data_all[2], data_all[1] / data_all[2]])
     print(data_all, data_all.shape)
     num_configs -= 1
-
+    configs_ordered = configs_ordered[:-1]
 print(num_points, num_configs)
-shift = 0.0
-for i, data in enumerate(data_all):
-    tick_starts = np.arange(0, num_points * num_configs, (width + interval) * num_configs) + shift
-
-    # print(tick_starts)
-    rect = plt.bar(tick_starts, data,
-        edgecolor='black',
-        color=colors[i], width=width)
-    rects.append(rect)
-    shift += width + interval
 
 benchmarks_ordered = []
 for point in df.index:
     if point.endswith('_0'):
         benchmarks_ordered.append(point.split('_')[0])
 
-ax.xaxis.set_major_locator(mpl.ticker.IndexLocator(base=(width+interval)*num_configs*3, offset=-interval/2))
-ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(base=(width+interval)*num_configs, offset=-interval/2))
-
-ax.xaxis.set_major_formatter(mpl.ticker.NullFormatter())
-# ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-
-ax.set_xlim(left=-0.5, right=num_points * num_configs)
-ax.set_ylim((0, 1.13 if do_normalization else 3))
-
-for tick in ax.xaxis.get_major_ticks():
-    tick.tick1line.set_markersize(10)
-    tick.tick2line.set_markersize(0)
-
-for tick in ax.xaxis.get_minor_ticks():
-    tick.tick1line.set_markersize(2)
-    # tick.tick2line.set_markersize(0)
-    tick.label1.set_horizontalalignment('left')
-
 xticklabels = [''] * num_points
 print(len(xticklabels))
 for i, benchmark in enumerate(benchmarks_ordered + ['rel_geomean']):
     xticklabels[i*2] = benchmark
-ax.set_xticklabels(xticklabels, minor=True, rotation=90)
 
-ax.grid(axis="y", linestyle="--", color='gray')
-ax.set_ylabel('Normalized IPCs')
-ax.set_xlabel('Simulation points from SPEC 2017')
-ax.legend(rects, configs_ordered, fontsize='small', ncol=num_configs, 
-        loc='lower left', bbox_to_anchor=(0.788,0.88))
-
-
-plt.tight_layout()
-for f in ['eps', 'png']:
-    plt.savefig(f'./{f}/ipc.{f}', format=f'{f}')
-
+print(len(configs_ordered))
+gh = graphs.GraphHelper()
+plt, ax = gh.bar_graph(data_all, xticklabels, configs_ordered, 
+        xlabel='Normalized IPCs', ylabel='Simulation points from SPEC 2017', 
+        xlim=(-0.5, num_points*num_configs), ylim=(0, 1.13 if do_normalization else 3))
+gh.save_to_file(plt, "ipc")
 plt.show()
