@@ -95,4 +95,4 @@ cache_*
 *.csv
 *.png
 *.eps
-data
+omega-flow-data

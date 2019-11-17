@@ -21,6 +21,9 @@ pd.set_option('display.max_rows', show_lins)
 pd.set_option('display.min_rows', show_lins)
 
 full = False
+do_normalization = True
+do_normalization = False
+
 if full:
     suffix = '-full'
 else:
@@ -63,11 +66,8 @@ for config in configs_ordered:
     for point, stat_file in zip(points, stat_files):
         d = c.get_stats(stat_file, t.ipc_target, re_targets=True)
         matrix[point] = d
-
     df = pd.DataFrame.from_dict(matrix, orient='index')
-
     dfs[config] = df
-
     if num_points == 0:
         num_points = len(df)
 
@@ -79,21 +79,18 @@ for config in configs_ordered:
         print(config)
         rel = dfs[config]['ipc'] / dfs['Ideal-OOO']['ipc'][:-1]
         dfs[config]['rel'] = rel
-
         dfs[config].loc['rel_geo_mean'] = [rel.prod() ** (1/len(rel))] * 2
-
         if config == 'Omega16-OPR-SpecSB':
             dfs[config]['boost'] = dfs[config]['rel'] / dfs['Xbar4']['rel']
-
         print(dfs[config])
 num_points += 1
 
-do_normalization = True
 data_all = []
 for i, config in enumerate(configs_ordered):
     df = dfs[config]
     # whitespace before geomean
-    data = np.concatenate((df['ipc'].values[:-1], np.ones(1) if i == 2 else np.zeros(1), df['ipc'].values[-1:]))
+    insert_val = np.ones(1) if i == 2 and do_normalization else np.zeros(1)
+    data = np.concatenate((df['ipc'].values[:-1], insert_val, df['ipc'].values[-1:]))
     data_all.append(data)
 num_points += 1
 data_all = np.array(data_all)
@@ -111,14 +108,19 @@ for point in df.index:
         benchmarks_ordered.append(point.split('_')[0])
 
 xticklabels = [''] * num_points
-print(len(xticklabels))
 for i, benchmark in enumerate(benchmarks_ordered + ['rel_geomean']):
     xticklabels[i*2] = benchmark
 
 print(len(configs_ordered))
 gh = graphs.GraphHelper()
-plt, ax = gh.bar_graph(data_all, xticklabels, configs_ordered, 
-        xlabel='Normalized IPCs', ylabel='Simulation points from SPEC 2017', 
+xlabel = 'Normalized IPCs' if do_normalization else "IPCs with different configurations"
+plt, ax = gh.simple_bar_graph(data_all, xticklabels, configs_ordered, 
+        xlabel=xlabel, ylabel='Simulation points from SPEC 2017', 
         xlim=(-0.5, num_points*num_configs), ylim=(0, 1.13 if do_normalization else 3))
+legend = ax.get_legend()
+if do_normalization:
+    legend.set_bbox_to_anchor((0.788,0.88))
+else:
+    legend.set_bbox_to_anchor((0.7,1))
 gh.save_to_file(plt, "ipc")
 plt.show()

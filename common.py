@@ -12,7 +12,7 @@ from paths import *
 
 class Env(object):
     def __init__(self):
-        self.prefix = "./data"
+        self.prefix = "./omega-flow-data"
 
     def data(self, s):
         return os.path.abspath(pjoin(self.prefix, s))

@@ -11,7 +11,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 class GraphDefaultConfig(object):
-    colors = ["r","gray"]
+    colors = ["r", "gray", "white", "green"]
     fig_size = (14, 4)
 
 class GraphHelper(object):
@@ -64,12 +64,11 @@ class GraphHelper(object):
         ax.grid(axis="y", linestyle="--", color='gray')
         ax.set_ylabel(xlabel)
         ax.set_xlabel(ylabel)
-        ax.legend(rects, legends, fontsize='small', ncol=num_configs, 
-                loc='lower left', bbox_to_anchor=(0.788,0.88))
+        ax.legend(rects, legends, fontsize='small', ncol=num_configs)
 
         plt.tight_layout()
 
-        return plt, (ax,)
+        return plt, ax
     
     def save_to_file(self, plt, name):
         for f in ['eps', 'png']:
