@@ -32,7 +32,7 @@ stat_dirs = {
         # 'Ideal-OOO': 'ruu-4-issue',
         }
 for k in stat_dirs:
-    stat_dirs[k] = osp.join(c.Env.prefix, f'{stat_dirs[k]}{suffix}')
+    stat_dirs[k] = c.env.data(f'{stat_dirs[k]}{suffix}')
 
 configs_ordered = [x for x in stat_dirs]
 

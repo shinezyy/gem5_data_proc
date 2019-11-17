@@ -1,27 +1,28 @@
 #!/usr/bin/env python3
 
 import os.path as osp
-import pandas as pd
-import numpy as np
-from matplotlib import pyplot as plt
-import matplotlib as mpl
-import seaborn as sns
-
 import sys
-sys.path.append('..')
+sys.path.append('.')
+
+import matplotlib as mpl
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 
 import common as c
 import target_stats as t
 
+
 baseline_stat_dirs = {
-        'Xbar4': '~/gem5-results-2017/xbar4-rand',
-        'Xbar4-2': '~/gem5-results-2017/xbar4-rand',
+        'Xbar4': c.env.data('xbar4-rand'),
+        'Xbar4-2': c.env.data('xbar4-rand'),
         }
 stat_dirs = {
-        # 'Xbar4*2-SpecSB': '~/gem5-results-2017/dedi-xbar4-rand-hint',
-        'Omega16-OPR': '~/gem5-results-2017/xbar-rand',
-        'Xbar16-OPR': '~/gem5-results-2017/omega-rand',
-        # 'Xbar16-OPR': '~/gem5-results-2017/xbar-rand',
+        # 'Xbar4*2-SpecSB': c.env.data('dedi-xbar4-rand-hint'),
+        'Omega16-OPR': c.env.data('xbar-rand'),
+        'Xbar16-OPR': c.env.data('omega-rand'),
+        # 'Xbar16-OPR': c.env.data('xbar-rand'),
         }
 
 baselines_ordered = [x for x in baseline_stat_dirs]
@@ -149,4 +150,3 @@ for f in ['eps', 'png']:
     plt.savefig(f'./{f}/interconnect_queueing.{f}', format=f'{f}')
 
 plt.show()
-

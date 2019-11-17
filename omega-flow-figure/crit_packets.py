@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 
 import os.path as osp
-import pandas as pd
-import numpy as np
-from matplotlib import pyplot as plt
-import matplotlib as mpl
-import seaborn as sns
-
 import sys
-sys.path.append('..')
+sys.path.append('.')
+
+import matplotlib as mpl
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 
 import common as c
 import target_stats as t
 
-stat_dir = osp.expanduser('~/gem5-results-2017/xbar-rand-hint')
+
+stat_dir = c.env.data('xbar-rand-hint')
 
 benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 points = []
@@ -76,4 +77,3 @@ for f in ['eps', 'png']:
     plt.savefig(f'./{f}/crit_pointers.{f}', format=f'{f}')
 
 plt.show()
-

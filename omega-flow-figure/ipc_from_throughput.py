@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 
 import os.path as osp
-import pandas as pd
-import numpy as np
-from matplotlib import pyplot as plt
-import matplotlib as mpl
-import seaborn as sns
-
 import sys
-sys.path.append('..')
+sys.path.append('.')
+
+import matplotlib as mpl
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 
 import common as c
 import target_stats as t
+
 
 show_lins = 62
 pd.set_option('precision', 3)
 pd.set_option('display.max_rows', show_lins)
 pd.set_option('display.min_rows', show_lins)
 
-prefix = '~/gem5-results-2017/'
 full = False
 if full:
     suffix = '-full'
@@ -38,7 +38,7 @@ stat_dirs = {
         # 'Ideal-OOO': 'ruu-4-issue',
         }
 for k in stat_dirs:
-    stat_dirs[k] = osp.join(prefix, f'{stat_dirs[k]}{suffix}')
+    stat_dirs[k] = c.env.data(f'{stat_dirs[k]}{suffix}')
 
 configs_ordered = ['Xbar4', 'Omega16-OPR', 'Xbar16-OPR']
 
@@ -156,4 +156,3 @@ for f in ['eps', 'png']:
     plt.savefig(f'./{f}/ipc_from_throughput.{f}', format=f'{f}')
 
 plt.show()
-
