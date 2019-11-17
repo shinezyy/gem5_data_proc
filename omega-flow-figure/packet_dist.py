@@ -13,7 +13,7 @@ sys.path.append('.')
 import common as c
 import target_stats as t
 
-stat_dir = osp.expanduser('../xbar-rand-hint')
+stat_dir = osp.expanduser(c.env.data('xbar-rand-hint'))
 
 benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 points = []

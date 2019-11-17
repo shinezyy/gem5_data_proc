@@ -13,7 +13,6 @@ sys.path.append('.')
 import common as c
 import target_stats as t
 
-prefix = '../'
 full = False
 if full:
     suffix = '-full'
@@ -33,7 +32,7 @@ stat_dirs = {
         # 'Ideal-OOO': 'ruu-4-issue',
         }
 for k in stat_dirs:
-    stat_dirs[k] = osp.join(prefix, f'{stat_dirs[k]}{suffix}')
+    stat_dirs[k] = osp.join(c.Env.prefix, f'{stat_dirs[k]}{suffix}')
 
 configs_ordered = [x for x in stat_dirs]
 

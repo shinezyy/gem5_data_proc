@@ -95,3 +95,4 @@ cache_*
 *.csv
 *.png
 *.eps
+data

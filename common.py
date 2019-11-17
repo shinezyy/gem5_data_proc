@@ -10,6 +10,15 @@ from st_stat import make_st_stat_cache
 from paths import *
 
 
+class Env(object):
+    def __init__(self):
+        self.prefix = "./data"
+
+    def data(self, s):
+        return os.path.abspath(pjoin(self.prefix, s))
+
+env = Env()
+
 def user_verify():
     ok = input('Is that OK? (y/n)')
     if ok != 'y':
@@ -348,14 +357,17 @@ def add_fanout(d: dict) -> None:
     del d['falseNegativeLF']
 
 def get_spec2017_int():
-    with open(os.path.expanduser('../int.txt')) as f:
+    with open(os.path.expanduser(env.data('int.txt'))) as f:
         return [x for x in f.read().split('\n') if len(x) > 1]
 
 def get_spec2017_fp():
-    with open(os.path.expanduser('../fp.txt')) as f:
+    with open(os.path.expanduser(env.data('fp.txt'))) as f:
         return [x for x in f.read().split('\n') if len(x) > 1]
 
 def add_packet(d: dict) -> None:
     d['by_bw'] = d['Insts'] / (d['TotalP']/3.1)
     d['by_chasing'] = d['Insts'] / (d['TotalP']/4.0)
     d['by_crit_ptr'] = min(d['Insts'] / (d['KeySrcP']/4), 4.0, d['TotalP']/10.0)
+
+
+

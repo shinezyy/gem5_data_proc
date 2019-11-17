@@ -13,13 +13,14 @@ sys.path.append('.')
 import common as c
 import target_stats as t
 
-baseline_stat_dir = '../xbar4-rand'
+baseline_stat_dir = c.env.data('xbar4-rand')
+
 stat_dirs = {
-        'Xbar4-SpecSB': '../xbar4-rand-hint',
-        # 'Xbar4*2-SpecSB': '../dedi-xbar4-rand-hint',
-        'Omega16-OPR': '../omega-rand',
-        'Omega16-OPR-SpecSB': '../omega-rand-hint',
-        # 'Xbar16-OPR': '../xbar-rand',
+        'Xbar4-SpecSB': c.env.data('xbar4-rand-hint'),
+        # 'Xbar4*2-SpecSB': c.env.data('dedi-xbar4-rand-hint'),
+        'Omega16-OPR': c.env.data('omega-rand'),
+        'Omega16-OPR-SpecSB': c.env.data('omega-rand-hint'),
+        # 'Xbar16-OPR': c.env.data('xbar-rand'),
         }
 configs_ordered = [x for x in stat_dirs]
 
