@@ -12,7 +12,10 @@ from paths import *
 
 class Env(object):
     def __init__(self):
-        self.prefix = "./omega-flow-data"
+        self.prefix = st_stat_dir
+
+    def get_stat_dir(self):
+        return os.path.abspath(self.prefix)
 
     def data(self, s):
         return os.path.abspath(pjoin(self.prefix, s))

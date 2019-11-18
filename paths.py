@@ -1,6 +1,6 @@
 import os
 
-st_stat_dir = '/home/xyn/omega-flow-data/'
+st_stat_dir = os.path.abspath("./omega-flow-data")
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
