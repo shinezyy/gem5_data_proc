@@ -11,8 +11,12 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 import common as c
+import graphs
 import target_stats as t
 
+
+full = True
+suffix = '-full' if full else ""
 
 baseline_stat_dirs = {
         'Xbar4': c.env.data('xbar4-rand'),
@@ -24,11 +28,14 @@ stat_dirs = {
         'Xbar16-OPR': c.env.data('omega-rand'),
         # 'Xbar16-OPR': c.env.data('xbar-rand'),
         }
+for k in baseline_stat_dirs:
+    baseline_stat_dirs[k] += suffix
+for k in stat_dirs:
+    stat_dirs[k] += suffix
 
 baselines_ordered = [x for x in baseline_stat_dirs]
 configs_ordered = [x for x in stat_dirs]
 
-colors = ['black', 'g', '#820000', '#00c100', 'white', '#fefe01', 'black', '#604080']
 
 benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 
@@ -37,18 +44,10 @@ for b in benchmarks:
     for i in range(0, 3):
         points.append(f'{b}_{i}')
 
-fig, ax = plt.subplots()
-fig.set_size_inches(8, 4, forward=True)
-width = 0.9
-interval = 0.1
-
-rects = []
-
-shift = 0.0
 num_points = 0
 num_configs = len(stat_dirs)
 
-
+data_all = []
 for baseline in baselines_ordered:
     baseline_stat_dir = baseline_stat_dirs[baseline]
     stat_files = [osp.join(baseline_stat_dir, point, 'stats.txt') for point in points]
@@ -61,23 +60,12 @@ for baseline in baselines_ordered:
     if num_points == 0:
         num_points = len(baseline_df)
 
-    tick_starts = np.arange(0, num_points * num_configs + 2, (width + interval) * num_configs) + shift
-    print(len(tick_starts))
-    print(tick_starts)
     baseline_df.loc['mean'] = baseline_df.iloc[-1]
     baseline_df.loc['mean']['queueingD'] = np.mean(baseline_df['queueingD'])
-    print(len(baseline_df))
-    print(baseline_df)
-    rect = plt.bar(tick_starts,
-            baseline_df['queueingD'].values, color='white',
-            edgecolor='grey',
-            width=width)
-    if baseline == 'Xbar4':
-        rects.append(rect)
-    shift += width + interval
+    data = np.concatenate([baseline_df['queueingD'].values[:-1], [0],baseline_df['queueingD'].values[-1:]])
+    print(data.shape)
+    data_all.append(data)
 
-i = 0
-shift = 0.0
 for config in configs_ordered:
     stat_dir = stat_dirs[config]
     stat_dir = osp.expanduser(stat_dir)
@@ -92,61 +80,33 @@ for config in configs_ordered:
     df = pd.DataFrame.from_dict(matrix, orient='index')
     df.loc['mean'] = df.iloc[-1]
     df.loc['mean']['queueingD'] = np.mean(df['queueingD'])
-
     print(len(df))
+    data = np.concatenate([df['queueingD'].values[:-1], [0],df['queueingD'].values[-1:]])
+    print(data.shape)
+    data_all.append(data)
 
-    tick_starts = np.arange(0, num_points * num_configs + 2, (width + interval) * num_configs) + shift
-    print(tick_starts)
-    rect = plt.bar(tick_starts,
-        df['queueingD'].values,
-        # edgecolor='black',
-        color=colors[i], width=width)
-    rects.append(rect)
-    shift += width + interval
-    i += 1
-
-ax.set_xlim((-0.6, num_points * num_configs + 2))
-# ax.set_ylim((0, 1.1))
+num_points += 2
+data_all = np.array(data_all)
+print(data_all.shape)
 
 benchmarks_ordered = []
 for point in df.index:
     if point.endswith('_0'):
         benchmarks_ordered.append(point.split('_')[0])
 
-ax.xaxis.set_major_locator(mpl.ticker.FixedLocator(
-    np.arange(-0.5, (num_points + 1) * num_configs, (width + interval) * num_configs * 3)))
-
-ax.xaxis.set_minor_locator(mpl.ticker.FixedLocator(
-    np.arange(-0.5, (num_points + 1) * num_configs, (width + interval) * num_configs)))
-
-ax.xaxis.set_major_formatter(mpl.ticker.NullFormatter())
-# # ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-#
-for tick in ax.xaxis.get_major_ticks():
-    tick.tick1line.set_markersize(10)
-    tick.tick2line.set_markersize(0)
-
-for tick in ax.xaxis.get_minor_ticks():
-    tick.tick1line.set_markersize(2)
-    # tick.tick2line.set_markersize(0)
-    tick.label1.set_horizontalalignment('left')
-
 xticklabels = [''] * num_points
 print(len(xticklabels))
-for i, benchmark in enumerate(benchmarks_ordered):
-    xticklabels[i*3 + 1] = benchmark
-xticklabels.append('mean')
+for i, benchmark in enumerate(benchmarks_ordered + ["mean"]):
+    xticklabels[i*2] = benchmark
 
-ax.set_xticklabels(xticklabels, minor=True, rotation=90)
-
-ax.set_ylabel('Relative queueing cycles reduction')
-ax.set_xlabel('Simulation points from SPEC 2017')
-ax.legend(rects, ['Xbar4'] + configs_ordered, fontsize='small', ncol=5)
-
+print(num_points, num_configs)
+gm = graphs.GraphMaker()
+legends = [baselines_ordered[0]] + configs_ordered
+fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legends, 
+        xlabel='Simulation points from SPEC 2017',
+        ylabel='Relative queueing cycles reduction',
+        xlim=(-0.5,num_points*num_configs-0.5))
 fig.suptitle('Queueing time reduction', fontsize='large')
-
-plt.tight_layout()
-for f in ['eps', 'png']:
-    plt.savefig(f'./{f}/interconnect_queueing.{f}', format=f'{f}')
-
-plt.show()
+# legend = ax.get_legend()
+# legend.set_bbox_to_anchor((0.80,0.89))
+gm.save_to_file(plt, "interconnect_queueing")

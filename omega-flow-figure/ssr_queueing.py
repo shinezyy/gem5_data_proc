@@ -11,6 +11,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 import common as c
+import graphs
 import target_stats as t
 
 
@@ -19,11 +20,9 @@ pd.set_option('precision', 3)
 pd.set_option('display.max_rows', show_lins)
 pd.set_option('display.min_rows', show_lins)
 
-full = False
-if full:
-    suffix = '-full'
-else:
-    suffix = ''
+full = True
+suffix = '-full' if full else ""
+
 stat_dirs = {
         # 'Xbar4': 'xbar4',
         'Xbar4': 'xbar4-rand',
@@ -42,22 +41,12 @@ for k in stat_dirs:
 
 configs_ordered = ['Xbar4', 'Omega16-OPR-SpecSB', 'Ideal-OOO']
 
-colors = ['#454545', '#820000', '#00c100', 'orange', '#7d5c80', 'black',
-        'pink', '#fefe01', 'orange']
-
 benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 
 points = []
 for b in benchmarks:
     for i in range(0, 3):
         points.append(f'{b}_{i}')
-
-fig, ax = plt.subplots()
-fig.set_size_inches(14, 4, forward=True)
-width = 0.6
-interval = 0.4
-
-rects = []
 
 num_points = 0
 dfs = dict()
@@ -73,73 +62,36 @@ for config in configs_ordered:
         matrix[point] = d
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
-
     dfs[config] = df
 
     if num_points == 0:
         num_points = len(df)
 
-shift = 0.0
-i = 0
 targets = ['ssrD', 'queueingD']
 num_targets = len(targets)
+data_all = []
 for target in targets:
     df = dfs[configs_ordered[0]]
-    # print(len(df))
-    tick_starts = np.arange(0, num_points * num_targets, (width + interval) * num_targets) + shift
-    # print(tick_starts)
-    print(len(tick_starts))
-    print(tick_starts)
     print(len(df[target].values))
     print(df[target].values)
-    rect = plt.bar(tick_starts,
-        df[target].values,
-        # edgecolor='black',
-        color=colors[i], width=width)
-    rects.append(rect)
-    shift += width + interval
-    i += 1
+    data_all.append(df[target].values)
 
-ax.set_xlim((-0.6, num_points * num_targets))
-# ax.set_ylim((0, 3))
+data_all = np.array(data_all)
 
 benchmarks_ordered = []
 for point in df.index:
     if point.endswith('_0'):
         benchmarks_ordered.append(point.split('_')[0])
 
-ax.xaxis.set_major_locator(mpl.ticker.FixedLocator(
-    np.arange(-0.5, (num_points + 1) * num_targets, (width + interval) * num_targets * 3)))
-
-ax.xaxis.set_minor_locator(mpl.ticker.FixedLocator(
-    np.arange(-0.5, (num_points + 1) * num_targets, (width + interval) * num_targets)))
-
-ax.xaxis.set_major_formatter(mpl.ticker.NullFormatter())
-# # ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-#
-for tick in ax.xaxis.get_major_ticks():
-    tick.tick1line.set_markersize(10)
-    tick.tick2line.set_markersize(0)
-
-for tick in ax.xaxis.get_minor_ticks():
-    tick.tick1line.set_markersize(2)
-    # tick.tick2line.set_markersize(0)
-    tick.label1.set_horizontalalignment('left')
-
 xticklabels = [''] * num_points
-# print(len(xticklabels))
 for i, benchmark in enumerate(benchmarks_ordered):
-    xticklabels[i*3 + 1] = benchmark
-# xticklabels.append('rel_geomean')
+    xticklabels[i*2] = benchmark
 
-ax.set_xticklabels(xticklabels, minor=True, rotation=90)
+gm = graphs.GraphMaker()
+legends = ['Delay by SSR', 'Delay by Queueing']
+fig, ax = gm.simple_bar_graph(data_all, xticklabels, legends, 
+        xlabel='Simulation points from SPEC 2017', ylabel='!!!!!!!!WRONG LABEL', 
+        xlim=(-0.5, num_points*num_targets-0.5))
 
-ax.set_ylabel('IPCs with different configurations')
-ax.set_xlabel('Simulation points from SPEC 2017')
-ax.legend(rects, ['Delay by SSR', 'Delay by Queueing'], fontsize='small', ncol=num_targets)
-
-plt.tight_layout()
-for f in ['eps', 'png']:
-    plt.savefig(f'./{f}/ssr_queueing.{f}', format=f'{f}')
-
+gm.save_to_file(plt, "ssr_queueing")
 plt.show()

@@ -15,19 +15,17 @@ import common as c
 import graphs
 import target_stats as t
 
+
 show_lins = 62
 pd.set_option('precision', 3)
 pd.set_option('display.max_rows', show_lins)
 pd.set_option('display.min_rows', show_lins)
 
-full = False
+full = True
 do_normalization = True
 do_normalization = False
 
-if full:
-    suffix = '-full'
-else:
-    suffix = ''
+suffix = '-full' if full else ""
 stat_dirs = {
         # 'Xbar4': 'xbar4',
         'Xbar4': 'xbar4-rand',
@@ -89,8 +87,8 @@ data_all = []
 for i, config in enumerate(configs_ordered):
     df = dfs[config]
     # whitespace before geomean
-    insert_val = np.ones(1) if i == 2 and do_normalization else np.zeros(1)
-    data = np.concatenate((df['ipc'].values[:-1], insert_val, df['ipc'].values[-1:]))
+    # insert_val = np.ones(1) if i == 2 and do_normalization else np.zeros(1)
+    data = np.concatenate((df['ipc'].values[:-1], [0], df['ipc'].values[-1:]))
     data_all.append(data)
 num_points += 1
 data_all = np.array(data_all)
@@ -112,15 +110,15 @@ for i, benchmark in enumerate(benchmarks_ordered + ['rel_geomean']):
     xticklabels[i*2] = benchmark
 
 print(len(configs_ordered))
-gh = graphs.GraphHelper()
-xlabel = 'Normalized IPCs' if do_normalization else "IPCs with different configurations"
-plt, ax = gh.simple_bar_graph(data_all, xticklabels, configs_ordered, 
-        xlabel=xlabel, ylabel='Simulation points from SPEC 2017', 
-        xlim=(-0.5, num_points*num_configs), ylim=(0, 1.13 if do_normalization else 3))
+gm = graphs.GraphMaker()
+ylabel = 'Normalized IPCs' if do_normalization else "IPCs with different configurations"
+fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered, 
+        xlabel='Simulation points from SPEC 2017', ylabel=ylabel, 
+        xlim=(-0.5, num_points*num_configs-0.5), ylim=(0, 1.13 if do_normalization else 3))
 legend = ax.get_legend()
 if do_normalization:
     legend.set_bbox_to_anchor((0.788,0.88))
 else:
     legend.set_bbox_to_anchor((0.7,1))
-gh.save_to_file(plt, "ipc")
+gm.save_to_file(plt, "ipc")
 plt.show()

@@ -13,11 +13,9 @@ sys.path.append('.')
 import common as c
 import target_stats as t
 
-full = False
-if full:
-    suffix = '-full'
-else:
-    suffix = ''
+full = True
+suffix = '-full' if full else ""
+
 stat_dirs = {
         # 'Xbar4': 'xbar4',
         'Xbar4': 'xbar4-rand',

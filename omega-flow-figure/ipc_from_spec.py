@@ -11,6 +11,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 import common as c
+import graphs
 import target_stats as t
 
 
@@ -19,11 +20,11 @@ pd.set_option('precision', 3)
 pd.set_option('display.max_rows', show_lins)
 pd.set_option('display.min_rows', show_lins)
 
-full = False
-if full:
-    suffix = '-full'
-else:
-    suffix = ''
+full = True
+suffix = '-full' if full else ""
+
+show_reduction = False
+
 stat_dirs = {
         'Xbar4': 'xbar4',
         'Xbar4-SpecSB': 'xbar4-rand-hint',
@@ -41,9 +42,6 @@ for k in stat_dirs:
 
 configs_ordered = ['Xbar4', 'Xbar4-SpecSB','Omega16-OPR', 'Omega16-OPR-SpecSB']
 
-colors = ['#454545', 'orange', '#820000', '#00c100', '#7d5c80', 'black',
-        'pink', '#fefe01', 'orange']
-
 benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 
 points = []
@@ -51,15 +49,8 @@ for b in benchmarks:
     for i in range(0, 3):
         points.append(f'{b}_{i}')
 
-fig, ax = plt.subplots()
-fig.set_size_inches(14, 4, forward=True)
-width = 0.6
-interval = 0.4
-
-rects = []
-
-num_points = 0
-num_configs = len(stat_dirs)
+data_all = []
+num_points, num_configs = 0, len(stat_dirs)
 dfs = dict()
 for config in configs_ordered:
     print(config)
@@ -97,63 +88,37 @@ for config in configs_ordered:
             # dfs[config]['boost'] = dfs[config]['rel'] / dfs[baseline]['rel']
 
         print(dfs[config])
-num_points += 1
-
-shift = 0.0
-i = 0
-for config in configs_ordered:
-    df = dfs[config]
-    # print(len(df))
-    tick_starts = np.arange(0, num_points * num_configs, (width + interval) * num_configs) + shift
-    # print(tick_starts)
-    rect = plt.bar(tick_starts,
-        df['ipc'].values,
-        # edgecolor='black',
-        color=colors[i], width=width)
-    rects.append(rect)
-    shift += width + interval
-    i += 1
-
-ax.set_xlim((-0.6, num_points * num_configs))
-ax.set_ylim((0, 3))
+    data = np.concatenate([dfs[config]['ipc'].values[:-1], [0], dfs[config]['ipc'].values[-1:]])
+    data_all.append(data)
+num_points += 2
+data_all = np.array(data_all)
 
 benchmarks_ordered = []
 for point in df.index:
     if point.endswith('_0'):
         benchmarks_ordered.append(point.split('_')[0])
 
-ax.xaxis.set_major_locator(mpl.ticker.FixedLocator(
-    np.arange(-0.5, (num_points + 1) * num_configs, (width + interval) * num_configs * 3)))
-
-ax.xaxis.set_minor_locator(mpl.ticker.FixedLocator(
-    np.arange(-0.5, (num_points + 1) * num_configs, (width + interval) * num_configs)))
-
-ax.xaxis.set_major_formatter(mpl.ticker.NullFormatter())
-# # ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-#
-for tick in ax.xaxis.get_major_ticks():
-    tick.tick1line.set_markersize(10)
-    tick.tick2line.set_markersize(0)
-
-for tick in ax.xaxis.get_minor_ticks():
-    tick.tick1line.set_markersize(2)
-    # tick.tick2line.set_markersize(0)
-    tick.label1.set_horizontalalignment('left')
-
 xticklabels = [''] * num_points
-# print(len(xticklabels))
-for i, benchmark in enumerate(benchmarks_ordered):
-    xticklabels[i*3 + 1] = benchmark
-xticklabels.append('rel_geomean')
+for i, benchmark in enumerate(benchmarks_ordered + ['rel_geomean']):
+    xticklabels[i*2] = benchmark
 
-ax.set_xticklabels(xticklabels, minor=True, rotation=90)
-
-ax.set_ylabel('IPCs with different configurations')
-ax.set_xlabel('Simulation points from SPEC 2017')
-ax.legend(rects, configs_ordered, fontsize='small', ncol=num_configs)
-
-plt.tight_layout()
-for f in ['eps', 'png']:
-    plt.savefig(f'./{f}/ipc_from_spec.{f}', format=f'{f}')
-
+print(data_all.shape)
+gm = graphs.GraphMaker()
+if show_reduction:
+    data_high = np.array([data_all[1], data_all[3]])
+    data_low = np.array([data_all[0], data_all[2]])
+    legends = [configs_ordered[1], configs_ordered[3], configs_ordered[0], configs_ordered[2]]
+    num_configs -= 2
+    fig, ax = gm.reduction_bar_graph(data_high, data_low, xticklabels, legends, 
+            xlabel='Simulation points from SPEC 2017', 
+            ylabel='IPCs with different configurations', 
+            xlim=(-0.5, num_points*num_configs), 
+            ylim=(0, 3), legendorder=(2,0,3,1))
+else:
+    fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered, 
+            xlabel='Simulation points from SPEC 2017', 
+            ylabel='IPCs with different configurations', 
+            xlim=(-0.5, num_points*num_configs-0.5), 
+            ylim=(0, 3))
+gm.save_to_file(plt, "ipc_from_spec")
 plt.show()

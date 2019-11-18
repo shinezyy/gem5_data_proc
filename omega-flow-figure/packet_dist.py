@@ -14,8 +14,9 @@ import common as c
 import graphs
 import target_stats as t
 
-
-stat_dir = c.env.data('xbar-rand-hint')
+full = True
+suffix = '-full' if full else ""
+stat_dir = c.env.data('xbar-rand-hint') + suffix
 
 benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 points = []
@@ -44,49 +45,45 @@ print(names)
 df = df.reindex(columns=names)
 print(df)
 
-fig, ax = plt.subplots()
-ax.set_ylim((0, 1.1))
-width = 0.85
+gm = graphs.GraphMaker(fig_size=(7,4))
+gm.config.bar_width, gm.config.bar_interval = 0.7, 0.3
 
-colors = ['#7d5c80', '#016201', '#fefe01', 'orange', '#cccccc', '#820000']
 cumulative = np.array([0.0] * len(df))
 rects = []
+data_all = []
 for i in range(6):
     if names[i] == 'KeySrcP':
         cumulative = np.array([0.0] * len(df))
     rect = plt.bar(df.index, df[names[i]].values, bottom=cumulative,
-            edgecolor='black', color=colors[i], width=width)
+            edgecolor=gm.config.edgecolor, color=gm.config.colors[i], width=gm.config.bar_width)
     rects.append(rect)
+    data_all.append(df[names[i]].values)
     cumulative += df[names[i]].values
 
+data_all = np.array(data_all)
+print(data_all.shape)
+
+num_points = data_all.shape[1]
 benchmarks_ordered = []
 for point in df.index:
     if point.endswith('_0'):
         benchmarks_ordered.append(point.split('_')[0])
 
-ax.xaxis.set_major_locator(mpl.ticker.FixedLocator(np.arange(-0.5, 20 * 3 + 1, 3)))
-ax.xaxis.set_minor_locator(mpl.ticker.FixedLocator(np.arange(1, 20 * 3 + 1, 3)))
+xticklabels = [''] * num_points
+for i, benchmark in enumerate(benchmarks_ordered + ['rel_geomean']):
+    xticklabels[i*2] = benchmark
 
-ax.xaxis.set_major_formatter(mpl.ticker.NullFormatter())
-# ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+bar_size = gm.config.bar_width + gm.config.bar_interval
+gm.ax.xaxis.set_major_locator(mpl.ticker.IndexLocator(base=bar_size*3, offset=-gm.config.bar_interval/2))
+gm.ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(base=bar_size, offset=-gm.config.bar_interval/2))
 
-for tick in ax.xaxis.get_major_ticks():
-    # tick.tick1line.set_markersize(0)
-    tick.tick2line.set_markersize(0)
-
-for tick in ax.xaxis.get_minor_ticks():
-    tick.tick1line.set_markersize(0)
-    # tick.tick2line.set_markersize(0)
-    tick.label1.set_horizontalalignment('center')
-
-ax.set_xticklabels(benchmarks_ordered, minor=True, rotation=90)
-
-ax.set_ylabel('Percentage of packet types')
-ax.set_xlabel('Simulation points from SPEC 2017')
-ax.legend(rects, names, fontsize='small', ncol=6)
+gm.set_graph_general_format(xlim=(-0.5, num_points-0.5), 
+        ylim=(0, 1), xticklabels=xticklabels, 
+        xlabel='Simulation points from SPEC 2017',
+        ylabel='Percentage of packet types')
+gm.ax.legend(rects, names, fontsize='small', ncol=6)
 
 plt.tight_layout()
-for f in ['eps', 'png']:
-    plt.savefig(f'./{f}/packet_targets.{f}', format=f'{f}')
 
+gm.save_to_file(plt, "packet_targets")
 plt.show()

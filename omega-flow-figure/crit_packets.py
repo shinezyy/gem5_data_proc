@@ -11,10 +11,13 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 import common as c
+import graphs
 import target_stats as t
 
+full = True
+suffix = '-full' if full else ""
 
-stat_dir = c.env.data('xbar-rand-hint')
+stat_dir = c.env.data('xbar-rand-hint') + suffix
 
 benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 points = []
@@ -29,51 +32,29 @@ for point, stat_file in zip(points, stat_files):
     matrix[point] = d
 df = pd.DataFrame.from_dict(matrix, orient='index')
 
-fig, ax = plt.subplots()
-# ax.set_ylim((0, 1.1))
-width = 0.85
-
-colors = ['#7d5c80', '#016201', '#fefe01', 'orange', '#cccccc', '#820000']
-cumulative = np.array([0.0] * len(df))
-rects = []
 names = ['TotalP', 'KeySrcP']
-
-rect = plt.bar(df.index, df['TotalP'].values, bottom=cumulative,
-        edgecolor='grey', color='white', width=width)
-rects.append(rect)
-
-rect = plt.bar(df.index, df['KeySrcP'].values, bottom=cumulative,
-        edgecolor='black', color=colors[0], width=width)
-rects.append(rect)
-
+data_all = [df['TotalP'].values, df['KeySrcP'].values]
+data_all = np.array(data_all)
+print(data_all.shape)
 benchmarks_ordered = []
 for point in df.index:
     if point.endswith('_0'):
         benchmarks_ordered.append(point.split('_')[0])
 
-ax.xaxis.set_major_locator(mpl.ticker.FixedLocator(np.arange(-0.5, 20 * 3 + 1, 3)))
-ax.xaxis.set_minor_locator(mpl.ticker.FixedLocator(np.arange(1, 20 * 3 + 1, 3)))
+xticklabels = [''] * (2*len(benchmarks_ordered))
+print(len(xticklabels))
+for i, benchmark in enumerate(benchmarks_ordered):
+    xticklabels[i*2] = benchmark
 
-ax.xaxis.set_major_formatter(mpl.ticker.NullFormatter())
-# ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+num_configs, num_points = 3, len(benchmarks_ordered)
 
-for tick in ax.xaxis.get_major_ticks():
-    # tick.tick1line.set_markersize(0)
-    tick.tick2line.set_markersize(0)
-
-for tick in ax.xaxis.get_minor_ticks():
-    tick.tick1line.set_markersize(0)
-    # tick.tick2line.set_markersize(0)
-    tick.label1.set_horizontalalignment('center')
-
-ax.set_xticklabels(benchmarks_ordered, minor=True, rotation=90)
-
-ax.set_ylabel('Number of pointers')
-ax.set_xlabel('Simulation points from SPEC 2017')
-ax.legend(rects, names, fontsize='small', ncol=6)
-
-plt.tight_layout()
-for f in ['eps', 'png']:
-    plt.savefig(f'./{f}/crit_pointers.{f}', format=f'{f}')
-
-plt.show()
+print(num_points, num_configs)
+gm = graphs.GraphMaker(fig_size=(7,4))
+gm.config.bar_width, gm.config.bar_interval = 0.7, 0.3
+fig, ax = gm.reduction_bar_graph(data_all[:1], data_all[1:], xticklabels, names, 
+        xlabel='Simulation points from SPEC 2017',
+        ylabel='Number of pointers', 
+        xlim=(-0.5, num_points*num_configs-0.5))
+# legend = ax.get_legend()
+# legend.set_bbox_to_anchor((0.80,0.89))
+gm.save_to_file(plt, "crit_pointers")
