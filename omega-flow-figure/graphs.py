@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys
-sys.path.append('.')
 
 import matplotlib as mpl
 import matplotlib.cm as cm
@@ -9,6 +8,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
+
+plt.rcParams["font.family"] = "Times New Roman"
 
 class GraphDefaultConfig(object):
     colors = ["red", "gray", "None", "green", "orange", "purple"]

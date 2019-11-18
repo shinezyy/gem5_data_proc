@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 
 import os.path as osp
-import pandas as pd
-import numpy as np
-from matplotlib import pyplot as plt
-import matplotlib as mpl
-import seaborn as sns
-
 import sys
 sys.path.append('.')
+
+import matplotlib as mpl
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 
 import common as c
 import graphs
 import target_stats as t
+
 
 full = True
 suffix = '-full' if full else ""
@@ -97,6 +98,6 @@ else:
             xlim=(-0.5, num_points*num_configs-0.5),
             ylim=(0,1.05))
     fig.suptitle('Queueing time reduction', fontsize='large')
+plt.subplots_adjust(top=0.92)
 gm.save_to_file(plt, "queueing")
 plt.show()
-

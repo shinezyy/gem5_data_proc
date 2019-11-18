@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 
 import os.path as osp
-import pandas as pd
-import numpy as np
-from matplotlib import pyplot as plt
-import matplotlib as mpl
-import seaborn as sns
-
 import sys
 sys.path.append('.')
 
+import matplotlib as mpl
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
+
 import common as c
+import graphs
 import target_stats as t
+
 
 full = True
 suffix = '-full' if full else ""
@@ -144,4 +146,3 @@ for f in ['eps', 'png']:
     plt.savefig(f'./{f}/flow_dist.{f}', format=f'{f}')
 
 plt.show()
-

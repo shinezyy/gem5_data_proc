@@ -5,7 +5,6 @@ import sys
 sys.path.append('.')
 
 import matplotlib as mpl
-import matplotlib.cm as cm
 import numpy as np
 import pandas as pd
 import seaborn as sns
