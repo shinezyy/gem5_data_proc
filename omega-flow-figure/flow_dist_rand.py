@@ -2,7 +2,7 @@
 
 import os.path as osp
 import sys
-sys.path.append('.')
+sys.path.append('..')
 
 import matplotlib as mpl
 import numpy as np
@@ -145,4 +145,4 @@ plt.tight_layout()
 for f in ['eps', 'png']:
     plt.savefig(f'./{f}/bw_dist_opr.{f}', format=f'{f}')
 
-plt.show()
+plt.show(block=True)

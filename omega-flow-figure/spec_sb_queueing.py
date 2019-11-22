@@ -2,7 +2,7 @@
 
 import os.path as osp
 import sys
-sys.path.append('.')
+sys.path.append('..')
 
 import matplotlib as mpl
 import numpy as np

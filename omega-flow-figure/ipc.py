@@ -2,7 +2,7 @@
 
 import os.path as osp
 import sys
-sys.path.append('.')
+sys.path.append('..')
 
 import matplotlib as mpl
 import numpy as np
@@ -15,6 +15,7 @@ import graphs
 import target_stats as t
 
 
+strange_const = 3
 show_lins = 62
 pd.set_option('precision', 3)
 pd.set_option('display.max_rows', show_lins)
@@ -22,7 +23,7 @@ pd.set_option('display.min_rows', show_lins)
 
 full = True
 do_normalization = True
-do_normalization = False
+# do_normalization = False
 
 suffix = '-full' if full else ""
 stat_dirs = {
@@ -106,13 +107,14 @@ for point in df.index:
 
 xticklabels = [''] * num_points
 for i, benchmark in enumerate(benchmarks_ordered + ['rel_geomean']):
-    xticklabels[i*2] = benchmark
+    xticklabels[i*strange_const + 1] = benchmark
 
 print(len(configs_ordered))
 gm = graphs.GraphMaker()
 ylabel = 'Normalized IPCs' if do_normalization else "IPCs with different configurations"
-fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered, 
-        xlabel='Simulation points from SPEC 2017', ylabel=ylabel, 
+fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered,
+        # xlabel='Simulation points from SPEC 2017',
+        ylabel=ylabel,
         xlim=(-0.5, num_points*num_configs-0.5), ylim=(0, 1.13 if do_normalization else 3))
 legend = ax.get_legend()
 if do_normalization:
@@ -120,4 +122,4 @@ if do_normalization:
 else:
     legend.set_bbox_to_anchor((0.7,1))
 gm.save_to_file(plt, "ipc")
-plt.show()
+plt.show(block=True)

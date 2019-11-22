@@ -43,8 +43,7 @@ for b in benchmarks:
         points.append(f'{b}_{i}')
 
 data_all = []
-# bounds = ['by_bw', 'by_chasing', 'by_crit_ptr']
-bounds = ['by_chasing', 'by_bw', ]
+bounds = ['by_bw', 'by_crit_ptr']
 num_points, num_configs = 0, len(bounds)
 
 for bound in bounds:
@@ -79,7 +78,7 @@ fig, ax = gm.simple_bar_graph(data_all, xticklabels, bounds,
         xlabel='Simulation points from SPEC 2017',
         ylabel='IPC upper bound with different configs',
         xlim=(-0.5, num_points*num_configs-0.5),
-        ylim=(0,4.0))
+        ylim=(0,4.6))
 
-gm.save_to_file(plt, "upper")
+gm.save_to_file(plt, "upper2")
 plt.show(block=True)

@@ -15,7 +15,7 @@ class GraphDefaultConfig(object):
     colors = ["red", "gray", "None", "green", "orange", "purple"]
     edgecolor = "black"
     edgecolors = ["black", "blue"]
-    fig_size = (14, 4)
+    fig_size = (14, 3)
     bar_width, bar_interval = 0.6, 0.4
 
 class GraphMaker(object):
@@ -43,7 +43,7 @@ class GraphMaker(object):
         self.ax.set_xlabel(xlabel)
         self.ax.set_ylabel(ylabel)
 
-    def simple_bar_graph(self, data, xticklabels, legends, xlabel="", ylabel="", 
+    def simple_bar_graph(self, data, xticklabels, legends, xlabel="", ylabel="",
             colors=None, edgecolor=None, xlim=(None,None), ylim=(None,None), overlap=False):
         if colors is None:
             colors = self.config.colors
@@ -62,18 +62,21 @@ class GraphMaker(object):
         bar_size = self.config.bar_width + self.config.bar_interval
         for i, d in enumerate(data):
             tick_starts = np.arange(0, num_points * num_configs, (bar_size * num_configs)) + shift
-            rect = plt.bar(tick_starts, d, edgecolor=edgecolor, color=colors[i], width=self.config.bar_width)
+            rect = plt.bar(tick_starts, d, edgecolor=edgecolor,
+                    color=colors[i], width=self.config.bar_width)
             rects.append(rect)
             shift += 0 if overlap else self.config.bar_width + self.config.bar_interval
-        self.ax.xaxis.set_major_locator(mpl.ticker.IndexLocator(base=bar_size*num_configs*3, offset=-self.config.bar_interval/2))
-        self.ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(base=bar_size*num_configs, offset=-self.config.bar_interval/2))
+        self.ax.xaxis.set_major_locator(mpl.ticker.IndexLocator(
+            base=bar_size*num_configs*3, offset=-self.config.bar_interval/2))
+        self.ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(
+            base=bar_size*num_configs, offset=-self.config.bar_interval/2))
         self.set_graph_general_format(xlim, ylim, xticklabels, xlabel, ylabel)
         self.ax.legend(rects, legends, fontsize='small', ncol=num_configs)
 
         plt.tight_layout()
         return self.fig, self.ax
-    
-    def reduction_bar_graph(self, data_high, data_low, xticklabels, legends, xlabel="", ylabel="", 
+
+    def reduction_bar_graph(self, data_high, data_low, xticklabels, legends, xlabel="", ylabel="",
             colors=None, edgecolors=None, xlim=(None,None), ylim=(None,None), legendorder=None):
         if colors is None:
             colors = [self.config.colors, ["None"]*len(self.config.colors)]

@@ -2,7 +2,7 @@
 
 import os.path as osp
 import sys
-sys.path.append('.')
+sys.path.append('..')
 
 import matplotlib as mpl
 import numpy as np
@@ -87,4 +87,4 @@ gm.ax.legend(rects, names, fontsize='small', ncol=6)
 plt.tight_layout()
 
 gm.save_to_file(plt, "packet_targets")
-plt.show()
+plt.show(block=True)

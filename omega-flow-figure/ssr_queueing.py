@@ -2,7 +2,7 @@
 
 import os.path as osp
 import sys
-sys.path.append('.')
+sys.path.append('..')
 
 import matplotlib as mpl
 import numpy as np
@@ -14,6 +14,7 @@ import common as c
 import graphs
 import target_stats as t
 
+strange_const = 3
 
 show_lins = 62
 pd.set_option('precision', 3)
@@ -85,7 +86,7 @@ for point in df.index:
 
 xticklabels = [''] * num_points
 for i, benchmark in enumerate(benchmarks_ordered):
-    xticklabels[i*2] = benchmark
+    xticklabels[i*strange_const] = benchmark
 
 gm = graphs.GraphMaker()
 legends = ['Delay by SSR', 'Delay by Queueing']
@@ -94,4 +95,4 @@ fig, ax = gm.simple_bar_graph(data_all, xticklabels, legends,
         xlim=(-0.5, num_points*num_targets-0.5))
 
 gm.save_to_file(plt, "ssr_queueing")
-plt.show()
+plt.show(block=True)

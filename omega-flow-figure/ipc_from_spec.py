@@ -2,7 +2,7 @@
 
 import os.path as osp
 import sys
-sys.path.append('.')
+sys.path.append('..')
 
 import matplotlib as mpl
 import numpy as np
@@ -14,6 +14,7 @@ import common as c
 import graphs
 import target_stats as t
 
+strange_const = 3
 
 show_lins = 62
 pd.set_option('precision', 3)
@@ -23,7 +24,7 @@ pd.set_option('display.min_rows', show_lins)
 full = True
 suffix = '-full' if full else ""
 
-show_reduction = False
+show_reduction = True
 
 stat_dirs = {
         'Xbar4': 'xbar4',
@@ -100,7 +101,7 @@ for point in df.index:
 
 xticklabels = [''] * num_points
 for i, benchmark in enumerate(benchmarks_ordered + ['rel_geomean']):
-    xticklabels[i*2] = benchmark
+    xticklabels[i*strange_const + 1] = benchmark
 
 print(data_all.shape)
 gm = graphs.GraphMaker()
@@ -121,4 +122,4 @@ else:
             xlim=(-0.5, num_points*num_configs-0.5), 
             ylim=(0, 3))
 gm.save_to_file(plt, "ipc_from_spec")
-plt.show()
+plt.show(block=True)

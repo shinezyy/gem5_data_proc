@@ -2,7 +2,7 @@
 
 import os.path as osp
 import sys
-sys.path.append('.')
+sys.path.append('..')
 
 import matplotlib as mpl
 import numpy as np
@@ -14,6 +14,7 @@ import common as c
 import graphs
 import target_stats as t
 
+strange_const = 3
 
 full = True
 suffix = '-full' if full else ""
@@ -77,7 +78,7 @@ for point in df.index:
 xticklabels = [''] * num_points
 print(len(xticklabels))
 for i, benchmark in enumerate(benchmarks_ordered):
-    xticklabels[i*2] = benchmark
+    xticklabels[i*strange_const+ 1] = benchmark
 
 print(data_all.shape)
 gm = graphs.GraphMaker()
@@ -88,16 +89,16 @@ if show_reduction:
     num_configs -= 2
     fig, ax = gm.reduction_bar_graph(data_high, data_low, xticklabels, legends, 
             xlabel='Simulation points from SPEC 2017', 
-            ylabel='Relative queueing cycles reduction', 
+            ylabel='Queueing cycles reduction', 
             xlim=(-0.5, num_points*num_configs-0.5), 
             ylim=(0, 3), legendorder=(2,0,3,1))
 else:
     fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered, 
             xlabel='Simulation points from SPEC 2017', 
-            ylabel='Relative queueing cycles reduction', 
+            ylabel='Queueing cycles reduction', 
             xlim=(-0.5, num_points*num_configs-0.5),
             ylim=(0,1.05))
     fig.suptitle('Queueing time reduction', fontsize='large')
 plt.subplots_adjust(top=0.92)
 gm.save_to_file(plt, "queueing")
-plt.show()
+plt.show(block=True)

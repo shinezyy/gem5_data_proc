@@ -2,7 +2,7 @@
 
 import os.path as osp
 import sys
-sys.path.append('.')
+sys.path.append('..')
 
 import matplotlib as mpl
 import numpy as np
@@ -14,6 +14,7 @@ import common as c
 import graphs
 import target_stats as t
 
+strange_const = 3
 
 full = True
 suffix = '-full' if full else ""
@@ -75,7 +76,7 @@ for point in df.index:
 xticklabels = [''] * num_points
 print(len(xticklabels))
 for i, benchmark in enumerate(benchmarks_ordered):
-    xticklabels[i*2] = benchmark
+    xticklabels[i*strange_const + 1] = benchmark
 
 
 gm = graphs.GraphMaker()
@@ -86,4 +87,4 @@ fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered,
         ylim=(0,1))
 
 gm.save_to_file(plt, "ssr")
-plt.show()
+plt.show(block=True)
