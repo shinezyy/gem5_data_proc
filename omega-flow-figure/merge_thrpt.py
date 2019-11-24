@@ -34,8 +34,8 @@ def draw_queueing_throughput():
             }
     stat_dirs = {
             # 'Xbar4*2-SpecSB': c.env.data('dedi-xbar4-rand-hint'),
-            'Omega16-OPR': c.env.data('xbar-rand'),
-            'Xbar16-OPR': c.env.data('omega-rand'),
+            'Omega16-OPR': c.env.data('omega-rand'),
+            'Xbar16-OPR': c.env.data('xbar-rand'),
             # 'Xbar16-OPR': c.env.data('xbar-rand'),
             }
     for k in baseline_stat_dirs:
@@ -122,6 +122,7 @@ def draw_queueing_throughput():
             xlim=(-0.5,num_points*num_configs-0.5),
             xtick_scale=1.5,
             title = "(a) Queueing time reduced by M-1 and new interconnect network",
+            with_borders=True,
             )
 
 
@@ -222,6 +223,7 @@ def draw_queueing_rand():
             xlim=(-0.5,num_points*num_configs-0.5),
             xtick_scale=1.5,
             title = "(b) Queueing time reduced by Operand Position Randomization",
+            with_borders=True,
             )
     # fig.suptitle('Queueing time reduction', fontsize='large')
 
@@ -321,7 +323,10 @@ def draw_ipc_throughput():
                 # ylabel='IPCs with different configurations',
                 ylabel='IPCs',
                 xlim=(-0.5, num_points*num_configs),
-                ylim=(0, 3))
+                ylim=(0, 3),
+                title = "(c) IPC improvements from M-1 and new interconnect network",
+                with_borders=True,
+                )
     else:
         fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered,
                 # xlabel='Simulation points from SPEC 2017',
@@ -330,6 +335,7 @@ def draw_ipc_throughput():
                 xlim=(-0.5, num_points*num_configs-0.5),
                 ylim=(0, 3),
                 title = "(c) IPC improvements from M-1 and new interconnect network",
+                with_borders=True,
                 )
 
 draw_queueing_throughput()
@@ -337,5 +343,5 @@ draw_queueing_rand()
 draw_ipc_throughput()
 plt.tight_layout()
 gm.save_to_file(plt, 'merged_throughput')
-plt.show()
+plt.show(block=False)
 

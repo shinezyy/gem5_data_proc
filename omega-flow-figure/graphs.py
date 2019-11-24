@@ -53,7 +53,7 @@ class GraphMaker(object):
 
     def simple_bar_graph(self, data, xticklabels, legends, xlabel="", ylabel="",
             colors=None, edgecolor=None, xlim=(None,None), ylim=(None,None), overlap=False,
-            set_format=True, xtick_scale=1, title=None):
+            set_format=True, xtick_scale=1, title=None, with_borders=False):
         if colors is None:
             colors = self.config.colors
         if edgecolor is None:
@@ -76,10 +76,33 @@ class GraphMaker(object):
                     color=colors[i], width=self.config.bar_width * xtick_scale)
             rects.append(rect)
             shift += 0 if overlap else self.config.bar_width + self.config.bar_interval
-        self.cur_ax.xaxis.set_major_locator(mpl.ticker.IndexLocator(
-            base=bar_size*num_configs*3, offset=-self.config.bar_interval/2))
+
+        # self.cur_ax.xaxis.set_major_locator(mpl.ticker.IndexLocator(
+        #     base=bar_size*num_configs*3, offset=-self.config.bar_interval/2))
+        # self.cur_ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(
+        #     base=bar_size*num_configs, offset=-self.config.bar_interval/2))
+
+        tick_locators = mpl.ticker.IndexLocator(
+            base=bar_size*num_configs*3,
+            # offset=-self.config.bar_interval/2 + self.config.bar_width,
+            offset=-self.config.bar_interval/4,
+            )
+
+        if with_borders:
+            for mt in tick_locators.tick_values(0, bar_size*num_configs*3*num_points):
+                self.cur_ax.axvline(mt*xtick_scale - self.config.bar_width/3*2,
+                        c='black', linestyle='-.',
+                        )
+
+        self.cur_ax.xaxis.set_major_locator(tick_locators)
+
         self.cur_ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(
-            base=bar_size*num_configs, offset=-self.config.bar_interval/2))
+            base=bar_size*num_configs,
+            # offset=-self.config.bar_interval/2 + self.config.bar_width,
+            offset=-self.config.bar_interval/4,
+            ))
+
+
         if set_format:
             self.set_graph_general_format(xlim, ylim, xticklabels, xlabel, ylabel, title=title)
         self.cur_ax.legend(rects, legends, fontsize='small', ncol=num_configs)
@@ -91,7 +114,9 @@ class GraphMaker(object):
 
     def reduction_bar_graph(self, data_high, data_low, xticklabels, legends, xlabel="", ylabel="",
             colors=None, edgecolors=None, xlim=(None,None), ylim=(None,None), legendorder=None,
-            set_format=True, xtick_scale=1, title=None):
+            set_format=True, xtick_scale=1, title=None,
+            with_borders=False,
+            ):
         if colors is None:
             colors = [self.config.colors, ["None"]*len(self.config.colors)]
         if edgecolors is None:
@@ -137,10 +162,26 @@ class GraphMaker(object):
             rects = new_rects
             legends = new_legends
 
-        self.cur_ax.xaxis.set_major_locator(mpl.ticker.IndexLocator(
-            base=bar_size*num_configs*3, offset=-self.config.bar_interval/2))
+        tick_locators = mpl.ticker.IndexLocator(
+            base=bar_size*num_configs*3,
+            # offset=-self.config.bar_interval/2 + self.config.bar_width,
+            offset=-self.config.bar_interval/4,
+            )
+
+        if with_borders:
+            for mt in tick_locators.tick_values(0, bar_size*num_configs*3*num_points):
+                self.cur_ax.axvline(mt*xtick_scale - self.config.bar_width/3*2,
+                        c='black', linestyle='-.',
+                        )
+
+        self.cur_ax.xaxis.set_major_locator(tick_locators)
+
         self.cur_ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(
-            base=bar_size*num_configs, offset=-self.config.bar_interval/2))
+            base=bar_size*num_configs,
+            # offset=-self.config.bar_interval/2 + self.config.bar_width,
+            offset=-self.config.bar_interval/4,
+            ))
+
         if set_format:
             self.set_graph_general_format(xlim, ylim, xticklabels, xlabel, ylabel, title=title)
 

@@ -124,6 +124,7 @@ def spec_on_xbar4():
             xlim=(-0.5, num_points*2-0.5),
             ylim=(0,1.22e9),
             title='(a) Effect of Speculative Scoreboard/ARF  on Xbar4',
+            with_borders=True,
             )
 
 def spec_on_omega():
@@ -227,6 +228,7 @@ def spec_on_omega():
             ylabel='Cycles',
             xlim=(-0.5, num_points*2-0.5),
             title='(b) Effect of Speculative Scoreboard/ARF  on Omega16',
+            with_borders=True,
             )
 
 def ipc_spec():
@@ -325,6 +327,7 @@ def ipc_spec():
                 xlim=(-0.5, num_points*num_configs), 
                 ylim=(0, 3), legendorder=(2,0,3,1),
                 title='(c) IPC improvements from Speculative Scoreboard/ARF on Omega16 and Xbar4',
+                with_borders=True,
                 )
     else:
         fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered, 
@@ -332,6 +335,7 @@ def ipc_spec():
                 xlim=(-0.5, num_points*num_configs-0.5), 
                 ylim=(0, 3),
                 title='(c) IPC improvements from Speculative Scoreboard/ARF on Omega16 and Xbar4',
+                with_borders=True,
                 )
 
 spec_on_xbar4()
@@ -341,5 +345,5 @@ ipc_spec()
 plt.tight_layout()
 
 gm.save_to_file(plt, "spec_merge")
-plt.show()
+plt.show(block=False)
 
