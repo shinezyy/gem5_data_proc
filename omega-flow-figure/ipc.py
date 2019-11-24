@@ -115,7 +115,8 @@ ylabel = 'Normalized IPCs' if do_normalization else "IPCs with different configu
 fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered,
         # xlabel='Simulation points from SPEC 2017',
         ylabel=ylabel,
-        xlim=(-0.5, num_points*num_configs-0.5), ylim=(0, 1.13 if do_normalization else 3))
+        xlim=(-0.5, num_points*num_configs-0.5), ylim=(0, 1.13 if do_normalization else 3),
+        with_borders=True)
 legend = ax.get_legend()
 if do_normalization:
     legend.set_bbox_to_anchor((0.788,0.88))
