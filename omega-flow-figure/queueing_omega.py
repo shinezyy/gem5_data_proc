@@ -113,6 +113,6 @@ fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legend
 # fig.suptitle('Queueing time reduction', fontsize='large')
 # legend = ax.get_legend()
 # legend.set_bbox_to_anchor((0.80,0.89))
-gm.save_to_file(plt, "interconnect_queueing")
+gm.save_to_file("interconnect_queueing")
 
 plt.show()

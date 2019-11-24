@@ -344,6 +344,6 @@ ipc_spec()
 
 plt.tight_layout()
 
-gm.save_to_file(plt, "spec_merge")
+gm.save_to_file("spec_merge")
 plt.show(block=False)
 

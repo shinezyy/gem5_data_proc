@@ -110,6 +110,6 @@ fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legend
         xlim=(-0.5, num_points*num_configs-0.5))
 # legend = ax.get_legend()
 # legend.set_bbox_to_anchor((0.80,0.89))
-gm.save_to_file(plt, "spec_ssr")
+gm.save_to_file("spec_ssr")
 
 plt.show()

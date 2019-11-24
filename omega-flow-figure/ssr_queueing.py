@@ -94,5 +94,5 @@ fig, ax = gm.simple_bar_graph(data_all, xticklabels, legends,
         xlabel='Simulation points from SPEC 2017', ylabel='!!!!!!!!WRONG LABEL', 
         xlim=(-0.5, num_points*num_targets-0.5))
 
-gm.save_to_file(plt, "ssr_queueing")
+gm.save_to_file("ssr_queueing")
 plt.show(block=True)

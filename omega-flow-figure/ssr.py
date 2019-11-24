@@ -85,6 +85,6 @@ fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered,
         ylabel='Serialized wakeup delay cycles reduction', 
         xlim=(-0.5, num_points*num_configs-0.5),
         ylim=(0,1))
-
-gm.save_to_file(plt, "ssr")
+ax.yaxis.set_label_coords(-0.03,0.35)
+gm.save_to_file("ssr")
 plt.show(block=True)

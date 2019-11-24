@@ -52,7 +52,7 @@ class GraphMaker(object):
             self.cur_ax.title.set_text(title)
 
     def simple_bar_graph(self, data, xticklabels, legends, xlabel="", ylabel="",
-            colors=None, edgecolor=None, xlim=(None,None), ylim=(None,None), overlap=False,
+            colors=None, edgecolor=None, linewidth=None, xlim=(None,None), ylim=(None,None), overlap=False,
             set_format=True, xtick_scale=1, title=None, with_borders=False):
         if colors is None:
             colors = self.config.colors
@@ -72,7 +72,7 @@ class GraphMaker(object):
         for i, d in enumerate(data):
             tick_starts = np.arange(0, num_points * num_configs, (bar_size * num_configs)) + shift
             tick_starts *= xtick_scale
-            rect = plt.bar(tick_starts, d, edgecolor=edgecolor,
+            rect = plt.bar(tick_starts, d, edgecolor=edgecolor, linewidth=linewidth,
                     color=colors[i], width=self.config.bar_width * xtick_scale)
             rects.append(rect)
             shift += 0 if overlap else self.config.bar_width + self.config.bar_interval
@@ -106,7 +106,7 @@ class GraphMaker(object):
         if set_format:
             self.set_graph_general_format(xlim, ylim, xticklabels, xlabel, ylabel, title=title)
         self.cur_ax.legend(rects, legends, fontsize='small', ncol=num_configs)
-
+        plt.tight_layout()
         return self.fig, self.cur_ax
 
     def set_cur_ax(self, new_ax):
@@ -188,10 +188,10 @@ class GraphMaker(object):
         if same_high_data:
             rects = [rects[0]] + rects[2:]
         self.cur_ax.legend(rects, legends, fontsize='small', ncol=num_legends)
-
+        plt.tight_layout()
         return self.fig, self.cur_ax
 
-    def save_to_file(self, plt, name):
+    def save_to_file(self, name):
         for f in ['eps', 'png']:
             filename = f'./{f}/{name}.{f}'
             print("save to", filename)

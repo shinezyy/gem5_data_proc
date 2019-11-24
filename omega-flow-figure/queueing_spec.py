@@ -111,6 +111,6 @@ fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legend
         xlim=(-0.5, num_points*num_configs-0.5),ylim=(0,1.22e9))
 fig.suptitle('Queueing time reduction', fontsize='large')
 
-gm.save_to_file(plt, "spec_queueing")
+gm.save_to_file("spec_queueing")
 
 plt.show()

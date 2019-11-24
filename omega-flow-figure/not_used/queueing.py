@@ -100,5 +100,5 @@ else:
             ylim=(0,1.05))
     fig.suptitle('Queueing time reduction', fontsize='large')
 plt.subplots_adjust(top=0.92)
-gm.save_to_file(plt, "queueing")
+gm.save_to_file("queueing")
 plt.show(block=True)

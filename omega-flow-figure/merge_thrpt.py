@@ -342,6 +342,6 @@ draw_queueing_throughput()
 draw_queueing_rand()
 draw_ipc_throughput()
 plt.tight_layout()
-gm.save_to_file(plt, 'merged_throughput')
+gm.save_to_file('merged_throughput')
 plt.show(block=False)
 

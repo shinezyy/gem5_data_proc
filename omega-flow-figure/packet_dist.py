@@ -86,5 +86,5 @@ gm.ax.legend(rects, names, fontsize='small', ncol=6)
 
 plt.tight_layout()
 
-gm.save_to_file(plt, "packet_targets")
+gm.save_to_file("packet_targets")
 plt.show(block=True)

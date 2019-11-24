@@ -119,8 +119,8 @@ fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered,
         with_borders=True)
 legend = ax.get_legend()
 if do_normalization:
-    legend.set_bbox_to_anchor((0.788,0.88))
+    legend.set_bbox_to_anchor((0.5,0.94))
 else:
     legend.set_bbox_to_anchor((0.7,1))
-gm.save_to_file(plt, "ipc")
+gm.save_to_file("ipc")
 plt.show(block=True)

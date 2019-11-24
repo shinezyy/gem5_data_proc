@@ -75,11 +75,13 @@ for i, benchmark in enumerate(benchmarks_ordered):
     xticklabels[i*3 + 1] = benchmark
 
 gm = graphs.GraphMaker(fig_size=(6,3))
+gm.config.bar_interval, gm.config.bar_width = 0.2, 0.8
 fig, ax = gm.simple_bar_graph(data_all, xticklabels, bounds,
+        linewidth=0.5,
         xlabel='Simulation points from SPEC 2017',
         ylabel='IPC upper bound with different configs',
         xlim=(-0.5, num_points*num_configs-0.5),
-        ylim=(0,4.0))
-
-gm.save_to_file(plt, "upper")
+        ylim=(0,4))
+ax.yaxis.set_label_coords(-0.04,0.4)
+gm.save_to_file("upper")
 plt.show(block=True)

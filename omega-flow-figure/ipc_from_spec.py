@@ -121,5 +121,5 @@ else:
             ylabel='IPCs with different configurations', 
             xlim=(-0.5, num_points*num_configs-0.5), 
             ylim=(0, 3))
-gm.save_to_file(plt, "ipc_from_spec")
+gm.save_to_file("ipc_from_spec")
 plt.show(block=True)
