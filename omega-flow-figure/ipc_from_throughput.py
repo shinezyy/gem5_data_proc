@@ -66,7 +66,7 @@ for config in configs_ordered:
         matrix[point] = d
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
-
+    df.sort_index(inplace=True)
     dfs[config] = df
 
     if num_points == 0:

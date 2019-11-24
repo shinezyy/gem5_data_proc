@@ -67,7 +67,7 @@ for baseline in baselines_ordered:
     print(data.shape)
     data_all.append(data)
 
-for config in configs_ordered:
+for nc, config in enumerate(configs_ordered):
     stat_dir = stat_dirs[config]
     stat_dir = osp.expanduser(stat_dir)
     stat_files = [osp.join(stat_dir, point, 'stats.txt') for point in points]
@@ -82,6 +82,8 @@ for config in configs_ordered:
     df.loc['mean'] = df.iloc[-1]
     df.loc['mean']['queueingD'] = np.mean(df['queueingD'])
     data = np.concatenate([df['queueingD'].values[:-1], [0],df['queueingD'].values[-1:]])
+    print(config)
+    print(data/data_all[nc])
     print(data.shape)
     data_all.append(data)
 
@@ -110,3 +112,5 @@ fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legend
 fig.suptitle('Queueing time reduction', fontsize='large')
 
 gm.save_to_file(plt, "spec_queueing")
+
+plt.show()

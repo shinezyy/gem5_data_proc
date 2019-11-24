@@ -57,17 +57,18 @@ for baseline in baselines_ordered:
         d = c.get_stats(stat_file, t.breakdown_targets, re_targets=True)
         matrix[point] = d
     baseline_df = pd.DataFrame.from_dict(matrix, orient='index')
+    baseline_df.sort_index(inplace=True)
 
     if num_points == 0:
         num_points = len(baseline_df)
 
     baseline_df.loc['mean'] = baseline_df.iloc[-1]
     baseline_df.loc['mean']['queueingD'] = np.mean(baseline_df['queueingD'])
-    data = np.concatenate([baseline_df['queueingD'].values[:-1], [0],baseline_df['queueingD'].values[-1:]])
+    data = np.concatenate([baseline_df['queueingD'].values[:-1], [0], baseline_df['queueingD'].values[-1:]])
     print(data.shape)
     data_all.append(data)
 
-for config in configs_ordered:
+for nc, config in enumerate(configs_ordered):
     stat_dir = stat_dirs[config]
     stat_dir = osp.expanduser(stat_dir)
     stat_files = [osp.join(stat_dir, point, 'stats.txt') for point in points]
@@ -79,11 +80,13 @@ for config in configs_ordered:
         matrix[point] = d
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
+    df.sort_index(inplace=True)
     df.loc['mean'] = df.iloc[-1]
     df.loc['mean']['queueingD'] = np.mean(df['queueingD'])
     print(len(df))
     data = np.concatenate([df['queueingD'].values[:-1], [0],df['queueingD'].values[-1:]])
     print(data.shape)
+    print(data/data_all[nc])
     data_all.append(data)
 
 num_points += 2
@@ -111,3 +114,5 @@ fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legend
 # legend = ax.get_legend()
 # legend.set_bbox_to_anchor((0.80,0.89))
 gm.save_to_file(plt, "interconnect_queueing")
+
+plt.show()

@@ -20,15 +20,16 @@ full = True
 suffix = '-full' if full else ""
 
 baseline_stat_dirs = {
-        'Omega16': c.env.data('omega'),
-        'Xbar16': c.env.data('xbar'),
+        'Xbar4': c.env.data('xbar4-rand'),
+        # 'Omega16-OPR': c.env.data('omega-rand'),
         }
 stat_dirs = {
         # 'Xbar4*2-SpecSB': c.env.data('dedi-xbar4-rand-hint'),
-        'Omega16-OPR': c.env.data('omega-rand'),
-        'Xbar16-OPR': c.env.data('xbar-rand'),
+        'Xbar4-SpecSB': c.env.data('xbar4-rand-hint'),
+        # 'Omega16-OPR-SpecSB': c.env.data('omega-rand-hint'),
         # 'Xbar16-OPR': c.env.data('xbar-rand'),
         }
+stats = ['queueingD', 'ssrD']
 for k in baseline_stat_dirs:
     baseline_stat_dirs[k] += suffix
 for k in stat_dirs:
@@ -44,31 +45,32 @@ for b in benchmarks:
     for i in range(0, 3):
         points.append(f'{b}_{i}')
 
-num_points = 0
-num_configs = len(stat_dirs)
+num_points, num_configs = 0, len(stat_dirs)
 
 data_all = []
-for baseline in baselines_ordered:
-    baseline_stat_dir = baseline_stat_dirs[baseline]
+# i = 0
+for stat in stats:
+    baseline_stat_dir = baseline_stat_dirs[baselines_ordered[0]]
     stat_files = [osp.join(baseline_stat_dir, point, 'stats.txt') for point in points]
     matrix = {}
     for point, stat_file in zip(points, stat_files):
         d = c.get_stats(stat_file, t.breakdown_targets, re_targets=True)
         matrix[point] = d
     baseline_df = pd.DataFrame.from_dict(matrix, orient='index')
-    baseline_df.sort_index(inplace=True)
 
     if num_points == 0:
         num_points = len(baseline_df)
 
     baseline_df.loc['mean'] = baseline_df.iloc[-1]
-    baseline_df.loc['mean']['queueingD'] = np.mean(baseline_df['queueingD'])
-    data = np.concatenate([baseline_df['queueingD'].values[:-1], [0],baseline_df['queueingD'].values[-1:]])
+    baseline_df.loc['mean'][stat] = np.mean(baseline_df[stat])
+
+    data = np.concatenate([baseline_df[stat].values[:-1], [0],
+        baseline_df[stat].values[-1:]])
     print(data.shape)
     data_all.append(data)
 
-for nc, config in enumerate(configs_ordered):
-    stat_dir = stat_dirs[config]
+for nc, stat in enumerate(stats):
+    stat_dir = stat_dirs[configs_ordered[0]]
     stat_dir = osp.expanduser(stat_dir)
     stat_files = [osp.join(stat_dir, point, 'stats.txt') for point in points]
 
@@ -79,13 +81,13 @@ for nc, config in enumerate(configs_ordered):
         matrix[point] = d
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
-    df.sort_index(inplace=True)
     df.loc['mean'] = df.iloc[-1]
-    df.loc['mean']['queueingD'] = np.mean(df['queueingD'])
-    data = np.concatenate([df['queueingD'].values[:-1], [0],df['queueingD'].values[-1:]])
+    df.loc['mean'][stat] = np.mean(df[stat])
+    data = np.concatenate([df[stat].values[:-1], [0],df[stat].values[-1:]])
     print(data/data_all[nc])
     print(data.shape)
     data_all.append(data)
+
 
 num_points += 2
 data_all = np.array(data_all)
@@ -98,19 +100,24 @@ for point in df.index:
 
 xticklabels = [''] * num_points
 print(len(xticklabels))
-for i, benchmark in enumerate(benchmarks_ordered + ["mean"]):
+for i, benchmark in enumerate(benchmarks_ordered + ['mean']):
     xticklabels[i*strange_const + 1] = benchmark
 
 print(num_points, num_configs)
 gm = graphs.GraphMaker()
-legends = baselines_ordered + configs_ordered
+legends = [
+        'Xbar4 Queueing Cycles', 'Xbar4 SSR Delay Cycles',
+        'Xbar4-SpecSB Queueing Cycles', 'Xbar4-SpecSB SSR Delay Cycles',
+        ]
 fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legends, 
-        # xlabel='Simulation points from SPEC 2017',
-        ylabel='Relative queueing cycles reduction',
-        xlim=(-0.5,num_points*num_configs-0.5))
+        xlabel='Simulation points from SPEC 2017',
+        ylabel='Queueing cycles reduction',
+        xlim=(-0.5, num_points*2-0.5),
+        ylim=(0,1.22e9),
+        )
 fig.suptitle('Queueing time reduction', fontsize='large')
-# legend = ax.get_legend()
-# legend.set_bbox_to_anchor((0.80,0.89))
-gm.save_to_file(plt, "rand_queueing")
+plt.tight_layout()
+
+gm.save_to_file(plt, "spec_on_xbar4")
 
 plt.show()

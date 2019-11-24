@@ -67,7 +67,7 @@ for baseline in baselines_ordered:
     print(data.shape)
     data_all.append(data)
 
-for config in configs_ordered:
+for nc, config in enumerate(configs_ordered):
     stat_dir = stat_dirs[config]
     stat_dir = osp.expanduser(stat_dir)
     stat_files = [osp.join(stat_dir, point, 'stats.txt') for point in points]
@@ -83,6 +83,8 @@ for config in configs_ordered:
     df.loc['mean'][stat] = np.mean(df[stat])
     data = np.concatenate([df[stat].values[:-1], [0],df[stat].values[-1:]])
     print(data.shape)
+    print(config)
+    print(data/data_all[nc])
     data_all.append(data)
 
 num_points += 2
@@ -109,3 +111,5 @@ fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legend
 # legend = ax.get_legend()
 # legend.set_bbox_to_anchor((0.80,0.89))
 gm.save_to_file(plt, "spec_ssr")
+
+plt.show()
