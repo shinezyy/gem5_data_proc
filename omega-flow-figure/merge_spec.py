@@ -22,7 +22,10 @@ suffix = '-full' if full else ""
 n_cols = 1
 n_rows = 3
 
-gm = graphs.GraphMaker((14,5.5), True, n_rows, n_cols, sharex='all')
+gm = graphs.GraphMaker((14,5.5), True, None, n_rows, n_cols, sharex='all')
+
+with open('./bench_order.txt') as f:
+    index_order = [l.strip() for l in f]
 
 def spec_on_xbar4():
     global gm
@@ -66,7 +69,7 @@ def spec_on_xbar4():
             d = c.get_stats(stat_file, t.breakdown_targets, re_targets=True)
             matrix[point] = d
         baseline_df = pd.DataFrame.from_dict(matrix, orient='index')
-        baseline_df.sort_index(inplace=True)
+        baseline_df = baseline_df.reindex(index_order)
 
         if num_points == 0:
             num_points = len(baseline_df)
@@ -74,7 +77,7 @@ def spec_on_xbar4():
         baseline_df.loc['mean'] = baseline_df.iloc[-1]
         baseline_df.loc['mean'][stat] = np.mean(baseline_df[stat])
 
-        data = np.concatenate([baseline_df[stat].values[:-1], [0],
+        data = np.concatenate([baseline_df[stat].values[:-1], [np.NaN],
             baseline_df[stat].values[-1:]])
         print(data.shape)
         data_all.append(data)
@@ -91,10 +94,12 @@ def spec_on_xbar4():
             matrix[point] = d
 
         df = pd.DataFrame.from_dict(matrix, orient='index')
-        df.sort_index(inplace=True)
+        df = df.reindex(index_order)
+
         df.loc['mean'] = df.iloc[-1]
         df.loc['mean'][stat] = np.mean(df[stat])
-        data = np.concatenate([df[stat].values[:-1], [0],df[stat].values[-1:]])
+        data = np.concatenate([df[stat].values[:-1],
+            [np.NaN],df[stat].values[-1:]])
         print(data/data_all[nc])
         print(data.shape)
         data_all.append(data)
@@ -124,7 +129,8 @@ def spec_on_xbar4():
             xlim=(-0.5, num_points*2-0.5),
             ylim=(0,1.22e9),
             title='(a) Effect of Speculative Scoreboard/ARF  on Xbar4',
-            with_borders=True,
+            colors=[['red', 'gray'], ['green', 'blue']],
+            markers=[['+', 6], ['x', 7]],
             )
 
 def spec_on_omega():
@@ -170,7 +176,7 @@ def spec_on_omega():
             d = c.get_stats(stat_file, t.breakdown_targets, re_targets=True)
             matrix[point] = d
         baseline_df = pd.DataFrame.from_dict(matrix, orient='index')
-        baseline_df.sort_index(inplace=True)
+        baseline_df = baseline_df.reindex(index_order)
 
         if num_points == 0:
             num_points = len(baseline_df)
@@ -178,7 +184,7 @@ def spec_on_omega():
         baseline_df.loc['mean'] = baseline_df.iloc[-1]
         baseline_df.loc['mean'][stat] = np.mean(baseline_df[stat])
 
-        data = np.concatenate([baseline_df[stat].values[:-1], [0],
+        data = np.concatenate([baseline_df[stat].values[:-1], [np.NaN],
             baseline_df[stat].values[-1:]])
         print(data.shape)
         data_all.append(data)
@@ -195,11 +201,12 @@ def spec_on_omega():
             matrix[point] = d
 
         df = pd.DataFrame.from_dict(matrix, orient='index')
-        df.sort_index(inplace=True)
+        df = df.reindex(index_order)
 
         df.loc['mean'] = df.iloc[-1]
         df.loc['mean'][stat] = np.mean(df[stat])
-        data = np.concatenate([df[stat].values[:-1], [0],df[stat].values[-1:]])
+        data = np.concatenate([df[stat].values[:-1],
+            [np.NaN], df[stat].values[-1:]])
         print(data/data_all[nc])
         print(data.shape)
         data_all.append(data)
@@ -228,7 +235,8 @@ def spec_on_omega():
             ylabel='Cycles',
             xlim=(-0.5, num_points*2-0.5),
             title='(b) Effect of Speculative Scoreboard/ARF  on Omega16',
-            with_borders=True,
+            colors=[['red', 'gray'], ['green', 'blue']],
+            markers=[['+', 6], ['x', 7]],
             )
 
 def ipc_spec():
@@ -277,7 +285,7 @@ def ipc_spec():
             matrix[point] = d
 
         df = pd.DataFrame.from_dict(matrix, orient='index')
-        df.sort_index(inplace=True)
+        df = df.reindex(index_order)
 
         dfs[config] = df
 
@@ -302,7 +310,8 @@ def ipc_spec():
                 # dfs[config]['boost'] = dfs[config]['rel'] / dfs[baseline]['rel']
 
             print(dfs[config])
-        data = np.concatenate([dfs[config]['ipc'].values[:-1], [0], dfs[config]['ipc'].values[-1:]])
+        data = np.concatenate([dfs[config]['ipc'].values[:-1],
+            [np.NaN], dfs[config]['ipc'].values[-1:]])
         data_all.append(data)
     num_points += 2
     data_all = np.array(data_all)
@@ -327,7 +336,8 @@ def ipc_spec():
                 xlim=(-0.5, num_points*num_configs), 
                 ylim=(0, 3), legendorder=(2,0,3,1),
                 title='(c) IPC improvements from Speculative Scoreboard/ARF on Omega16 and Xbar4',
-                with_borders=True,
+                colors=[['red', 'gray'], ['green', 'blue']],
+                markers=[['+', 6], ['x', 7]],
                 )
     else:
         fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered, 

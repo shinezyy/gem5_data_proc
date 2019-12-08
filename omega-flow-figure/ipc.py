@@ -54,6 +54,7 @@ for b in benchmarks:
 num_points = 0
 num_configs = len(stat_dirs)
 dfs = dict()
+benchmarks_ordered = None
 for config in configs_ordered:
     print(config)
     stat_dir = stat_dirs[config]
@@ -62,12 +63,30 @@ for config in configs_ordered:
 
     matrix = {}
     for point, stat_file in zip(points, stat_files):
-        d = c.get_stats(stat_file, t.ipc_target, re_targets=True)
+        d = c.get_stats(stat_file,
+                # t.ipc_target + t.packet_targets,
+                t.ipc_target,
+                re_targets=True)
         matrix[point] = d
     df = pd.DataFrame.from_dict(matrix, orient='index')
+
+    if config == 'Ideal-OOO':
+        # df['ratioP'] = df['KeySrcP'] / df['TotalP']
+        df = df.sort_values(by = ['ipc'])
+        benchmarks_ordered = df.index
+
+        with open('./bench_order.txt', 'w') as f:
+            for b in benchmarks_ordered:
+                f.write(b+'\n')
+
     dfs[config] = df
     if num_points == 0:
         num_points = len(df)
+
+for config in configs_ordered:
+    dfs[config] = dfs[config].reindex(benchmarks_ordered)
+    # cols_to_drop = [col for col in dfs[config].columns if col.endswith('P')]
+    # dfs[config].drop(cols_to_drop, axis=1, inplace=True)
 
 dfs['Ideal-OOO'].loc['rel_geo_mean'] = [1.0]
 print('Ideal-OOO')
@@ -77,6 +96,7 @@ for config in configs_ordered:
         print(config)
         rel = dfs[config]['ipc'] / dfs['Ideal-OOO']['ipc'][:-1]
         dfs[config]['rel'] = rel
+        print(dfs[config].columns)
         dfs[config].loc['rel_geo_mean'] = [rel.prod() ** (1/len(rel))] * 2
         if config == 'Omega16-OPR-SpecSB':
             dfs[config]['boost'] = dfs[config]['rel'] / dfs['Xbar4']['rel']
@@ -100,27 +120,28 @@ if do_normalization:
     configs_ordered = configs_ordered[:-1]
 print(num_points, num_configs)
 
-benchmarks_ordered = []
-for point in df.index:
-    if point.endswith('_0'):
-        benchmarks_ordered.append(point.split('_')[0])
+# xticklabels = [''] * num_points
+# for i, benchmark in enumerate(benchmarks_ordered + ['rel_geomean']):
+#     xticklabels[i*strange_const + 1] = benchmark
 
-xticklabels = [''] * num_points
-for i, benchmark in enumerate(benchmarks_ordered + ['rel_geomean']):
-    xticklabels[i*strange_const + 1] = benchmark
+legends = list(benchmarks_ordered) + ['', 'mean']
 
 print(len(configs_ordered))
-gm = graphs.GraphMaker((14,2.5))
+gm = graphs.GraphMaker((14,2.5), legend_loc= 'lower left')
 ylabel = 'Normalized IPCs' if do_normalization else "IPCs with different configurations"
-fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered,
+fig, ax = gm.simple_bar_graph(data_all, legends, configs_ordered,
         # xlabel='Simulation points from SPEC 2017',
         ylabel=ylabel,
-        xlim=(-0.5, num_points*num_configs-0.5), ylim=(0, 1.0 if do_normalization else 3),
-        with_borders=True)
+        xlim=(-0.5, num_points*num_configs-0.5),
+        ylim=(0.25, 1.05 if do_normalization else 3),
+        with_borders=False,
+        markers=['x', '+'],
+        )
 # legend = ax.get_legend()
 # if do_normalization:
 #     legend.set_bbox_to_anchor((0.5,0.94))
 # else:
 #     legend.set_bbox_to_anchor((0.7,1))
+plt.tight_layout()
 gm.save_to_file("ipc")
 plt.show(block=True)

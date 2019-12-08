@@ -19,7 +19,7 @@ class GraphDefaultConfig(object):
     bar_width, bar_interval = 0.6, 0.4
 
 class GraphMaker(object):
-    def __init__(self, fig_size=None, multi_ax=False, *args, **kwargs):
+    def __init__(self, fig_size=None, multi_ax=False, legend_loc=None, *args, **kwargs):
         self.config = GraphDefaultConfig()
         if fig_size is None:
             fig_size = self.config.fig_size
@@ -29,7 +29,10 @@ class GraphMaker(object):
             self.fig, self.ax = plt.subplots()
         self.fig.set_size_inches(fig_size[0], fig_size[1], forward=True)
         self.cur_ax = self.ax
-        self.loc = 'upper left'
+        if legend_loc is None:
+            self.loc = 'upper left'
+        else:
+            self.loc = legend_loc
         self.frameon = True
 
     def set_graph_general_format(self, xlim, ylim, xticklabels, xlabel, ylabel,
@@ -38,14 +41,15 @@ class GraphMaker(object):
         # cur_ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
         # print(self.cur_ax.xaxis.get_major_ticks())
         for tick in self.cur_ax.xaxis.get_major_ticks():
-            tick.tick1line.set_markersize(10)
+            tick.tick1line.set_markersize(2)
             tick.tick2line.set_markersize(0)
             # tick.tick2line.set_fontsize(14)
         for tick in self.cur_ax.xaxis.get_minor_ticks():
             tick.tick1line.set_markersize(2)
             tick.label.set_fontsize(14)
             # tick.tick2line.set_markersize(0)
-            tick.label1.set_horizontalalignment('left')
+            tick.label1.set_horizontalalignment('center')
+
         self.cur_ax.set_xlim(xlim)
         self.cur_ax.set_ylim(ylim)
         self.cur_ax.set_xticklabels(xticklabels, minor=True, rotation=90)
@@ -57,8 +61,11 @@ class GraphMaker(object):
             self.cur_ax.title.set_fontsize(14)
 
     def simple_bar_graph(self, data, xticklabels, legends, xlabel="", ylabel="",
-            colors=None, edgecolor=None, linewidth=None, xlim=(None,None), ylim=(None,None), overlap=False,
-            set_format=True, xtick_scale=1, title=None, with_borders=False):
+            colors=None, edgecolor=None, linewidth=None,
+            xlim=(None,None), ylim=(None,None), overlap=False,
+            set_format=True, xtick_scale=1, title=None, with_borders=False,
+            markers=None
+            ):
         if colors is None:
             colors = self.config.colors
         if edgecolor is None:
@@ -71,16 +78,19 @@ class GraphMaker(object):
             num_configs = 1
 
         print(num_points, num_configs)
-        shift = 0.0
         rects = []
         bar_size = self.config.bar_width + self.config.bar_interval
+        assert markers is not None
         for i, d in enumerate(data):
-            tick_starts = np.arange(0, num_points * num_configs, (bar_size * num_configs)) + shift
+            tick_starts = np.arange(0, num_points * num_configs, (bar_size * num_configs))
             tick_starts *= xtick_scale
-            rect = plt.bar(tick_starts, d, edgecolor=edgecolor, linewidth=linewidth,
-                    color=colors[i], width=self.config.bar_width * xtick_scale)
+            rect, = plt.plot(tick_starts, d,
+                    marker=markers[i],
+                    # edgecolor=edgecolor, linewidth=linewidth,
+                    color=colors[i],
+                    # width=self.config.bar_width * xtick_scale
+                    )
             rects.append(rect)
-            shift += 0 if overlap else self.config.bar_width + self.config.bar_interval
 
         # self.cur_ax.xaxis.set_major_locator(mpl.ticker.IndexLocator(
         #     base=bar_size*num_configs*3, offset=-self.config.bar_interval/2))
@@ -110,6 +120,8 @@ class GraphMaker(object):
 
         if set_format:
             self.set_graph_general_format(xlim, ylim, xticklabels, xlabel, ylabel, title=title)
+
+        print(rects, legends)
         self.cur_ax.legend(rects, legends, fontsize=13, ncol=num_configs,
                 loc=self.loc,
                 frameon=self.frameon,
@@ -124,9 +136,11 @@ class GraphMaker(object):
             colors=None, edgecolors=None, xlim=(None,None), ylim=(None,None), legendorder=None,
             set_format=True, xtick_scale=1, title=None,
             with_borders=False,
+            markers=None,
+            redundant_baseline=False,
             ):
-        if colors is None:
-            colors = [self.config.colors, ["None"]*len(self.config.colors)]
+        assert colors is not None
+
         if edgecolors is None:
             edgecolors = [self.config.colors, self.config.edgecolors]
 
@@ -142,25 +156,34 @@ class GraphMaker(object):
             if np.array_equal(data_high[0], data_high[1]):
                 num_legends = num_configs + 1
                 edgecolors = [[self.config.edgecolor] * 2] * 2
-                same_high_data = True
             print(legends, num_legends)
             assert(len(legends) == num_legends)
+        same_high_data = redundant_baseline
 
         print(num_points, num_configs)
         rects = []
 
         bar_size = self.config.bar_width + self.config.bar_interval
+
         for i, data in enumerate([data_low, data_high]):
-            shift = 0.0
             for j, d in enumerate(data):
-                tick_starts = np.arange(0, num_points * num_configs, bar_size * num_configs) + shift
+                if same_high_data and i > 0 and j > 0:
+                    continue
+                tick_starts = np.arange(0, num_points * num_configs, bar_size * num_configs)
                 tick_starts *= xtick_scale
-                rect = plt.bar(tick_starts, d,
-                        edgecolor=edgecolors[i][j],
+                # rect = plt.bar(tick_starts, d,
+                #         edgecolor=edgecolors[i][j],
+                #         color=colors[i][j],
+                #         width=self.config.bar_width * xtick_scale)
+
+                rect, = plt.plot(tick_starts, d,
+                        marker=markers[i][j],
+                        # edgecolor=edgecolor, linewidth=linewidth,
                         color=colors[i][j],
-                        width=self.config.bar_width * xtick_scale)
+                        # width=self.config.bar_width * xtick_scale
+                        )
                 rects.append(rect)
-                shift += bar_size
+
         rects = rects[2:] + rects[:2]
         if legendorder is not None:
             new_rects, new_legends = [], []
@@ -194,7 +217,7 @@ class GraphMaker(object):
             self.set_graph_general_format(xlim, ylim, xticklabels, xlabel, ylabel, title=title)
 
         if same_high_data:
-            rects = [rects[0]] + rects[2:]
+            legends = [legends[0]] + legends[2:]
 
         self.cur_ax.legend(rects, legends, fontsize=13, ncol=num_legends,
                 loc=self.loc,

@@ -22,7 +22,10 @@ suffix = '-full' if full else ""
 n_cols = 1
 n_rows = 3
 
-gm = graphs.GraphMaker((14,5.5), True, n_rows, n_cols, sharex='all')
+gm = graphs.GraphMaker((14,5.5), True, None, n_rows, n_cols, sharex='all')
+
+with open('./bench_order.txt') as f:
+    index_order = [l.strip() for l in f]
 
 def draw_queueing_throughput():
     global gm
@@ -66,7 +69,7 @@ def draw_queueing_throughput():
             d = c.get_stats(stat_file, t.breakdown_targets, re_targets=True)
             matrix[point] = d
         baseline_df = pd.DataFrame.from_dict(matrix, orient='index')
-        baseline_df.sort_index(inplace=True)
+        baseline_df = baseline_df.reindex(index_order)
 
         if num_points == 0:
             num_points = len(baseline_df)
@@ -74,7 +77,7 @@ def draw_queueing_throughput():
         baseline_df.loc['mean'] = baseline_df.iloc[-1]
         baseline_df.loc['mean']['queueingD'] = np.mean(baseline_df['queueingD'])
         data = np.concatenate(
-                [baseline_df['queueingD'].values[:-1], [0], baseline_df['queueingD'].values[-1:]])
+                [baseline_df['queueingD'].values[:-1], [np.NaN], baseline_df['queueingD'].values[-1:]])
         print(data.shape)
         data_all.append(data)
 
@@ -90,11 +93,11 @@ def draw_queueing_throughput():
             matrix[point] = d
 
         df = pd.DataFrame.from_dict(matrix, orient='index')
-        df.sort_index(inplace=True)
+        df = df.reindex(index_order)
         df.loc['mean'] = df.iloc[-1]
         df.loc['mean']['queueingD'] = np.mean(df['queueingD'])
         print(len(df))
-        data = np.concatenate([df['queueingD'].values[:-1], [0],df['queueingD'].values[-1:]])
+        data = np.concatenate([df['queueingD'].values[:-1], [np.NaN],df['queueingD'].values[-1:]])
         print(data.shape)
         print(data/data_all[nc])
         data_all.append(data)
@@ -115,14 +118,16 @@ def draw_queueing_throughput():
 
     print(num_points, num_configs)
     print(xticklabels)
-    legends = [baselines_ordered[0]] + configs_ordered
+    legends = baselines_ordered + configs_ordered
     fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legends, 
             # xlabel='Simulation points from SPEC 2017',
             ylabel='Cycles',
             xlim=(-0.5,num_points*num_configs-0.5),
             xtick_scale=1.5,
             title = "(a) Queueing time reduced by Parallel DQ Bank and new interconnect network",
-            with_borders=True,
+            colors=[['red', 'gray'], ['green', 'green']],
+            markers=[['x', '+'], ['.', '.']],
+            redundant_baseline=True,
             )
 
 
@@ -169,14 +174,15 @@ def draw_queueing_rand():
             d = c.get_stats(stat_file, t.breakdown_targets, re_targets=True)
             matrix[point] = d
         baseline_df = pd.DataFrame.from_dict(matrix, orient='index')
-        baseline_df.sort_index(inplace=True)
+        baseline_df = baseline_df.reindex(index_order)
 
         if num_points == 0:
             num_points = len(baseline_df)
 
         baseline_df.loc['mean'] = baseline_df.iloc[-1]
         baseline_df.loc['mean']['queueingD'] = np.mean(baseline_df['queueingD'])
-        data = np.concatenate([baseline_df['queueingD'].values[:-1], [0],baseline_df['queueingD'].values[-1:]])
+        data = np.concatenate([baseline_df['queueingD'].values[:-1],
+            [np.NaN],baseline_df['queueingD'].values[-1:]])
         print(data.shape)
         data_all.append(data)
 
@@ -192,10 +198,11 @@ def draw_queueing_rand():
             matrix[point] = d
 
         df = pd.DataFrame.from_dict(matrix, orient='index')
-        df.sort_index(inplace=True)
+        df = df.reindex(index_order)
         df.loc['mean'] = df.iloc[-1]
         df.loc['mean']['queueingD'] = np.mean(df['queueingD'])
-        data = np.concatenate([df['queueingD'].values[:-1], [0],df['queueingD'].values[-1:]])
+        data = np.concatenate([df['queueingD'].values[:-1],
+            [np.NaN], df['queueingD'].values[-1:]])
         print(data/data_all[nc])
         print(data.shape)
         data_all.append(data)
@@ -223,7 +230,8 @@ def draw_queueing_rand():
             xlim=(-0.5,num_points*num_configs-0.5),
             xtick_scale=1.5,
             title = "(b) Queueing time reduced by Operand Position Randomization",
-            with_borders=True,
+            colors=[['red', 'gray'], ['green', 'blue']],
+            markers=[[6, '+'], [7, 'x']],
             )
     # fig.suptitle('Queueing time reduction', fontsize='large')
 
@@ -275,7 +283,7 @@ def draw_ipc_throughput():
             matrix[point] = d
 
         df = pd.DataFrame.from_dict(matrix, orient='index')
-        df.sort_index(inplace=True)
+        df = df.reindex(index_order)
         dfs[config] = df
 
         if num_points == 0:
@@ -297,7 +305,7 @@ def draw_ipc_throughput():
                 dfs[config]['boost'] = dfs[config]['rel'] / dfs['Xbar4']['rel']
 
             print(dfs[config])
-        data = np.concatenate([dfs[config]['ipc'].values[:-1], [0], dfs[config]['ipc'].values[-1:]])
+        data = np.concatenate([dfs[config]['ipc'].values[:-1], [np.NaN], dfs[config]['ipc'].values[-1:]])
         data_all.append(data)
     num_points += 2
     data_all = np.array(data_all)
@@ -307,9 +315,7 @@ def draw_ipc_throughput():
         if point.endswith('_0'):
             benchmarks_ordered.append(point.split('_')[0])
 
-    xticklabels = [''] * num_points
-    for i, benchmark in enumerate(benchmarks_ordered + ['rel_geomean']):
-        xticklabels[i*strange_const + 1] = benchmark
+    xticklabels = [*index_order, '', 'mean']
 
     print(data_all.shape)
     print(xticklabels)
@@ -325,7 +331,9 @@ def draw_ipc_throughput():
                 xlim=(-0.5, num_points*num_configs),
                 ylim=(0, 3),
                 title = "(c) IPC improvements from Parallel DQ Bank and new interconnect network",
-                with_borders=True,
+                colors=[['red', 'gray'], ['green', 'green']],
+                markers=[['x', '+'], ['.', '.']],
+                redundant_baseline=True,
                 )
     else:
         fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered,
@@ -335,7 +343,8 @@ def draw_ipc_throughput():
                 xlim=(-0.5, num_points*num_configs-0.5),
                 ylim=(0, 3),
                 title = "(c) IPC improvements from Parallel DQ Bank and new interconnect network",
-                with_borders=True,
+                colors=['green', 'red', 'gray'],
+                markers=['.', 'x', '+'],
                 )
 
 draw_queueing_throughput()

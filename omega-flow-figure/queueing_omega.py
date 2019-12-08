@@ -25,8 +25,8 @@ baseline_stat_dirs = {
         }
 stat_dirs = {
         # 'Xbar4*2-SpecSB': c.env.data('dedi-xbar4-rand-hint'),
-        'Omega16-OPR': c.env.data('xbar-rand'),
-        'Xbar16-OPR': c.env.data('omega-rand'),
+        'Omega16-OPR': c.env.data('omega-rand'),
+        'Xbar16-OPR': c.env.data('xbar-rand'),
         # 'Xbar16-OPR': c.env.data('xbar-rand'),
         }
 for k in baseline_stat_dirs:
@@ -48,6 +48,11 @@ for b in benchmarks:
 num_points = 0
 num_configs = len(stat_dirs)
 
+with open('./bench_order.txt') as f:
+    index_order = [l.strip() for l in f]
+
+print(index_order)
+
 data_all = []
 for baseline in baselines_ordered:
     baseline_stat_dir = baseline_stat_dirs[baseline]
@@ -57,14 +62,14 @@ for baseline in baselines_ordered:
         d = c.get_stats(stat_file, t.breakdown_targets, re_targets=True)
         matrix[point] = d
     baseline_df = pd.DataFrame.from_dict(matrix, orient='index')
-    baseline_df.sort_index(inplace=True)
+    baseline_df = baseline_df.reindex(index_order)
 
     if num_points == 0:
         num_points = len(baseline_df)
 
     baseline_df.loc['mean'] = baseline_df.iloc[-1]
     baseline_df.loc['mean']['queueingD'] = np.mean(baseline_df['queueingD'])
-    data = np.concatenate([baseline_df['queueingD'].values[:-1], [0], baseline_df['queueingD'].values[-1:]])
+    data = np.concatenate([baseline_df['queueingD'].values[:-1], [np.NaN], baseline_df['queueingD'].values[-1:]])
     print(data.shape)
     data_all.append(data)
 
@@ -80,11 +85,12 @@ for nc, config in enumerate(configs_ordered):
         matrix[point] = d
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
-    df.sort_index(inplace=True)
+    df = df.reindex(index_order)
+
     df.loc['mean'] = df.iloc[-1]
     df.loc['mean']['queueingD'] = np.mean(df['queueingD'])
     print(len(df))
-    data = np.concatenate([df['queueingD'].values[:-1], [0],df['queueingD'].values[-1:]])
+    data = np.concatenate([df['queueingD'].values[:-1], [np.NaN],df['queueingD'].values[-1:]])
     print(data.shape)
     print(data/data_all[nc])
     data_all.append(data)
@@ -104,12 +110,16 @@ for i, benchmark in enumerate(benchmarks_ordered + ["mean"]):
     xticklabels[i*strange_const + 1] = benchmark
 
 print(num_points, num_configs)
-gm = graphs.GraphMaker()
-legends = [baselines_ordered[0]] + configs_ordered
-fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legends, 
+gm = graphs.GraphMaker(legend_loc='upper center')
+legends = baselines_ordered + configs_ordered
+fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legends,
         # xlabel='Simulation points from SPEC 2017',
         ylabel='Queueing cycles reduction',
-        xlim=(-0.5,num_points*num_configs-0.5))
+        xlim=(-0.5,num_points*num_configs-0.5),
+        colors=[['red', 'gray'], ['green', 'green']],
+        markers=[['x', '+'], ['.', '.']],
+        redundant_baseline=True,
+        )
 # fig.suptitle('Queueing time reduction', fontsize='large')
 # legend = ax.get_legend()
 # legend.set_bbox_to_anchor((0.80,0.89))
