@@ -119,4 +119,4 @@ plt.tight_layout()
 
 gm.save_to_file("spec_on_omega")
 
-plt.show()
+plt.show(block=True)

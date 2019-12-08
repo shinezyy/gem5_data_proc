@@ -113,4 +113,4 @@ fig.suptitle('Queueing time reduction', fontsize='large')
 
 gm.save_to_file("spec_queueing")
 
-plt.show()
+plt.show(block=True)

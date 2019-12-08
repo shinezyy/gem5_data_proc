@@ -22,7 +22,7 @@ suffix = '-full' if full else ""
 n_cols = 1
 n_rows = 3
 
-gm = graphs.GraphMaker((14,7), True, n_rows, n_cols, sharex='all')
+gm = graphs.GraphMaker((14,5.5), True, n_rows, n_cols, sharex='all')
 
 def spec_on_xbar4():
     global gm
@@ -116,8 +116,8 @@ def spec_on_xbar4():
 
     print(num_points, num_configs)
     legends = [
-            'Xbar4 Queueing Cycles', 'Xbar4 SSR Delay Cycles',
-            'Xbar4-SpecSB Queueing Cycles', 'Xbar4-SpecSB SSR Delay Cycles',
+            'Xbar4 Queueing', 'Xbar4 SSR',
+            'Xbar4-SpecSB Queueing', 'Xbar4-SpecSB SSR',
             ]
     fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legends,
             ylabel='Cycles',
@@ -221,8 +221,8 @@ def spec_on_omega():
 
     print(num_points, num_configs)
     legends = [
-            'Omega16 Queueing Cycles', 'Omega16 SSR Delay Cycles',
-            'Omega16-SpecSB Queueing Cycles', 'Omega16-SpecSB SSR Delay Cycles',
+            'Omega16 Queueing', 'Omega16 SSR',
+            'Omega16-SpecSB Queueing', 'Omega16-SpecSB SSR',
             ]
     fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legends, 
             ylabel='Cycles',
@@ -345,5 +345,5 @@ ipc_spec()
 plt.tight_layout()
 
 gm.save_to_file("spec_merge")
-plt.show(block=False)
+plt.show(block=True)
 

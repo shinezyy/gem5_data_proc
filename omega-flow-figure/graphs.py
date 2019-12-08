@@ -29,6 +29,8 @@ class GraphMaker(object):
             self.fig, self.ax = plt.subplots()
         self.fig.set_size_inches(fig_size[0], fig_size[1], forward=True)
         self.cur_ax = self.ax
+        self.loc = 'upper left'
+        self.frameon = True
 
     def set_graph_general_format(self, xlim, ylim, xticklabels, xlabel, ylabel,
             title=None):
@@ -38,8 +40,10 @@ class GraphMaker(object):
         for tick in self.cur_ax.xaxis.get_major_ticks():
             tick.tick1line.set_markersize(10)
             tick.tick2line.set_markersize(0)
+            # tick.tick2line.set_fontsize(14)
         for tick in self.cur_ax.xaxis.get_minor_ticks():
             tick.tick1line.set_markersize(2)
+            tick.label.set_fontsize(14)
             # tick.tick2line.set_markersize(0)
             tick.label1.set_horizontalalignment('left')
         self.cur_ax.set_xlim(xlim)
@@ -47,9 +51,10 @@ class GraphMaker(object):
         self.cur_ax.set_xticklabels(xticklabels, minor=True, rotation=90)
         self.cur_ax.grid(axis="y", linestyle="--", color='gray', alpha=0.3)
         self.cur_ax.set_xlabel(xlabel)
-        self.cur_ax.set_ylabel(ylabel)
+        self.cur_ax.set_ylabel(ylabel, fontsize=14)
         if title is not None:
             self.cur_ax.title.set_text(title)
+            self.cur_ax.title.set_fontsize(14)
 
     def simple_bar_graph(self, data, xticklabels, legends, xlabel="", ylabel="",
             colors=None, edgecolor=None, linewidth=None, xlim=(None,None), ylim=(None,None), overlap=False,
@@ -105,8 +110,11 @@ class GraphMaker(object):
 
         if set_format:
             self.set_graph_general_format(xlim, ylim, xticklabels, xlabel, ylabel, title=title)
-        self.cur_ax.legend(rects, legends, fontsize='small', ncol=num_configs)
-        plt.tight_layout()
+        self.cur_ax.legend(rects, legends, fontsize=13, ncol=num_configs,
+                loc=self.loc,
+                frameon=self.frameon,
+                )
+        # plt.tight_layout()
         return self.fig, self.cur_ax
 
     def set_cur_ax(self, new_ax):
@@ -187,12 +195,19 @@ class GraphMaker(object):
 
         if same_high_data:
             rects = [rects[0]] + rects[2:]
-        self.cur_ax.legend(rects, legends, fontsize='small', ncol=num_legends)
-        plt.tight_layout()
+
+        self.cur_ax.legend(rects, legends, fontsize=13, ncol=num_legends,
+                loc=self.loc,
+                frameon=self.frameon,
+                )
+        # plt.tight_layout()
         return self.fig, self.cur_ax
 
     def save_to_file(self, name):
-        for f in ['eps', 'png']:
-            filename = f'./{f}/{name}.{f}'
+        for f in ['eps', 'png', 'pdf']:
+            d = f
+            if f == 'pdf':
+                d = 'eps'
+            filename = f'./{d}/{name}.{f}'
             print("save to", filename)
             plt.savefig(filename, format=f'{f}')

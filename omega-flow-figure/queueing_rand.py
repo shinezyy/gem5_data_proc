@@ -113,4 +113,4 @@ fig.suptitle('Queueing time reduction', fontsize='large')
 # legend.set_bbox_to_anchor((0.80,0.89))
 gm.save_to_file("rand_queueing")
 
-plt.show()
+plt.show(block=True)

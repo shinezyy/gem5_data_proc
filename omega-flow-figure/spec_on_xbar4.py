@@ -120,4 +120,4 @@ plt.tight_layout()
 
 gm.save_to_file("spec_on_xbar4")
 
-plt.show()
+plt.show(block=True)

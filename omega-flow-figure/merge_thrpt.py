@@ -22,7 +22,7 @@ suffix = '-full' if full else ""
 n_cols = 1
 n_rows = 3
 
-gm = graphs.GraphMaker((14,7), True, n_rows, n_cols, sharex='all')
+gm = graphs.GraphMaker((14,5.5), True, n_rows, n_cols, sharex='all')
 
 def draw_queueing_throughput():
     global gm
@@ -121,7 +121,7 @@ def draw_queueing_throughput():
             ylabel='Cycles',
             xlim=(-0.5,num_points*num_configs-0.5),
             xtick_scale=1.5,
-            title = "(a) Queueing time reduced by M-1 and new interconnect network",
+            title = "(a) Queueing time reduced by Parallel DQ Bank and new interconnect network",
             with_borders=True,
             )
 
@@ -324,7 +324,7 @@ def draw_ipc_throughput():
                 ylabel='IPCs',
                 xlim=(-0.5, num_points*num_configs),
                 ylim=(0, 3),
-                title = "(c) IPC improvements from M-1 and new interconnect network",
+                title = "(c) IPC improvements from Parallel DQ Bank and new interconnect network",
                 with_borders=True,
                 )
     else:
@@ -334,7 +334,7 @@ def draw_ipc_throughput():
                 # ylabel='IPCs with different configurations',
                 xlim=(-0.5, num_points*num_configs-0.5),
                 ylim=(0, 3),
-                title = "(c) IPC improvements from M-1 and new interconnect network",
+                title = "(c) IPC improvements from Parallel DQ Bank and new interconnect network",
                 with_borders=True,
                 )
 
@@ -343,5 +343,5 @@ draw_queueing_rand()
 draw_ipc_throughput()
 plt.tight_layout()
 gm.save_to_file('merged_throughput')
-plt.show(block=False)
+plt.show(block=True)
 

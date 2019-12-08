@@ -56,7 +56,7 @@ for i, benchmark in enumerate(benchmarks_ordered):
 num_configs, num_points = 3, len(benchmarks_ordered)
 
 print(num_points, num_configs)
-gm = graphs.GraphMaker(fig_size=(6,3))
+gm = graphs.GraphMaker(fig_size=(6,2.5))
 gm.config.bar_width, gm.config.bar_interval = 0.7, 0.3
 common_options = (data_all[:1], data_all[1:], xticklabels, names)
 

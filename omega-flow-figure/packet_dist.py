@@ -84,7 +84,7 @@ gm.set_graph_general_format(xlim=(-0.5, num_points-0.5),
         ylabel='Percentage of packet types')
 gm.ax.legend(rects, names, fontsize='small', ncol=6)
 
-plt.tight_layout()
+# plt.tight_layout()
 
 gm.save_to_file("packet_targets")
 plt.show(block=True)

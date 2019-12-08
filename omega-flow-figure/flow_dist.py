@@ -50,7 +50,7 @@ n_cols = 2
 n_rows = 2
 
 fig, axs = plt.subplots(n_rows, n_cols, sharex='all', sharey='all')
-fig.set_size_inches(8, 5, forward=True)
+fig.set_size_inches(5, 3.8, forward=True)
 
 width = 0.8
 interval = 0.2
@@ -131,18 +131,23 @@ for point in points:
 
         sub_ax.set_xticklabels(xticklabels, minor=True)
         sub_ax.set_title(point, fontsize='small')
-        if count == 1:
-            sub_ax.legend(rects, configs_ordered, fontsize='small', ncol=1)
+        if count == 3:
+            sub_ax.legend(rects, configs_ordered, ncol=1,
+                    fancybox=True, framealpha=0.2
+                    )
         if count == 2:
-            sub_ax.set_ylabel('Packet consumed', ha='left')
-            sub_ax.set_xlabel('Packet consumed per cycle', ha='left')
+            sub_ax.set_ylabel('Packet consumed', ha='left',)
+            sub_ax.set_xlabel('Packet consumed per cycle', ha='left',)
     count += 1
 
 fig.suptitle("Packet consuming distribution", fontsize=14)
 
 
-plt.tight_layout()
-for f in ['eps', 'png']:
-    plt.savefig(f'./{f}/flow_dist.{f}', format=f'{f}')
+# plt.tight_layout()
+for f in ['eps', 'png', 'pdf']:
+    d = f
+    if f == 'pdf':
+        d = 'eps'
+    plt.savefig(f'./{d}/flow_dist.{f}', format=f'{f}')
 
 plt.show(block=True)

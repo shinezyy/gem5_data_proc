@@ -110,17 +110,17 @@ for i, benchmark in enumerate(benchmarks_ordered + ['rel_geomean']):
     xticklabels[i*strange_const + 1] = benchmark
 
 print(len(configs_ordered))
-gm = graphs.GraphMaker()
+gm = graphs.GraphMaker((14,2.5))
 ylabel = 'Normalized IPCs' if do_normalization else "IPCs with different configurations"
 fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered,
         # xlabel='Simulation points from SPEC 2017',
         ylabel=ylabel,
-        xlim=(-0.5, num_points*num_configs-0.5), ylim=(0, 1.13 if do_normalization else 3),
+        xlim=(-0.5, num_points*num_configs-0.5), ylim=(0, 1.0 if do_normalization else 3),
         with_borders=True)
-legend = ax.get_legend()
-if do_normalization:
-    legend.set_bbox_to_anchor((0.5,0.94))
-else:
-    legend.set_bbox_to_anchor((0.7,1))
+# legend = ax.get_legend()
+# if do_normalization:
+#     legend.set_bbox_to_anchor((0.5,0.94))
+# else:
+#     legend.set_bbox_to_anchor((0.7,1))
 gm.save_to_file("ipc")
 plt.show(block=True)
