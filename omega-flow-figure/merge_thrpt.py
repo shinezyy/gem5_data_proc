@@ -22,7 +22,12 @@ suffix = '-full' if full else ""
 n_cols = 1
 n_rows = 3
 
-gm = graphs.GraphMaker((14,5.5), True, None, n_rows, n_cols, sharex='all')
+gm = graphs.GraphMaker(
+        fig_size=(7,5.5),
+        multi_ax=True,
+        legend_loc='best',
+        with_xtick_label=False,
+        nrows=n_rows, ncols=n_cols, sharex='all')
 
 with open('./bench_order.txt') as f:
     index_order = [l.strip() for l in f]
@@ -122,9 +127,10 @@ def draw_queueing_throughput():
     fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legends, 
             # xlabel='Simulation points from SPEC 2017',
             ylabel='Cycles',
-            xlim=(-0.5,num_points*num_configs-0.5),
-            xtick_scale=1.5,
-            title = "(a) Queueing time reduced by Parallel DQ Bank and new interconnect network",
+            xlim=(-0.5,num_points-0.5),
+            # xtick_scale=1.5,
+            title = "(a) Queueing time reduced by Parallel DQ Bank\n" +\
+                    "and wider interconnect networks",
             colors=[['red', 'gray'], ['green', 'green']],
             markers=[['x', '+'], ['.', '.']],
             redundant_baseline=True,
@@ -227,8 +233,7 @@ def draw_queueing_rand():
     fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legends, 
             # xlabel='Simulation points from SPEC 2017',
             ylabel='Cycles',
-            xlim=(-0.5,num_points*num_configs-0.5),
-            xtick_scale=1.5,
+            xlim=(-0.5, num_points-0.5),
             title = "(b) Queueing time reduced by Operand Position Randomization",
             colors=[['red', 'gray'], ['green', 'blue']],
             markers=[[6, '+'], [7, 'x']],
@@ -328,9 +333,10 @@ def draw_ipc_throughput():
                 # xlabel='Simulation points from SPEC 2017',
                 # ylabel='IPCs with different configurations',
                 ylabel='IPCs',
-                xlim=(-0.5, num_points*num_configs),
+                xlim=(-0.5, num_points),
                 ylim=(0, 3),
-                title = "(c) IPC improvements from Parallel DQ Bank and new interconnect network",
+                title = "(c) IPC improved by Parallel DQ Bank\n" +\
+                        "and wider interconnect networks",
                 colors=[['red', 'gray'], ['green', 'green']],
                 markers=[['x', '+'], ['.', '.']],
                 redundant_baseline=True,
@@ -340,9 +346,10 @@ def draw_ipc_throughput():
                 # xlabel='Simulation points from SPEC 2017',
                 ylabel='IPCs',
                 # ylabel='IPCs with different configurations',
-                xlim=(-0.5, num_points*num_configs-0.5),
+                xlim=(-0.5, num_points-0.5),
                 ylim=(0, 3),
-                title = "(c) IPC improvements from Parallel DQ Bank and new interconnect network",
+                title = "(c) IPC improved by Parallel DQ Bank\n" +\
+                        "and wider interconnect networks",
                 colors=['green', 'red', 'gray'],
                 markers=['.', 'x', '+'],
                 )
@@ -352,5 +359,5 @@ draw_queueing_rand()
 draw_ipc_throughput()
 plt.tight_layout()
 gm.save_to_file('merged_throughput')
-plt.show(block=True)
+# plt.show(block=True)
 

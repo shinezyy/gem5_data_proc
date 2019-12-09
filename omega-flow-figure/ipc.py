@@ -132,7 +132,7 @@ ylabel = 'Normalized IPCs' if do_normalization else "IPCs with different configu
 fig, ax = gm.simple_bar_graph(data_all, legends, configs_ordered,
         # xlabel='Simulation points from SPEC 2017',
         ylabel=ylabel,
-        xlim=(-0.5, num_points*num_configs-0.5),
+        xlim=(-0.5, num_points-0.5),
         ylim=(0.25, 1.05 if do_normalization else 3),
         with_borders=False,
         markers=['x', '+'],
@@ -144,4 +144,4 @@ fig, ax = gm.simple_bar_graph(data_all, legends, configs_ordered,
 #     legend.set_bbox_to_anchor((0.7,1))
 plt.tight_layout()
 gm.save_to_file("ipc")
-plt.show(block=True)
+# plt.show(block=True)

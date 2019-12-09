@@ -20,9 +20,17 @@ full = True
 suffix = '-full' if full else ""
 
 n_cols = 1
-n_rows = 3
+n_rows = 4
 
-gm = graphs.GraphMaker((14,5.5), True, None, n_rows, n_cols, sharex='all')
+gm = graphs.GraphMaker(
+        fig_size=(7,7.2),
+        multi_ax=True,
+        legend_loc='best',
+        with_xtick_label=False,
+        frameon=False,
+        nrows=n_rows,
+        ncols=n_cols,
+        sharex='all')
 
 with open('./bench_order.txt') as f:
     index_order = [l.strip() for l in f]
@@ -82,6 +90,11 @@ def spec_on_xbar4():
         print(data.shape)
         data_all.append(data)
 
+    legends = [
+            'Xbar4 Queuing', 'Xbar4 SSR',
+            'Xbar4-SpecSB Queuing', 'Xbar4-SpecSB SSR',
+            ]
+
     for nc, stat in enumerate(stats):
         stat_dir = stat_dirs[configs_ordered[0]]
         stat_dir = osp.expanduser(stat_dir)
@@ -124,13 +137,24 @@ def spec_on_xbar4():
             'Xbar4 Queueing', 'Xbar4 SSR',
             'Xbar4-SpecSB Queueing', 'Xbar4-SpecSB SSR',
             ]
-    fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legends,
+    fig, ax = gm.simple_bar_graph(data_all, xticklabels, legends,
             ylabel='Cycles',
-            xlim=(-0.5, num_points*2-0.5),
+            xlim=(-0.5, num_points-0.5),
             ylim=(0,1.22e9),
-            title='(a) Effect of Speculative Scoreboard/ARF  on Xbar4',
-            colors=[['red', 'gray'], ['green', 'blue']],
-            markers=[['+', 6], ['x', 7]],
+            title='(a) Effect of Speculative SB/ARF on baseline architecutre',
+            colors=['red', 'gray', 'green', 'blue'],
+            markers=['+', 7, 'x', 6],
+            dont_legend=True,
+            )
+
+    ax.legend(
+            legends,
+            loc = 'upper left',
+            # bbox_to_anchor=(0, 0),
+            ncol=2,
+            fancybox=True,
+            framealpha=0.5,
+            fontsize=13,
             )
 
 def spec_on_omega():
@@ -227,21 +251,61 @@ def spec_on_omega():
         xticklabels[i*strange_const + 1] = benchmark
 
     print(num_points, num_configs)
-    legends = [
-            'Omega16 Queueing', 'Omega16 SSR',
-            'Omega16-SpecSB Queueing', 'Omega16-SpecSB SSR',
-            ]
-    fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legends, 
+
+    # data_all order:
+    # 'Omega16 Queueing', 'Omega16 SSR',
+    # 'Omega16-SpecSB Queueing', 'Omega16-SpecSB SSR',
+
+    legends = ['Omega16-OPR', 'Omega16-OPR-SpecSB']
+    fig, ax = gm.simple_bar_graph(
+            np.array([data_all[0], data_all[2]]),
+            xticklabels,
+            legends=legends,
             ylabel='Cycles',
-            xlim=(-0.5, num_points*2-0.5),
-            title='(b) Effect of Speculative Scoreboard/ARF  on Omega16',
-            colors=[['red', 'gray'], ['green', 'blue']],
-            markers=[['+', 6], ['x', 7]],
+            xlim=(-0.5, num_points-0.5),
+            title='(b.1) Queueing time reduced by Speculative SB/ARF\non Omega16-OPR',
+            colors=['red', 'gray'],
+            markers=[7, 6],
+            dont_legend=True,
+            )
+
+    ax.legend(
+            legends,
+            loc = 'upper left',
+            # bbox_to_anchor=(0, 0),
+            ncol=2,
+            fancybox=True,
+            framealpha=0.5,
+            fontsize=13,
+            )
+
+    gm.set_cur_ax(gm.ax[2])
+    plt.sca(gm.cur_ax)
+    fig, ax = gm.simple_bar_graph(
+            np.array([data_all[1], data_all[3]]),
+            xticklabels,
+            legends=legends,
+            ylabel='Cycles',
+            xlim=(-0.5, num_points-0.5),
+            title='(b.2) Wakeup delay reduced by Speculative SB/ARF\non Omega16-OPR',
+            colors=['red', 'gray'],
+            markers=[7, 6],
+            dont_legend=True,
+            )
+
+    ax.legend(
+            legends,
+            loc = 'upper left',
+            # bbox_to_anchor=(0, 0),
+            ncol=2,
+            fancybox=True,
+            framealpha=0.5,
+            fontsize=13,
             )
 
 def ipc_spec():
     global gm
-    gm.set_cur_ax(gm.ax[2])
+    gm.set_cur_ax(gm.ax[3])
     plt.sca(gm.cur_ax)
 
     show_reduction = True
@@ -296,6 +360,7 @@ def ipc_spec():
     dfs[baseline].loc['rel_geo_mean'] = [1.0]
     print(baseline)
     print(dfs[baseline])
+    datas = dict()
     for config in configs_ordered:
         if config != baseline:
             print(config)
@@ -312,9 +377,15 @@ def ipc_spec():
             print(dfs[config])
         data = np.concatenate([dfs[config]['ipc'].values[:-1],
             [np.NaN], dfs[config]['ipc'].values[-1:]])
-        data_all.append(data)
-    num_points += 2
+        datas[config] = data
+
+    legends = ['Omega16-OPR-SpecSB', 'Xbar4-SpecSB', 'Omega16-OPR', 'Xbar4']
+    data_all = [datas[x] for x in legends]
+    print(data_all)
     data_all = np.array(data_all)
+    print(data_all.shape)
+
+    num_points += 2
 
     benchmarks_ordered = []
     for point in df.index:
@@ -326,27 +397,27 @@ def ipc_spec():
         xticklabels[i*strange_const + 1] = benchmark
 
     print(data_all.shape)
-    if show_reduction:
-        data_high = np.array([data_all[1], data_all[3]])
-        data_low = np.array([data_all[0], data_all[2]])
-        legends = [configs_ordered[1], configs_ordered[3], configs_ordered[0], configs_ordered[2]]
-        num_configs -= 2
-        fig, ax = gm.reduction_bar_graph(data_high, data_low, xticklabels, legends, 
-                ylabel='IPCs',
-                xlim=(-0.5, num_points*num_configs), 
-                ylim=(0, 3), legendorder=(2,0,3,1),
-                title='(c) IPC improvements from Speculative Scoreboard/ARF on Omega16 and Xbar4',
-                colors=[['red', 'gray'], ['green', 'blue']],
-                markers=[['+', 6], ['x', 7]],
-                )
-    else:
-        fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered, 
-                ylabel='IPCs',
-                xlim=(-0.5, num_points*num_configs-0.5), 
-                ylim=(0, 3),
-                title='(c) IPC improvements from Speculative Scoreboard/ARF on Omega16 and Xbar4',
-                with_borders=True,
-                )
+    fig, ax = gm.simple_bar_graph(data_all, xticklabels,
+            legends,
+            ylabel='IPCs',
+            xlim=(-0.5, num_points-0.5),
+            ylim=(0, 3),
+            title='(c) IPC improvements from Speculative SB/ARF\non Omega16-OPR and Xbar4',
+            colors=['red', 'gray', 'green', 'blue'],
+            markers=['+', 7, 'x', 6],
+            with_borders=False,
+            dont_legend=True,
+            )
+    ax.legend(
+            legends,
+            loc = 'upper left',
+            # bbox_to_anchor=(0, 0),
+            ncol=2,
+            fancybox=True,
+            framealpha=0.5,
+            fontsize=13,
+            )
+
 
 spec_on_xbar4()
 spec_on_omega()
@@ -355,5 +426,5 @@ ipc_spec()
 plt.tight_layout()
 
 gm.save_to_file("spec_merge")
-plt.show(block=True)
+# plt.show(block=True)
 

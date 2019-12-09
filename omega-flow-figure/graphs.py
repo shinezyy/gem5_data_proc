@@ -19,7 +19,8 @@ class GraphDefaultConfig(object):
     bar_width, bar_interval = 0.6, 0.4
 
 class GraphMaker(object):
-    def __init__(self, fig_size=None, multi_ax=False, legend_loc=None, *args, **kwargs):
+    def __init__(self, fig_size=None, multi_ax=False, legend_loc=None,
+            with_xtick_label=True, frameon=True, *args, **kwargs):
         self.config = GraphDefaultConfig()
         if fig_size is None:
             fig_size = self.config.fig_size
@@ -33,7 +34,18 @@ class GraphMaker(object):
             self.loc = 'upper left'
         else:
             self.loc = legend_loc
-        self.frameon = True
+        self.frameon = frameon
+
+        self.with_xtick_label = with_xtick_label
+
+    def compute_legend(self, n):
+        if n <= 3:
+            return n
+        elif n == 4:
+            return 2
+        else:
+            return np.ceil(n/2)
+
 
     def set_graph_general_format(self, xlim, ylim, xticklabels, xlabel, ylabel,
             title=None):
@@ -52,7 +64,8 @@ class GraphMaker(object):
 
         self.cur_ax.set_xlim(xlim)
         self.cur_ax.set_ylim(ylim)
-        self.cur_ax.set_xticklabels(xticklabels, minor=True, rotation=90)
+        if self.with_xtick_label:
+            self.cur_ax.set_xticklabels(xticklabels, minor=True, rotation=90)
         self.cur_ax.grid(axis="y", linestyle="--", color='gray', alpha=0.3)
         self.cur_ax.set_xlabel(xlabel)
         self.cur_ax.set_ylabel(ylabel, fontsize=14)
@@ -64,7 +77,8 @@ class GraphMaker(object):
             colors=None, edgecolor=None, linewidth=None,
             xlim=(None,None), ylim=(None,None), overlap=False,
             set_format=True, xtick_scale=1, title=None, with_borders=False,
-            markers=None
+            markers=None,
+            dont_legend=False,
             ):
         if colors is None:
             colors = self.config.colors
@@ -82,7 +96,7 @@ class GraphMaker(object):
         bar_size = self.config.bar_width + self.config.bar_interval
         assert markers is not None
         for i, d in enumerate(data):
-            tick_starts = np.arange(0, num_points * num_configs, (bar_size * num_configs))
+            tick_starts = np.arange(0, num_points, bar_size)
             tick_starts *= xtick_scale
             rect, = plt.plot(tick_starts, d,
                     marker=markers[i],
@@ -98,7 +112,7 @@ class GraphMaker(object):
         #     base=bar_size*num_configs, offset=-self.config.bar_interval/2))
 
         tick_locators = mpl.ticker.IndexLocator(
-            base=bar_size*num_configs*3,
+            base=bar_size,
             # offset=-self.config.bar_interval/2 + self.config.bar_width,
             offset=-self.config.bar_interval/4,
             )
@@ -112,7 +126,7 @@ class GraphMaker(object):
         self.cur_ax.xaxis.set_major_locator(tick_locators)
 
         self.cur_ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(
-            base=bar_size*num_configs,
+            base=bar_size,
             # offset=-self.config.bar_interval/2 + self.config.bar_width,
             offset=-self.config.bar_interval/4,
             ))
@@ -121,11 +135,15 @@ class GraphMaker(object):
         if set_format:
             self.set_graph_general_format(xlim, ylim, xticklabels, xlabel, ylabel, title=title)
 
-        print(rects, legends)
-        self.cur_ax.legend(rects, legends, fontsize=13, ncol=num_configs,
-                loc=self.loc,
-                frameon=self.frameon,
-                )
+        if not dont_legend:
+            print(rects, legends)
+            self.cur_ax.legend(rects, legends, fontsize=13,
+                    ncol=self.compute_legend(num_configs),
+                    loc=self.loc,
+                    frameon=self.frameon,
+                    fancybox=True,
+                    framealpha=0.5,
+                    )
         # plt.tight_layout()
         return self.fig, self.cur_ax
 
@@ -138,6 +156,7 @@ class GraphMaker(object):
             with_borders=False,
             markers=None,
             redundant_baseline=False,
+            dont_legend=False,
             ):
         assert colors is not None
 
@@ -169,7 +188,7 @@ class GraphMaker(object):
             for j, d in enumerate(data):
                 if same_high_data and i > 0 and j > 0:
                     continue
-                tick_starts = np.arange(0, num_points * num_configs, bar_size * num_configs)
+                tick_starts = np.arange(0, num_points, bar_size)
                 tick_starts *= xtick_scale
                 # rect = plt.bar(tick_starts, d,
                 #         edgecolor=edgecolors[i][j],
@@ -194,7 +213,7 @@ class GraphMaker(object):
             legends = new_legends
 
         tick_locators = mpl.ticker.IndexLocator(
-            base=bar_size*num_configs*3,
+            base=bar_size,
             # offset=-self.config.bar_interval/2 + self.config.bar_width,
             offset=-self.config.bar_interval/4,
             )
@@ -208,7 +227,7 @@ class GraphMaker(object):
         self.cur_ax.xaxis.set_major_locator(tick_locators)
 
         self.cur_ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(
-            base=bar_size*num_configs,
+            base=bar_size,
             # offset=-self.config.bar_interval/2 + self.config.bar_width,
             offset=-self.config.bar_interval/4,
             ))
@@ -219,10 +238,14 @@ class GraphMaker(object):
         if same_high_data:
             legends = [legends[0]] + legends[2:]
 
-        self.cur_ax.legend(rects, legends, fontsize=13, ncol=num_legends,
-                loc=self.loc,
-                frameon=self.frameon,
-                )
+        if not dont_legend:
+            self.cur_ax.legend(rects, legends, fontsize=13,
+                    ncol=self.compute_legend(num_legends),
+                    loc=self.loc,
+                    frameon=self.frameon,
+                    fancybox=True,
+                    framealpha=0.5,
+                    )
         # plt.tight_layout()
         return self.fig, self.cur_ax
 
