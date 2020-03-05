@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 plt.rcParams["font.family"] = "Times New Roman"
 
 class GraphDefaultConfig(object):
-    colors = ["red", "gray", "None", "green", "orange", "purple"]
+    colors = ["red", "gray", "purple", "None", "green", "orange"]
     edgecolor = "black"
     edgecolors = ["black", "blue"]
     fig_size = (14, 3)
@@ -39,12 +39,12 @@ class GraphMaker(object):
         self.with_xtick_label = with_xtick_label
 
     def compute_legend(self, n):
-        if n <= 3:
+        if n <= 2:
             return n
         elif n == 4:
             return 2
         else:
-            return np.ceil(n/2)
+            return int(np.ceil(n/2))
 
 
     def set_graph_general_format(self, xlim, ylim, xticklabels, xlabel, ylabel,
@@ -65,7 +65,7 @@ class GraphMaker(object):
         self.cur_ax.set_xlim(xlim)
         self.cur_ax.set_ylim(ylim)
         if self.with_xtick_label:
-            self.cur_ax.set_xticklabels(xticklabels, minor=True, rotation=90)
+            self.cur_ax.set_xticklabels(xticklabels, minor=True, rotation=0)
         self.cur_ax.grid(axis="y", linestyle="--", color='gray', alpha=0.3)
         self.cur_ax.set_xlabel(xlabel)
         self.cur_ax.set_ylabel(ylabel, fontsize=14)
