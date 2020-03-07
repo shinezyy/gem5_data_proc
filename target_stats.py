@@ -73,3 +73,10 @@ breakdown_targets= [
         'diewc\.FU(ContentionD)elay',
         'dataflow_queue\.(HalfSquash)es',
         ]
+
+model_targets = [
+    r'cpus\.(ipc)',
+    r'DQGroup(\d\.TotalPackets)',
+    r'cpus\.committed(Insts)',
+]
+

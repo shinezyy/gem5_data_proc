@@ -1,5 +1,6 @@
 import sys
 import os
+import os.path as osp
 from os.path import join as pjoin
 from os.path import expanduser as expu
 import re
@@ -359,13 +360,16 @@ def add_fanout(d: dict) -> None:
     del d['falsePositiveLF']
     del d['falseNegativeLF']
 
+
 def get_spec2017_int():
     with open(os.path.expanduser(env.data('int.txt'))) as f:
         return [x for x in f.read().split('\n') if len(x) > 1]
 
+
 def get_spec2017_fp():
     with open(os.path.expanduser(env.data('fp.txt'))) as f:
         return [x for x in f.read().split('\n') if len(x) > 1]
+
 
 def add_packet(d: dict) -> None:
     d['by_bw'] = d['Insts'] / (d['TotalP']/3.1)
@@ -373,4 +377,11 @@ def add_packet(d: dict) -> None:
     d['by_crit_ptr'] = min(d['Insts'] / (d['KeySrcP']/4), 4.0, d['TotalP']/10.0)
 
 
-
+def find_stats_file(d: str) -> str:
+    assert osp.isdir(d)
+    stats = []
+    for file in os.listdir(d):
+        if file.endswith('stats.txt') and osp.isfile(pjoin(d, file)):
+            stats.append(pjoin(d, file))
+    assert len(stats) == 1
+    return stats[0]
