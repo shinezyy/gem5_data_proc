@@ -19,6 +19,8 @@ def get_tuples(arch: str, targets):
     matrix = {}
     print(path)
     for d in os.listdir(path):
+        if not d.startswith('imagick_0'):
+            continue
         stat_dir_path = osp.join(path, d)
         if not osp.isdir(stat_dir_path):
             continue
@@ -36,11 +38,22 @@ def main():
     # print(ooo_matrix)
     matrix = pd.concat([f1_matrix, ooo_matrix], axis=1, sort=True)
     matrix['PPI'] = matrix['0.TotalPackets']/matrix['Insts']
+    matrix['PPI'] = matrix['PPI'] - 0.5
+    matrix = matrix[['ipc', 'ideal_ipc', 'PPI']]
+    matrix = matrix.append({
+        'ipc': matrix['ipc'][0],
+        'ideal_ipc': matrix['ideal_ipc'][0],
+        'PPI': matrix['PPI'][0] - 0.6,
+    },
+        ignore_index=True,
+    )
+    matrix['ipc'] = matrix['ipc'] + 0.2
     matrix.sort_values(['PPI'], inplace=True)
     print(matrix)
 
     fig, ax = plt.subplots()
-    fig.set_size_inches(14, 5)
+    fig.set_size_inches(6, 5)
+
 
     colors = plt.get_cmap('Dark2').colors
 
@@ -61,9 +74,11 @@ def main():
     objs = [ooo, ff]
     legends = ['Idealized OoO', 'Forwardflow']
 
-    start = 1.4
+    start = 0.5
     end = 2.52
     dots = np.arange(start, end, 0.01)
+    ax.set_xlim([start, end])
+    ax.set_ylim([0.01, 5.0])
 
     def draw_model(rate: float, color):
         obj, = ax.plot(dots, rate/dots, marker=',', color=color)
@@ -73,15 +88,56 @@ def main():
             if rate/row['PPI'] < row['ideal_ipc']:
                 ax.scatter([row['PPI']], [rate/row['PPI']], marker='x', color=color, zorder=2)
 
-    draw_model(6.0, color=colors[6])
+    high_rate = 4.5
+    draw_model(high_rate, color=colors[6])
     # draw_model(5.0, color=colors[5])
     # draw_model(4.0, color=colors[4])
     # draw_model(3.5, color=colors[3])
     draw_model(3.1, color=colors[2])
-    draw_model(2.5, color=colors[7])
+    # draw_model(2.5, color=colors[7])
 
-    ax.set_xlim([start, end])
-    ax.set_ylim([0.0, 5.0])
+    # from original PPI to new
+    src = int(0)
+    dest = int(1)
+    src_x = matrix['PPI'][src]
+    src_y = 0.9*matrix['ipc'][src] + 0.1*matrix['ideal_ipc'][src]
+    dest_x = matrix['PPI'][dest]
+    dest_y = src_y
+    mid_x = 0.5*src_x + 0.5*dest_x
+    mid_y = dest_y
+    margin = 0.05
+    line_width = 0.01
+    ax.arrow(src_x - margin, src_y,
+             dest_x - src_x + 2*margin,  0,
+             head_width=10*line_width,
+             head_length=10*line_width,
+             length_includes_head=True,
+             color=colors[3],
+             )
+    plt.text(mid_x, mid_y + 0.1,
+             'Move programs left\nby reducing $PPI$',
+             horizontalalignment='center')
+
+    # Increase Rate:
+    src_x = 1.5
+    src_y = 3.1/src_x
+    dest_y = high_rate/src_x
+    mid_x = src_x
+    mid_y = 0.5*src_y + 0.5*dest_y
+    margin = 0.05
+    line_width = 0.01
+    ax.arrow(src_x, src_y,
+             0, dest_y - src_y,
+             head_width=3 * line_width,
+             head_length=30 * line_width,
+             length_includes_head=True,
+             color=colors[4],
+             )
+    plt.text(mid_x+0.02, mid_y-0.15,
+             'Push curve up\nby increasing $Rate$',
+             horizontalalignment='left',
+             verticalalignment='top',
+             )
 
     ax.set_ylabel('IPC', fontsize=14)
     ax.set_xlabel('PPI: pointers per instruction', fontsize=14)
