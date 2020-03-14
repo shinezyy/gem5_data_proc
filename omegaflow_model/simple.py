@@ -14,26 +14,9 @@ data = {
 }
 
 
-def get_tuples(arch: str, targets):
-    path = data[arch]
-    matrix = {}
-    print(path)
-    for d in os.listdir(path):
-        if not d.startswith('imagick_0'):
-            continue
-        stat_dir_path = osp.join(path, d)
-        if not osp.isdir(stat_dir_path):
-            continue
-        f = c.find_stats_file(stat_dir_path)
-        tup = c.get_stats(f, targets, re_targets=True)
-        matrix[d] = tup
-    df = pd.DataFrame.from_dict(matrix, orient='index')
-    return df
-
-
 def main():
-    f1_matrix = get_tuples('F1', t.model_targets)
-    ooo_matrix = get_tuples('OoO', t.ipc_target)
+    f1_matrix = c.get_df(data, 'F1', t.model_targets, 'imagick_0')
+    ooo_matrix = c.get_df(data, 'OoO', t.ipc_target, 'imagick_0')
     ooo_matrix.columns = ['ideal_ipc']
     # print(ooo_matrix)
     matrix = pd.concat([f1_matrix, ooo_matrix], axis=1, sort=True)

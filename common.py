@@ -385,3 +385,21 @@ def find_stats_file(d: str) -> str:
             stats.append(pjoin(d, file))
     assert len(stats) == 1
     return stats[0]
+
+
+def get_df(path_dict: dict, arch: str, targets, filter_bmk=None):
+    path = path_dict[arch]
+    matrix = {}
+    print(path)
+    for d in os.listdir(path):
+        if filter_bmk is not None and not d.startswith(filter_bmk):
+            continue
+        stat_dir_path = osp.join(path, d)
+        if not osp.isdir(stat_dir_path):
+            continue
+        f = find_stats_file(stat_dir_path)
+        tup = get_stats(f, targets, re_targets=True)
+        matrix[d] = tup
+    df = pd.DataFrame.from_dict(matrix, orient='index')
+    return df
+
