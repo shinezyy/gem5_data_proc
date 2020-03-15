@@ -32,11 +32,11 @@ def main():
     )
     matrix['ipc'] = matrix['ipc'] + 0.2
     matrix.sort_values(['PPI'], inplace=True)
+    matrix = matrix.append(np.mean(matrix, axis=0), ignore_index=True)
     print(matrix)
 
     fig, ax = plt.subplots()
-    fig.set_size_inches(6, 5)
-
+    fig.set_size_inches(12, 10)
 
     colors = plt.get_cmap('Dark2').colors
 
@@ -61,33 +61,41 @@ def main():
     end = 2.52
     dots = np.arange(start, end, 0.01)
     ax.set_xlim([start, end])
-    ax.set_ylim([0.01, 5.0])
+    # ax.set_ylim([0.01, 5.0])
+    ax.set_ylim([1, 5.0])
 
-    def draw_model(rate: float, color):
+    def draw_model(rate: float, color, extend=False, show_bound=False):
         obj, = ax.plot(dots, rate/dots, marker=',', color=color)
         objs.append(obj)
         legends.append(f'Transferring and consumption rate={rate}')
         for index, row in matrix.iterrows():
-            if rate/row['PPI'] < row['ideal_ipc']:
-                ax.scatter([row['PPI']], [rate/row['PPI']], marker='x', color=color, zorder=2)
+            if show_bound and index == 1:
+                ax.scatter([row['PPI']], [rate / row['PPI']], marker='o', color=color, zorder=2)
+            m = 'x'
+            if extend:
+                ax.scatter([row['PPI']], [rate/row['PPI']], marker=m, color=color, zorder=2)
+                ax.plot([row['PPI'], row['PPI']], [row['ipc'], rate/row['PPI']],
+                        marker='.',
+                        color='lightgrey',
+                        zorder=1)
 
     high_rate = 4.5
-    draw_model(high_rate, color=colors[6])
+    draw_model(high_rate, color=colors[6], show_bound=True)
     # draw_model(5.0, color=colors[5])
     # draw_model(4.0, color=colors[4])
     # draw_model(3.5, color=colors[3])
-    draw_model(3.1, color=colors[2])
+    draw_model(3.1, color=colors[2], extend=True)
     # draw_model(2.5, color=colors[7])
 
     # from original PPI to new
-    src = int(0)
-    dest = int(1)
+    src = int(1)
+    dest = int(0)
     src_x = matrix['PPI'][src]
     src_y = 0.9*matrix['ipc'][src] + 0.1*matrix['ideal_ipc'][src]
     dest_x = matrix['PPI'][dest]
-    dest_y = src_y
+    dest_y = src_y + 1
     mid_x = 0.5*src_x + 0.5*dest_x
-    mid_y = dest_y
+    mid_y = 0.5*src_y + 0.5*dest_y
     margin = 0.05
     line_width = 0.01
     ax.arrow(src_x - margin, src_y,
@@ -97,9 +105,19 @@ def main():
              length_includes_head=True,
              color=colors[3],
              )
-    plt.text(mid_x, mid_y + 0.1,
+    ax.arrow(src_x - margin, src_y + 0.35,
+             dest_x - src_x + 2 * margin, dest_y - src_y + 0.3,
+             head_width=10 * line_width,
+             head_length=10 * line_width,
+             length_includes_head=True,
+             color=colors[3],
+             )
+    plt.text(mid_x-0.2, mid_y - 0.3,
              'Move programs left\nby reducing $PPI$',
-             horizontalalignment='center')
+             horizontalalignment='center',
+             verticalalignment='bottom',
+             fontsize=12,
+             )
 
     # Increase Rate:
     src_x = 1.5
@@ -120,6 +138,7 @@ def main():
              'Push curve up\nby increasing $Rate$',
              horizontalalignment='left',
              verticalalignment='top',
+             fontsize=12,
              )
 
     ax.set_ylabel('IPC', fontsize=14)

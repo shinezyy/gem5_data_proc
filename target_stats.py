@@ -132,5 +132,6 @@ ff_power_targets = [
     r'DQGrou(p\d\.DQBank\d\.RegReadRxBuf)',
     r'DQGrou(p\d\.DQBank\d\.QueueReadReadyInstBuf)',
     r'DQGrou(p\d\.DQBank\d\.QueueWriteReadyInstBuf)',
-
+    r'num(Cycles)',
+    r'(sim_seconds)',
 ]
