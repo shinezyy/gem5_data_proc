@@ -46,8 +46,8 @@ def get_power_df(arch: str):
                     d[counter] = df_raw[col]
 
     # Data Frame merged
-    df = pd.DataFrame.from_records(d)
-
+    df_raw_2 = pd.DataFrame.from_records(d)
+    df = pd.DataFrame()
     r = 'Read'
     w = 'Write'
     for unit in power_sheet.index:
@@ -55,10 +55,12 @@ def get_power_df(arch: str):
             r_str = unit.replace('#', 'Read')
             w_str = unit.replace('#', 'Write')
             raw = unit.replace('#', '')
-            df[raw] = df[r_str] * power_sheet[r][unit] + \
-                      df[w_str] * power_sheet[w][unit]
-        else:
-            df[unit] = df[unit] * power_sheet[r][unit]
+            df[raw] = df_raw_2[r_str] * power_sheet[r][unit] + \
+                      df_raw_2[w_str] * power_sheet[w][unit]
+        # else:
+        #     df[unit] = df[unit] * power_sheet[r][unit]
+    print(df.sum(axis=1))
+    df.to_csv(f'{arch}-Dynamic.csv')
     df['DynamicPower'] = df.sum(axis=1) / (10**6)
     sim_time = 'sim_seconds'
     df[sim_time] = df_raw[sim_time]
@@ -80,8 +82,8 @@ def main():
     delta = width + 0.1
     iter = 0
     archs = ['F1', 'O1']
-    power = 'StaticPower'
-    # power = 'DynamicPower'
+    # power = 'StaticPower'
+    power = 'DynamicPower'
     for arch in archs:
         df = get_power_df(arch)
         l = len(df)
@@ -90,6 +92,8 @@ def main():
         rects.append(ax.bar(xticks + shift, df[power], 0.4, color=colors[iter]))
         iter += 1
     ax.legend(rects, archs)
+    ax.set_xlabel('SPECCPU 2017 benchmarks', fontsize=14)
+    ax.set_ylabel('Energy consumption for 200M instructions (mJ)', fontsize=14)
     plt.show()
 
 
