@@ -83,7 +83,7 @@ def get_power_df(arch: str):
     df[sim_time] = df_raw[sim_time]
     df['StaticPower'] = df[sim_time] * (
             power_sheet['Static'] * power_sheet['Copies']).sum()
-    df.drop([sim_time], axis=1, inplace=True)
+    # df.drop([sim_time], axis=1, inplace=True)
     df.to_csv(f'{arch}-Energy.csv')
     return df
 
@@ -101,15 +101,16 @@ def main():
     delta = width + 0.1
     iter = 0
     archs = ['OoO', 'F1', 'O1', ]
-    # power = 'StaticPower'
-    power = 'DynamicPower'
+    static = 'StaticPower'
+    dyn = 'DynamicPower'
     one_bmk_width = len(archs) * delta
     for arch in archs:
         df = get_power_df(arch)
         l = len(df)
         xticks = np.arange(0, l * one_bmk_width, one_bmk_width)
         shift = delta * iter
-        rects.append(ax.bar(xticks + shift, df[power], 0.4, color=colors[iter]))
+        # rects.append(ax.bar(xticks + shift, (df[static] + df[dyn])*df['sim_seconds'], 0.4, color=colors[iter]))
+        rects.append(ax.bar(xticks + shift, df[static] + df[dyn], 0.4, color=colors[iter]))
         iter += 1
     ax.legend(rects, archs)
     ax.set_xlabel('SPECCPU 2017 benchmarks', fontsize=14)
