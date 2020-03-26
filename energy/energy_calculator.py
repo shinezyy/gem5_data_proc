@@ -77,12 +77,19 @@ def get_power_df(arch: str):
 
         # else:
         #     df[unit] = df[unit] * power_sheet[r][unit]
-    print(df.sum(axis=1))
-    df['DynamicPower'] = df.sum(axis=1) / (10**6)
+    # print(df.sum(axis=1))
+
+    static = 'StaticPower'
+    dyn = 'DynamicPower'
+
+    df[dyn] = df.sum(axis=1) / (10**6)
     sim_time = 'sim_seconds'
     df[sim_time] = df_raw[sim_time]
-    df['StaticPower'] = df[sim_time] * (
+    df[static] = df[sim_time] * (
             power_sheet['Static'] * power_sheet['Copies']).sum()
+    df['total'] = df[static] + df[dyn]
+    df['ED'] = df['total'] * df_raw[sim_time]
+    df['ED^2'] = df['total'] * df_raw[sim_time] * df_raw[sim_time]
     # df.drop([sim_time], axis=1, inplace=True)
     df.to_csv(f'{arch}-Energy.csv')
     return df
@@ -97,22 +104,35 @@ def main():
 
     # stats
 
-    width = 0.3
-    delta = width + 0.1
+    # width = 0.25 + 1e-9
+    width = 0.20
+    delta = width + 0.05
     iter = 0
     archs = ['OoO', 'F1', 'O1', ]
-    static = 'StaticPower'
-    dyn = 'DynamicPower'
-    one_bmk_width = len(archs) * delta
+    one_bmk_width = len(archs) * delta + 0.25
     for arch in archs:
         df = get_power_df(arch)
+        df.loc['mean'] = df.mean()
+        shift = delta * iter
+
         l = len(df)
         xticks = np.arange(0, l * one_bmk_width, one_bmk_width)
-        shift = delta * iter
-        # rects.append(ax.bar(xticks + shift, (df[static] + df[dyn])*df['sim_seconds'], 0.4, color=colors[iter]))
-        rects.append(ax.bar(xticks + shift, df[static] + df[dyn], 0.4, color=colors[iter]))
+        # Energy:
+        # rects.append(ax.bar(xticks + shift, df['total'], 0.3, color=colors[iter]))
+        # E*D:
+        rects.append(ax.bar(xticks + shift, df['ED'], 0.3, color=colors[iter]))
+
+        # l = len(df.columns)
+        # xticks = np.arange(0, l * one_bmk_width, one_bmk_width)
+        # rects.append(ax.bar(xticks + shift, df.loc['leela_0'], 0.3, color=colors[iter]))
+
         iter += 1
+
     ax.legend(rects, archs)
+
+    xtick_locations = np.arange(delta, l * one_bmk_width + delta, one_bmk_width)
+    plt.xticks(ticks=xtick_locations, labels=list(df.index), rotation=90)
+
     ax.set_xlabel('SPECCPU 2017 benchmarks', fontsize=14)
     ax.set_ylabel('Energy consumption for 200M instructions (mJ)', fontsize=14)
     plt.show()
