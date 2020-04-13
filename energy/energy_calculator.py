@@ -20,7 +20,7 @@ pd.set_option('display.max_columns', 15)
 data = {
     'F1': osp.join(c.env.get_stat_dir(), 'f1_rand-full'),
     'O1': osp.join(c.env.get_stat_dir(), 'o1_rand_hint-full'),
-    'OoO': osp.join(c.env.get_stat_dir(), 'ooo_4w-full'),
+    'OoO': osp.join(c.env.get_stat_dir(), 'trad_4w-full'),
 }
 power_sheet_file = {
     'F1': osp.join('ff_power.csv'),
@@ -97,8 +97,9 @@ def get_power_df(arch: str):
 
 def main():
     # fig
-    fig, ax = plt.subplots()
-    fig.set_size_inches(14, 5)
+    fig, ax = plt.subplots(1, 1, sharex=True)
+    axs = [ax]
+    fig.set_size_inches(7, 3)
     colors = plt.get_cmap('Dark2').colors
     rects = []
 
@@ -110,6 +111,8 @@ def main():
     iter = 0
     archs = ['OoO', 'F1', 'O1', ]
     one_bmk_width = len(archs) * delta + 0.25
+
+    means = {}
     for arch in archs:
         df = get_power_df(arch)
         df.loc['mean'] = df.mean()
@@ -118,24 +121,36 @@ def main():
         l = len(df)
         xticks = np.arange(0, l * one_bmk_width, one_bmk_width)
         # Energy:
-        # rects.append(ax.bar(xticks + shift, df['total'], 0.3, color=colors[iter]))
+        rects.append(axs[0].bar(xticks + shift, df['total'], 0.3, color=colors[iter]))
         # E*D:
-        rects.append(ax.bar(xticks + shift, df['ED'], 0.3, color=colors[iter]))
+        # rects.append(axs[0].bar(xticks + shift, df['ED'], 0.3, color=colors[iter]))
 
         # l = len(df.columns)
         # xticks = np.arange(0, l * one_bmk_width, one_bmk_width)
         # rects.append(ax.bar(xticks + shift, df.loc['leela_0'], 0.3, color=colors[iter]))
-
+        means[arch] = df['total']['mean']
         iter += 1
+    print('omf / ff:', means['O1']/means['F1'])
+    print('1-omf / OoO:', 1.0-means['O1']/means['OoO'])
 
-    ax.legend(rects, archs)
+    axs[0].legend(rects, archs, ncol=3)
 
     xtick_locations = np.arange(delta, l * one_bmk_width + delta, one_bmk_width)
-    plt.xticks(ticks=xtick_locations, labels=list(df.index), rotation=90)
+    plt.xticks(ticks=xtick_locations, labels=list(df.index), rotation=90, fontsize=7)
 
-    ax.set_xlabel('SPECCPU 2017 benchmarks', fontsize=14)
-    ax.set_ylabel('Energy consumption for 200M instructions (mJ)', fontsize=14)
-    plt.show()
+    # axs[-1].set_xlabel('SPECCPU 2017 benchmarks', fontsize=12)
+    axs[0].set_ylabel('Energy consumption (mJ)', fontsize=12)
+
+    def save_to_file(name):
+        for f in ['eps', 'png', 'pdf']:
+            d = '/home/zyy/projects/gem5_data_proc/figures'
+            filename = f'{d}/{name}.{f}'
+            print("save to", filename)
+            plt.savefig(filename, format=f'{f}')
+
+    # plt.show()
+    plt.tight_layout()
+    save_to_file('energy')
 
 
 if __name__ == '__main__':

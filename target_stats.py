@@ -58,13 +58,13 @@ operand_targets = [
 
         ]
 packet_targets = [
-        'dataflow_queue\.(KeySrcP)acket',
-        'dataflow_queue\.(SrcOpP)ackets',
-        'dataflow_queue\.(DestOpP)ackets',
-        'dataflow_queue\.(MemP)ackets',
-        'dataflow_queue\.(OrderP)ackets',
-        'dataflow_queue\.(MiscP)ackets',
-        'dataflow_queue\.(TotalP)ackets',
+        'DQGroup0\.(KeySrcP)acket',
+        'DQGroup0\.(SrcOpP)ackets',
+        'DQGroup0\.(DestOpP)ackets',
+        'DQGroup0\.(MemP)ackets',
+        'DQGroup0\.(OrderP)ackets',
+        'DQGroup0\.(MiscP)ackets',
+        'DQGroup0\.(TotalP)ackets',
         ]
 breakdown_targets= [
         'diewc\.(queueingD)elay',

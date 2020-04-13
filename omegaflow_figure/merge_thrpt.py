@@ -32,18 +32,20 @@ gm = graphs.GraphMaker(
 with open('./bench_order.txt') as f:
     index_order = [l.strip() for l in f]
 
+colors = plt.get_cmap('Dark2').colors
+
 def draw_queueing_throughput():
     global gm
     gm.set_cur_ax(gm.ax[0])
     plt.sca(gm.cur_ax)
     baseline_stat_dirs = {
-            'Xbar4': c.env.data('xbar4-rand'),
-            'Xbar4-2': c.env.data('xbar4-rand'),
+            'F1': c.env.data('xbar4-rand'),
+            'F1-2': c.env.data('xbar4-rand'),
             }
     stat_dirs = {
             # 'Xbar4*2-SpecSB': c.env.data('dedi-xbar4-rand-hint'),
-            'Omega16-OPR': c.env.data('omega-rand'),
-            'Xbar16-OPR': c.env.data('xbar-rand'),
+            'O1': c.env.data('omega-rand'),
+            'O1 w/ Xbar16': c.env.data('xbar-rand'),
             # 'Xbar16-OPR': c.env.data('xbar-rand'),
             }
     for k in baseline_stat_dirs:
@@ -131,7 +133,8 @@ def draw_queueing_throughput():
             # xtick_scale=1.5,
             title = "(a) Queueing time reduced by Parallel DQ Bank\n" +\
                     "and wider interconnect networks",
-            colors=[['red', 'gray'], ['green', 'green']],
+            colors=[[colors[0], colors[3]], [colors[1], colors[2]]],
+            # colors=[['red', 'gray'], ['green', 'green']],
             markers=[['x', '+'], ['.', '.']],
             redundant_baseline=True,
             )
@@ -144,13 +147,13 @@ def draw_queueing_rand():
     plt.sca(gm.cur_ax)
 
     baseline_stat_dirs = {
-            'Omega16': c.env.data('omega'),
-            'Xbar16': c.env.data('xbar'),
+            'O1 w/o shuffle': c.env.data('omega'),
+            # 'O1 w/ Xbar16 w/o shuffle': c.env.data('xbar'),
             }
     stat_dirs = {
             # 'Xbar4*2-SpecSB': c.env.data('dedi-xbar4-rand-hint'),
-            'Omega16-OPR': c.env.data('omega-rand'),
-            'Xbar16-OPR': c.env.data('xbar-rand'),
+            'O1 w/ shuffle': c.env.data('omega-rand'),
+            # 'O1 w/ Xbar16 w/ shuffle': c.env.data('xbar-rand'),
             # 'Xbar16-OPR': c.env.data('xbar-rand'),
             }
     for k in baseline_stat_dirs:
@@ -230,13 +233,14 @@ def draw_queueing_rand():
     print(num_points, num_configs)
     print(xticklabels)
     legends = baselines_ordered + configs_ordered
-    fig, ax = gm.reduction_bar_graph(data_all[:2], data_all[2:], xticklabels, legends, 
+    fig, ax = gm.reduction_bar_graph(data_all[:1], data_all[1:], xticklabels, legends,
             # xlabel='Simulation points from SPEC 2017',
             ylabel='Cycles',
             xlim=(-0.5, num_points-0.5),
-            title = "(b) Queueing time reduced by Operand Position Randomization",
-            colors=[['red', 'gray'], ['green', 'blue']],
-            markers=[[6, '+'], [7, 'x']],
+            title = "(b) Queueing time reduced by Operand Shuffle",
+            colors=[[colors[0]], [colors[1]]],
+            # markers=[[6, '+'], [7, 'x']],
+            markers=[[6], [7]],
             )
     # fig.suptitle('Queueing time reduction', fontsize='large')
 
@@ -250,21 +254,21 @@ def draw_ipc_throughput():
 
     stat_dirs = {
             # 'Xbar4': 'xbar4',
-            'Xbar4': 'xbar4-rand',
+            'F1': 'xbar4-rand',
             # 'Xbar4-SpecSB': 'xbar4-rand-hint',
             # 'Xbar4*2-SpecSB': 'dedi-xbar4-rand-hint',
             #'Omega16': 'omega',
-            'Omega16-OPR': 'omega-rand',
+            'O1': 'omega-rand',
             # 'Omega16-OPR-SpecSB': 'omega-rand-hint',
             #'Xbar16': 'xbar',
-            'Xbar16-OPR': 'xbar-rand',
+            'O1 w/ Xbar16': 'xbar-rand',
             #'Xbar16-OPR-SpecSB': 'xbar-rand-hint',
             # 'Ideal-OOO': 'ruu-4-issue',
             }
     for k in stat_dirs:
         stat_dirs[k] = c.env.data(f'{stat_dirs[k]}{suffix}')
 
-    configs_ordered = ['Xbar4', 'Omega16-OPR', 'Xbar16-OPR']
+    configs_ordered = ['F1', 'O1', 'O1 w/ Xbar16']
 
     benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 
@@ -294,20 +298,20 @@ def draw_ipc_throughput():
         if num_points == 0:
             num_points = len(df)
 
-    baseline = 'Xbar4'
-    dfs['Xbar4'].loc['rel_geo_mean'] = [1.0]
-    print('Xbar4')
-    print(dfs['Xbar4'])
+    baseline = 'F1'
+    dfs[baseline].loc['rel_geo_mean'] = [1.0]
+    print(baseline)
+    print(dfs[baseline])
     for config in configs_ordered:
-        if config != 'Xbar4':
+        if config != baseline:
             print(config)
-            rel = dfs[config]['ipc'] / dfs['Xbar4']['ipc'][:-1]
+            rel = dfs[config]['ipc'] / dfs[baseline]['ipc'][:-1]
             dfs[config]['rel'] = rel
 
             dfs[config].loc['rel_geo_mean'] = [rel.prod() ** (1/len(rel))] * 2
 
             if config == 'Omega16-OPR-SpecSB':
-                dfs[config]['boost'] = dfs[config]['rel'] / dfs['Xbar4']['rel']
+                dfs[config]['boost'] = dfs[config]['rel'] / dfs[baseline]['rel']
 
             print(dfs[config])
         data = np.concatenate([dfs[config]['ipc'].values[:-1], [np.NaN], dfs[config]['ipc'].values[-1:]])
@@ -350,7 +354,8 @@ def draw_ipc_throughput():
                 ylim=(0, 3),
                 title = "(c) IPC improved by Parallel DQ Bank\n" +\
                         "and wider interconnect networks",
-                colors=['green', 'red', 'gray'],
+                # colors=['green', 'red', 'gray'],
+                colors=[colors[0], colors[1], colors[2]],
                 markers=['.', 'x', '+'],
                 )
 

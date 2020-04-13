@@ -16,7 +16,8 @@ class Env(object):
         self.prefix = st_stat_dir
 
     def get_stat_dir(self):
-        return os.path.abspath(self.prefix)
+        return '/home/zyy/gem5-results-2017'
+        # return os.path.abspath(self.prefix)
 
     def data(self, s):
         return os.path.abspath(pjoin(self.prefix, s))
@@ -242,6 +243,7 @@ def to_num(x: str) -> (int, float):
 
 def get_stats(stat_file: str, targets: list,
               insts: int=200*(10**6), re_targets=False) -> dict:
+    # print(stat_file)
     assert(os.path.isfile(expu(stat_file)))
     lines = get_raw_stats_around(stat_file, insts)
 

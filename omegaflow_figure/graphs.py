@@ -12,7 +12,8 @@ from matplotlib import pyplot as plt
 plt.rcParams["font.family"] = "Times New Roman"
 
 class GraphDefaultConfig(object):
-    colors = ["red", "gray", "purple", "None", "green", "orange"]
+    # colors = ["red", "gray", "purple", "None", "green", "orange"]
+    colors = plt.get_cmap('Dark2').colors
     edgecolor = "black"
     edgecolors = ["black", "blue"]
     fig_size = (14, 3)
@@ -46,26 +47,27 @@ class GraphMaker(object):
         else:
             return int(np.ceil(n/2))
 
-
     def set_graph_general_format(self, xlim, ylim, xticklabels, xlabel, ylabel,
             title=None):
-        self.cur_ax.xaxis.set_major_formatter(mpl.ticker.NullFormatter())
+        # self.cur_ax.xaxis.set_major_formatter(mpl.ticker.NullFormatter())
         # cur_ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
         # print(self.cur_ax.xaxis.get_major_ticks())
-        for tick in self.cur_ax.xaxis.get_major_ticks():
-            tick.tick1line.set_markersize(2)
-            tick.tick2line.set_markersize(0)
-            # tick.tick2line.set_fontsize(14)
-        for tick in self.cur_ax.xaxis.get_minor_ticks():
-            tick.tick1line.set_markersize(2)
-            tick.label.set_fontsize(14)
-            # tick.tick2line.set_markersize(0)
-            tick.label1.set_horizontalalignment('center')
+        # for tick in self.cur_ax.xaxis.get_major_ticks():
+        #     tick.tick1line.set_markersize(2)
+        #     tick.tick2line.set_markersize(0)
+        #     # tick.tick2line.set_fontsize(14)
+        # for tick in self.cur_ax.xaxis.get_minor_ticks():
+        #     tick.tick1line.set_markersize(2)
+        #     tick.label.set_fontsize(14)
+        #     # tick.tick2line.set_markersize(0)
+        #     tick.label1.set_horizontalalignment('center')
 
         self.cur_ax.set_xlim(xlim)
         self.cur_ax.set_ylim(ylim)
         if self.with_xtick_label:
-            self.cur_ax.set_xticklabels(xticklabels, minor=True, rotation=0)
+            print(xticklabels)
+            # self.cur_ax.set_xticklabels(xticklabels, minor=True, rotation=0)
+            self.cur_ax.set_xticklabels(xticklabels, rotation=90, fontsize=14)
         self.cur_ax.grid(axis="y", linestyle="--", color='gray', alpha=0.3)
         self.cur_ax.set_xlabel(xlabel)
         self.cur_ax.set_ylabel(ylabel, fontsize=14)
@@ -73,12 +75,14 @@ class GraphMaker(object):
             self.cur_ax.title.set_text(title)
             self.cur_ax.title.set_fontsize(14)
 
-    def simple_bar_graph(self, data, xticklabels, legends, xlabel="", ylabel="",
+    def simple_bar_graph(
+            self, data, xticklabels, legends, xlabel="", ylabel="",
             colors=None, edgecolor=None, linewidth=None,
             xlim=(None,None), ylim=(None,None), overlap=False,
             set_format=True, xtick_scale=1, title=None, with_borders=False,
             markers=None,
             dont_legend=False,
+            show_tick=False,
             ):
         if colors is None:
             colors = self.config.colors
@@ -106,8 +110,8 @@ class GraphMaker(object):
                     )
             rects.append(rect)
 
-        # self.cur_ax.xaxis.set_major_locator(mpl.ticker.IndexLocator(
-        #     base=bar_size*num_configs*3, offset=-self.config.bar_interval/2))
+        self.cur_ax.xaxis.set_major_locator(mpl.ticker.IndexLocator(
+            base=bar_size*num_configs*3, offset=-self.config.bar_interval/2))
         # self.cur_ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(
         #     base=bar_size*num_configs, offset=-self.config.bar_interval/2))
 
@@ -115,21 +119,27 @@ class GraphMaker(object):
             base=bar_size,
             # offset=-self.config.bar_interval/2 + self.config.bar_width,
             offset=-self.config.bar_interval/4,
-            )
+        )
 
-        if with_borders:
-            for mt in tick_locators.tick_values(0, bar_size*num_configs*3*num_points):
-                self.cur_ax.axvline(mt*xtick_scale - self.config.bar_width/3*2,
-                        c='black', linestyle='-.',
-                        )
+        # if with_borders:
+        #     for mt in tick_locators.tick_values(0, bar_size*num_configs*3*num_points):
+        #         self.cur_ax.axvline(mt*xtick_scale - self.config.bar_width/3*2,
+        #                 c='black', linestyle='-.',
+        #                 )
 
-        self.cur_ax.xaxis.set_major_locator(tick_locators)
+        if show_tick:
+            self.cur_ax.xaxis.set_major_locator(tick_locators)
+        else:
+            for tick in self.cur_ax.xaxis.get_major_ticks():
+                tick.tick1line.set_markersize(0)
+                tick.label.set_fontsize(0)
+                tick.tick2line.set_markersize(0)
 
-        self.cur_ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(
-            base=bar_size,
-            # offset=-self.config.bar_interval/2 + self.config.bar_width,
-            offset=-self.config.bar_interval/4,
-            ))
+        # self.cur_ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(
+        #     base=bar_size,
+        #     # offset=-self.config.bar_interval/2 + self.config.bar_width,
+        #     offset=-self.config.bar_interval/4,
+        #     ))
 
 
         if set_format:
@@ -150,13 +160,15 @@ class GraphMaker(object):
     def set_cur_ax(self, new_ax):
         self.cur_ax = new_ax
 
-    def reduction_bar_graph(self, data_high, data_low, xticklabels, legends, xlabel="", ylabel="",
+    def reduction_bar_graph(
+            self, data_high, data_low, xticklabels, legends, xlabel="", ylabel="",
             colors=None, edgecolors=None, xlim=(None,None), ylim=(None,None), legendorder=None,
             set_format=True, xtick_scale=1, title=None,
             with_borders=False,
             markers=None,
             redundant_baseline=False,
             dont_legend=False,
+            show_tick=False,
             ):
         assert colors is not None
 
@@ -214,23 +226,29 @@ class GraphMaker(object):
 
         tick_locators = mpl.ticker.IndexLocator(
             base=bar_size,
-            # offset=-self.config.bar_interval/2 + self.config.bar_width,
             offset=-self.config.bar_interval/4,
-            )
+        )
+        if show_tick:
+            self.cur_ax.xaxis.set_major_locator(tick_locators)
+        else:
+            for tick in self.cur_ax.xaxis.get_major_ticks():
+                tick.tick1line.set_markersize(0)
+                tick.label.set_fontsize(0)
+                tick.tick2line.set_markersize(0)
 
-        if with_borders:
-            for mt in tick_locators.tick_values(0, bar_size*num_configs*3*num_points):
-                self.cur_ax.axvline(mt*xtick_scale - self.config.bar_width/3*2,
-                        c='black', linestyle='-.',
-                        )
+        #
+        # if with_borders:
+        #     for mt in tick_locators.tick_values(0, bar_size*num_configs*3*num_points):
+        #         self.cur_ax.axvline(mt*xtick_scale - self.config.bar_width/3*2,
+        #                 c='black', linestyle='-.',
+        #                 )
+        # self.cur_ax.xaxis.set_major_locator(tick_locators)
 
-        self.cur_ax.xaxis.set_major_locator(tick_locators)
-
-        self.cur_ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(
-            base=bar_size,
-            # offset=-self.config.bar_interval/2 + self.config.bar_width,
-            offset=-self.config.bar_interval/4,
-            ))
+        # self.cur_ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(
+        #     base=bar_size,
+        #     # offset=-self.config.bar_interval/2 + self.config.bar_width,
+        #     offset=-self.config.bar_interval/4,
+        #     ))
 
         if set_format:
             self.set_graph_general_format(xlim, ylim, xticklabels, xlabel, ylabel, title=title)
@@ -252,8 +270,8 @@ class GraphMaker(object):
     def save_to_file(self, name):
         for f in ['eps', 'png', 'pdf']:
             d = f
-            if f == 'pdf':
-                d = 'eps'
+            # if f == 'pdf':
+            #     d = 'eps'
             filename = f'./{d}/{name}.{f}'
             print("save to", filename)
             plt.savefig(filename, format=f'{f}')

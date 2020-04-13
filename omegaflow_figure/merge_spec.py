@@ -35,18 +35,20 @@ gm = graphs.GraphMaker(
 with open('./bench_order.txt') as f:
     index_order = [l.strip() for l in f]
 
+colors = plt.get_cmap('Dark2').colors
+
 def spec_on_xbar4():
     global gm
     gm.set_cur_ax(gm.ax[0])
     plt.sca(gm.cur_ax)
 
     baseline_stat_dirs = {
-            'Xbar4': c.env.data('xbar4-rand'),
+            'F1': c.env.data('xbar4-rand'),
             # 'Omega16-OPR': c.env.data('omega-rand'),
             }
     stat_dirs = {
             # 'Xbar4*2-SpecSB': c.env.data('dedi-xbar4-rand-hint'),
-            'Xbar4-SpecSB': c.env.data('xbar4-rand-hint'),
+            'F1 w/ WoC': c.env.data('xbar4-rand-hint'),
             # 'Omega16-OPR-SpecSB': c.env.data('omega-rand-hint'),
             # 'Xbar16-OPR': c.env.data('xbar-rand'),
             }
@@ -91,8 +93,8 @@ def spec_on_xbar4():
         data_all.append(data)
 
     legends = [
-            'Xbar4 Queuing', 'Xbar4 SSR',
-            'Xbar4-SpecSB Queuing', 'Xbar4-SpecSB SSR',
+            'F1 Queuing', 'F1 SSR',
+            'F1 w/ WoC Queuing', 'F1 w/ WoC SSR',
             ]
 
     for nc, stat in enumerate(stats):
@@ -134,15 +136,15 @@ def spec_on_xbar4():
 
     print(num_points, num_configs)
     legends = [
-            'Xbar4 Queueing', 'Xbar4 SSR',
-            'Xbar4-SpecSB Queueing', 'Xbar4-SpecSB SSR',
+            'F1 Queuing', 'F1 SSR',
+            'F1 w/ WoC Queuing', 'F1 w/ WoC SSR',
             ]
     fig, ax = gm.simple_bar_graph(data_all, xticklabels, legends,
             ylabel='Cycles',
             xlim=(-0.5, num_points-0.5),
             ylim=(0,1.22e9),
-            title='(a) Effect of Speculative SB/ARF on baseline architecutre',
-            colors=['red', 'gray', 'green', 'blue'],
+            title='(a) Effect of WoC on Forwardflow',
+            colors=[colors[0], colors[2], colors[1], colors[3], ],
             markers=['+', 7, 'x', 6],
             dont_legend=True,
             )
@@ -164,12 +166,12 @@ def spec_on_omega():
 
     baseline_stat_dirs = {
             # 'Xbar4': c.env.data('xbar4-rand'),
-            'Omega16-OPR': c.env.data('omega-rand'),
+            'O1 w/o WoC': c.env.data('omega-rand'),
             }
     stat_dirs = {
             # 'Xbar4*2-SpecSB': c.env.data('dedi-xbar4-rand-hint'),
             # 'Xbar4-SpecSB': c.env.data('xbar4-rand-hint'),
-            'Omega16-OPR-SpecSB': c.env.data('omega-rand-hint'),
+            'O1': c.env.data('omega-rand-hint'),
             # 'Xbar16-OPR': c.env.data('xbar-rand'),
             }
     stats = ['queueingD', 'ssrD']
@@ -256,15 +258,16 @@ def spec_on_omega():
     # 'Omega16 Queueing', 'Omega16 SSR',
     # 'Omega16-SpecSB Queueing', 'Omega16-SpecSB SSR',
 
-    legends = ['Omega16-OPR', 'Omega16-OPR-SpecSB']
+    legends = ['O1 w/o WoC', 'O1']
     fig, ax = gm.simple_bar_graph(
             np.array([data_all[0], data_all[2]]),
             xticklabels,
             legends=legends,
             ylabel='Cycles',
             xlim=(-0.5, num_points-0.5),
-            title='(b.1) Queueing time reduced by Speculative SB/ARF\non Omega16-OPR',
-            colors=['red', 'gray'],
+            title='(b.1) Queueing time reduced by WoC on O1',
+            # colors=['red', 'gray'],
+            colors=[colors[0], colors[1]],
             markers=[7, 6],
             dont_legend=True,
             )
@@ -287,8 +290,9 @@ def spec_on_omega():
             legends=legends,
             ylabel='Cycles',
             xlim=(-0.5, num_points-0.5),
-            title='(b.2) Wakeup delay reduced by Speculative SB/ARF\non Omega16-OPR',
-            colors=['red', 'gray'],
+            title='(b.2) SSR delay reduced by WoC on O1',
+            # colors=['red', 'gray'],
+            colors=[colors[0], colors[1]],
             markers=[7, 6],
             dont_legend=True,
             )
@@ -311,12 +315,12 @@ def ipc_spec():
     show_reduction = True
 
     stat_dirs = {
-            'Xbar4': 'xbar4',
-            'Xbar4-SpecSB': 'xbar4-rand-hint',
+            'F1': 'xbar4',
+            'F1 w/ WoC': 'xbar4-rand-hint',
             # 'Xbar4*2-SpecSB': 'dedi-xbar4-rand-hint',
             #'Omega16': 'omega',
-            'Omega16-OPR': 'omega-rand',
-            'Omega16-OPR-SpecSB': 'omega-rand-hint',
+            'O1 w/o WoC': 'omega-rand',
+            'O1': 'omega-rand-hint',
             #'Xbar16': 'xbar',
             #'Xbar16-OPR': 'xbar-rand',
             #'Xbar16-OPR-SpecSB': 'xbar-rand-hint',
@@ -325,7 +329,8 @@ def ipc_spec():
     for k in stat_dirs:
         stat_dirs[k] = c.env.data(f'{stat_dirs[k]}{suffix}')
 
-    configs_ordered = ['Xbar4', 'Xbar4-SpecSB','Omega16-OPR', 'Omega16-OPR-SpecSB']
+    # configs_ordered = ['Xbar4', 'Xbar4-SpecSB','Omega16-OPR', 'Omega16-OPR-SpecSB']
+    configs_ordered = ['F1', 'F1 w/ WoC', 'O1 w/o WoC', 'O1']
 
     benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 
@@ -356,7 +361,7 @@ def ipc_spec():
         if num_points == 0:
             num_points = len(df)
 
-    baseline = 'Xbar4'
+    baseline = 'F1'
     dfs[baseline].loc['rel_geo_mean'] = [1.0]
     print(baseline)
     print(dfs[baseline])
@@ -369,7 +374,7 @@ def ipc_spec():
 
             dfs[config].loc['rel_geo_mean'] = [rel.prod() ** (1/len(rel))] * 2
 
-            if config.endswith('SpecSB'):
+            if config in ['F1 w/ WoC', 'O1']:
                 print(dfs[config])
                 print(dfs[baseline])
                 # dfs[config]['boost'] = dfs[config]['rel'] / dfs[baseline]['rel']
@@ -379,7 +384,8 @@ def ipc_spec():
             [np.NaN], dfs[config]['ipc'].values[-1:]])
         datas[config] = data
 
-    legends = ['Omega16-OPR-SpecSB', 'Xbar4-SpecSB', 'Omega16-OPR', 'Xbar4']
+    # legends = ['Omega16-OPR-SpecSB', 'Xbar4-SpecSB', 'Omega16-OPR', 'Xbar4']
+    legends = ['O1', 'F1 w/ WoC', 'O1 w/o WoC', 'F1']
     data_all = [datas[x] for x in legends]
     print(data_all)
     data_all = np.array(data_all)
@@ -402,8 +408,9 @@ def ipc_spec():
             ylabel='IPCs',
             xlim=(-0.5, num_points-0.5),
             ylim=(0, 3),
-            title='(c) IPC improvements from Speculative SB/ARF\non Omega16-OPR and Xbar4',
-            colors=['red', 'gray', 'green', 'blue'],
+            title='(c) IPC improvements from WoC on O1 and F1',
+            # colors=['red', 'gray', 'green', 'blue'],
+            colors=[colors[1], colors[3], colors[0], colors[2], ],
             markers=['+', 7, 'x', 6],
             with_borders=False,
             dont_legend=True,

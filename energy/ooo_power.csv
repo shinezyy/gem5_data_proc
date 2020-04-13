@@ -1,5 +1,5 @@
 ,Static,Read,Write,Copies,ReadStat,WriteStat
-Reg#IntRegfile,2.17988,0.0023102,0.00333028,1,int_regfile_reads,int_regfile_writes
+Reg#IntRegfile,2.94314,0.00292001,0.00421845,1,int_regfile_reads,int_regfile_writes
 Reg#FloatRegfile,0,0.0023102,0.00333028,0,fp_regfile_reads,fp_regfile_writes
 Reg#MiscRegfile,0,0.0023102,0.00333028,0,misc_regfile_reads,misc_regfile_writes
 CAM#IntScheduler,1.907,0.000126864,0.000318971,1,int_inst_queue_reads,int_inst_queue_writes
