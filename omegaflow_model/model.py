@@ -1,3 +1,6 @@
+import sys
+sys.path.append('..')
+
 import common as c
 import target_stats as t
 import os
@@ -36,8 +39,8 @@ def main():
     ooo_matrix.columns = ['ideal_ipc']
     # print(ooo_matrix)
     matrix = pd.concat([f1_matrix, ooo_matrix], axis=1, sort=True)
-    matrix['PPI'] = matrix['0.TotalPackets']/matrix['Insts']
-    matrix.sort_values(['PPI'], inplace=True)
+    matrix['TPI'] = matrix['0.TotalPackets']/matrix['Insts']
+    matrix.sort_values(['TPI'], inplace=True)
 
     matrix = matrix.iloc[::2, :]
     print(matrix)
@@ -49,17 +52,17 @@ def main():
 
     # vertical line
     for index, row in matrix.iterrows():
-        ax.plot((row['PPI'], row['PPI']), (row['ipc'], row['ideal_ipc']),
+        ax.plot((row['TPI'], row['TPI']), (row['ipc'], row['ideal_ipc']),
                 color='lightgrey',
                 linestyle=':',
                 zorder=1)
 
     # OoO
-    ooo = ax.scatter(matrix['PPI'], matrix['ideal_ipc'],   marker='v', color=colors.get(),
+    ooo = ax.scatter(matrix['TPI'], matrix['ideal_ipc'],   marker='v', color=colors.get(),
                      zorder=3)
 
     # FF
-    ff = ax.scatter(matrix['PPI'], matrix['ipc'],         marker='^', color=colors.get(),
+    ff = ax.scatter(matrix['TPI'], matrix['ipc'],         marker='^', color=colors.get(),
                     zorder=3,
                     )
     objs = [ooo, ff]
@@ -77,29 +80,29 @@ def main():
                  color=colors.last()
                  )
 
-    add_circle((matrix.loc['cactuBSSN_1']['PPI'], matrix.loc['cactuBSSN_1']['ipc']),
-               text='cactuBSSB:\nlow PPI & low IPC',
+    add_circle((matrix.loc['cactuBSSN_1']['TPI'], matrix.loc['cactuBSSN_1']['ipc']),
+               text='cactuBSSB:\nlow TPI & low IPC',
                text_shift=(-0.1, +0.2),
                )
 
     bmk = 'imagick'
-    add_circle((matrix.loc[f'{bmk}_0']['PPI'], matrix.loc[f'{bmk}_0']['ideal_ipc']),
-               text=f'{bmk}:\nmedium PPI & high IPC',
+    add_circle((matrix.loc[f'{bmk}_0']['TPI'], matrix.loc[f'{bmk}_0']['ideal_ipc']),
+               text=f'{bmk}:\nmedium TPI & high IPC',
                text_shift=(-0.42, -0.1),
                )
 
     bmk = 'bwaves'
-    add_circle((matrix.loc[f'{bmk}_0']['PPI'] - 0.02, matrix.loc[f'{bmk}_0']['ideal_ipc'] + 0.05),
-               text=f'{bmk}:\nhigh PPI & high IPC',
+    add_circle((matrix.loc[f'{bmk}_0']['TPI'] - 0.02, matrix.loc[f'{bmk}_0']['ideal_ipc'] + 0.05),
+               text=f'{bmk}:\nhigh TPI & high IPC',
                text_shift=(+0.2, +0.25),
                color_inc=2
                )
-    bmk = 'deepsjeng'
-    add_circle((matrix.loc[f'{bmk}_1']['PPI'] + 0.02, matrix.loc[f'{bmk}_1']['ideal_ipc'] + 0.1),
-               text=f'{bmk}:\nmedium PPI&medium IPC',
-               text_shift=(+0.45, -0.05),
-               color_inc=2
-               )
+    # bmk = 'deepsjeng'
+    # add_circle((matrix.loc[f'{bmk}_1']['TPI'] + 0.02, matrix.loc[f'{bmk}_1']['ideal_ipc'] + 0.1),
+    #            text=f'{bmk}:\nmedium TPI&medium IPC',
+    #            text_shift=(+0.45, -0.05),
+    #            color_inc=2
+    #            )
 
     start = 1.0
     end = 3.0
@@ -108,16 +111,17 @@ def main():
     def draw_model(rate: float, color, ls=None):
         obj, = ax.plot(dots, rate/dots, linestyle=ls, color=color)
         objs.append(obj)
-        legends.append(f'IPC=$Rate$/PPI, $Rate$={rate}')
+        legends.append(f'IPC=$Rate$/TPI, $Rate$={rate}')
         for index, row in matrix.iterrows():
-            if rate/row['PPI'] < row['ideal_ipc']:
-                ax.scatter([row['PPI']], [rate/row['PPI']], marker='o', color=color, zorder=2)
+            if rate/row['TPI'] < row['ideal_ipc']:
+                ax.scatter([row['TPI']], [rate/row['TPI']], marker='o', color=color, zorder=2)
 
+    colors.get()
     # draw_model(6.0, color=colors[6])
     # draw_model(5.0, color=colors[5])
     # draw_model(4.0, color=colors[4])
     # draw_model(3.5, color=colors[3])
-    draw_model(3.1, color=colors.last())
+    draw_model(3.31, color=colors.get())
     draw_model(6.0, color=colors.last(), ls='--')
     # draw_model(2.5, color=colors[7])
 
@@ -125,7 +129,7 @@ def main():
     ax.set_ylim([0.0, 5.0])
 
     ax.set_ylabel('IPC', fontsize=14)
-    ax.set_xlabel('PPI: pointers per instruction', fontsize=14)
+    ax.set_xlabel('TPI: pointers per instruction', fontsize=14)
     ax.legend(objs, legends, fontsize=12)
     # plt.plot()
     # plt.show()

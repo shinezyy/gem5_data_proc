@@ -47,8 +47,11 @@ class GraphMaker(object):
         else:
             return int(np.ceil(n/2))
 
-    def set_graph_general_format(self, xlim, ylim, xticklabels, xlabel, ylabel,
-            title=None):
+    def set_graph_general_format(
+            self, xlim, ylim, xticklabels, xlabel, ylabel,
+            title=None,
+            show_minor=False,
+    ):
         # self.cur_ax.xaxis.set_major_formatter(mpl.ticker.NullFormatter())
         # cur_ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
         # print(self.cur_ax.xaxis.get_major_ticks())
@@ -56,18 +59,23 @@ class GraphMaker(object):
         #     tick.tick1line.set_markersize(2)
         #     tick.tick2line.set_markersize(0)
         #     # tick.tick2line.set_fontsize(14)
-        # for tick in self.cur_ax.xaxis.get_minor_ticks():
-        #     tick.tick1line.set_markersize(2)
-        #     tick.label.set_fontsize(14)
-        #     # tick.tick2line.set_markersize(0)
-        #     tick.label1.set_horizontalalignment('center')
+        if show_minor:
+            for tick in self.cur_ax.xaxis.get_major_ticks():
+                tick.tick1line.set_markersize(6)
+                tick.tick2line.set_markersize(6)
+                tick.label1.set_horizontalalignment('left')
+            for tick in self.cur_ax.xaxis.get_minor_ticks():
+                tick.tick1line.set_markersize(2)
+                tick.tick2line.set_markersize(2)
+                # tick.tick2line.set_markersize(0)
+                # tick.label1.set_horizontalalignment('center')
 
         self.cur_ax.set_xlim(xlim)
         self.cur_ax.set_ylim(ylim)
         if self.with_xtick_label:
             print(xticklabels)
             # self.cur_ax.set_xticklabels(xticklabels, minor=True, rotation=0)
-            self.cur_ax.set_xticklabels(xticklabels, rotation=90, fontsize=14)
+            self.cur_ax.set_xticklabels(xticklabels, rotation=90, fontsize=11)
         self.cur_ax.grid(axis="y", linestyle="--", color='gray', alpha=0.3)
         self.cur_ax.set_xlabel(xlabel)
         self.cur_ax.set_ylabel(ylabel, fontsize=14)
@@ -169,6 +177,9 @@ class GraphMaker(object):
             redundant_baseline=False,
             dont_legend=False,
             show_tick=False,
+            bar=False,
+            swap=False,
+            show_minor=False,
             ):
         assert colors is not None
 
@@ -196,23 +207,32 @@ class GraphMaker(object):
 
         bar_size = self.config.bar_width + self.config.bar_interval
 
+        if swap:
+            data_high, data_low = data_low, data_high
+            mid = len(legends)/2
+            if mid == 1:
+                legends[0], legends[1] = legends[1], legends[0]
+
         for i, data in enumerate([data_low, data_high]):
             for j, d in enumerate(data):
                 if same_high_data and i > 0 and j > 0:
                     continue
                 tick_starts = np.arange(0, num_points, bar_size)
                 tick_starts *= xtick_scale
-                # rect = plt.bar(tick_starts, d,
-                #         edgecolor=edgecolors[i][j],
-                #         color=colors[i][j],
-                #         width=self.config.bar_width * xtick_scale)
-
-                rect, = plt.plot(tick_starts, d,
+                if bar:
+                    rect = plt.bar(
+                        tick_starts, d,
+                        # edgecolor=edgecolors[i][j],
+                        color=colors[i][j],
+                        width=self.config.bar_width * xtick_scale)
+                else:
+                    rect, = plt.plot(
+                        tick_starts, d,
                         marker=markers[i][j],
                         # edgecolor=edgecolor, linewidth=linewidth,
                         color=colors[i][j],
                         # width=self.config.bar_width * xtick_scale
-                        )
+                    )
                 rects.append(rect)
 
         rects = rects[2:] + rects[:2]
@@ -224,11 +244,25 @@ class GraphMaker(object):
             rects = new_rects
             legends = new_legends
 
-        tick_locators = mpl.ticker.IndexLocator(
-            base=bar_size,
-            offset=-self.config.bar_interval/4,
-        )
         if show_tick:
+            if show_minor:
+                tick_locators = mpl.ticker.IndexLocator(
+                    base=bar_size*3,
+                    offset=-self.config.bar_interval / 4,
+                )
+
+                minor_locators = mpl.ticker.IndexLocator(
+                    base=bar_size,
+                    # offset=-self.config.bar_interval/2 + self.config.bar_width,
+                    offset=-self.config.bar_interval / 4,
+                )
+                self.cur_ax.xaxis.set_minor_locator(minor_locators)
+
+            else:
+                tick_locators = mpl.ticker.IndexLocator(
+                    base=bar_size,
+                    offset=-self.config.bar_interval / 4,
+                )
             self.cur_ax.xaxis.set_major_locator(tick_locators)
         else:
             for tick in self.cur_ax.xaxis.get_major_ticks():
@@ -244,14 +278,9 @@ class GraphMaker(object):
         #                 )
         # self.cur_ax.xaxis.set_major_locator(tick_locators)
 
-        # self.cur_ax.xaxis.set_minor_locator(mpl.ticker.IndexLocator(
-        #     base=bar_size,
-        #     # offset=-self.config.bar_interval/2 + self.config.bar_width,
-        #     offset=-self.config.bar_interval/4,
-        #     ))
 
         if set_format:
-            self.set_graph_general_format(xlim, ylim, xticklabels, xlabel, ylabel, title=title)
+            self.set_graph_general_format(xlim, ylim, xticklabels, xlabel, ylabel, title=title, show_minor=show_minor)
 
         if same_high_data:
             legends = [legends[0]] + legends[2:]

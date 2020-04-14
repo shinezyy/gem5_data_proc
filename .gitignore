@@ -99,3 +99,7 @@ omega-flow-data
 .vscode
 /.idea
 /data
+figures
+omegaflow_figure/figures
+omegaflow_figure/pdf
+pdf

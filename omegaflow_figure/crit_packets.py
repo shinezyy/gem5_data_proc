@@ -14,13 +14,14 @@ import common as c
 import graphs
 import target_stats as t
 
+colors = plt.get_cmap('Dark2').colors
 
 strange_const = 3
 do_normalization = True
 full = True
 suffix = '-full' if full else ""
 
-stat_dir = c.env.data('xbar-rand-hint') + suffix
+stat_dir = c.env.data('o1_rand_hint') + suffix
 
 benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 points = []
@@ -48,10 +49,11 @@ for point in df.index:
     if point.endswith('_0'):
         benchmarks_ordered.append(point.split('_')[0])
 
-xticklabels = [''] * (strange_const*len(benchmarks_ordered))
-print(len(xticklabels))
-for i, benchmark in enumerate(benchmarks_ordered):
-    xticklabels[i*strange_const + 1] = benchmark
+# xticklabels = [''] * (strange_const*len(benchmarks_ordered))
+# print(len(xticklabels))
+# for i, benchmark in enumerate(benchmarks_ordered):
+#     xticklabels[i*strange_const + 1] = benchmark
+xticklabels = benchmarks_ordered
 
 num_configs, num_points = 3, len(benchmarks_ordered)
 
@@ -59,18 +61,26 @@ print(num_points, num_configs)
 gm = graphs.GraphMaker(fig_size=(6,2.5))
 gm.config.bar_width, gm.config.bar_interval = 0.7, 0.3
 common_options = (data_all[:1], data_all[1:], xticklabels, names)
-
+print(data_all)
 if not do_normalization:
     fig, ax = gm.reduction_bar_graph(*common_options,
-            ylabel='Number of pointers',
+            ylabel='Number of tokens',
             xlim=(-0.5, num_points*num_configs-0.5),
             )
 else:
-    fig, ax = gm.reduction_bar_graph(*common_options,
-            ylabel='Proportion of pointers',
-            xlim=(-0.5, num_points*num_configs-0.5),
-            ylim=(0.0, 1.0))
+    fig, ax = gm.reduction_bar_graph(
+        *common_options,
+        colors=[[colors[0]], [colors[1]]],
+        ylabel='Proportion of tokens',
+        # xlim=(-0.5, num_points*num_configs-0.5),
+        # ylim=(0.0, 1.0),
+        bar=True,
+        show_tick=True,
+        swap=True,
+        show_minor=True,
+    )
 
 # legend.set_bbox_to_anchor((0.80,0.89))
-gm.save_to_file("crit_pointers")
-plt.show(block=True)
+plt.tight_layout()
+gm.save_to_file("crit_tokens")
+# plt.show(block=True)
