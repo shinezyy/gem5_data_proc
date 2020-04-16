@@ -143,13 +143,13 @@ def ipc_scale():
     print(data_all.shape)
     fig, ax = gm.simple_bar_graph(data_all, xticklabels,
                                   legends,
-                                  ylabel='IPC',
+                                  ylabel='Normalized IPC',
                                   xlim=(-0.5, num_points - 0.5),
                                   ylim=(0.5, 1.6),
                                   title='(a) IPC improvements from scaling up',
                                   # colors=['red', 'gray', 'green', 'blue'],
                                   colors=[colors[1], colors[3], colors[0],],
-                                  markers=['+', 7, 'x'],
+                                  markers=['+', 'x', 7],
                                   with_borders=False,
                                   dont_legend=True,
                                   )
@@ -246,7 +246,7 @@ def scale_vs_soc():
     print(data_all.shape)
     fig, ax = gm.simple_bar_graph(data_all, xticklabels,
                                   legends,
-                                  ylabel='IPC',
+                                  ylabel='Normalized IPC',
                                   xlim=(-0.5, num_points - 0.5),
                                   ylim=(0.5, 1.6),
                                   title='(b) WoC VS. scaling up',
