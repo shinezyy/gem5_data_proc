@@ -121,7 +121,7 @@ xticklabels = list(index_order) + ['', 'mean']
 
 print(len(configs_ordered))
 gm = graphs.GraphMaker((14, 2.5))
-ylabel = 'Normalized IPCs' if do_normalization else "IPCs"
+ylabel = 'Normalized IPC' if do_normalization else "IPC"
 print(xticklabels)
 fig, ax = gm.simple_bar_graph(
     data_all, xticklabels, configs_ordered,

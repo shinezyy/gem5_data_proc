@@ -20,14 +20,14 @@ suffix = '-full' if full else ""
 
 stat_dirs = {
         # 'Xbar4': 'xbar4',
-        'Xbar4': 'xbar4-rand',
+        'F1': 'xbar4-rand',
         # 'Xbar4-SpecSB': 'xbar4-rand-hint',
         # 'Xbar4*2-SpecSB': 'dedi-xbar4-rand-hint',
         # 'Omega16': 'omega',
-        'Omega16-OPR': 'omega-rand',
+        'O1': 'omega-rand',
         # 'Omega16-OPR-SpecSB': 'omega-rand-hint',
         # 'Xbar16': 'xbar',
-        'Xbar16-OPR': 'xbar-rand',
+        'O1 w/ Xbar16': 'xbar-rand',
         # 'Xbar16-OPR-SpecSB': 'xbar-rand-hint',
         # 'Ideal-OOO': 'ruu-4-issue',
         }
@@ -50,7 +50,7 @@ n_cols = 2
 n_rows = 2
 
 fig, axs = plt.subplots(n_rows, n_cols, sharex='all', sharey='all')
-fig.set_size_inches(5, 3.8, forward=True)
+fig.set_size_inches(6, 3, forward=True)
 
 width = 0.8
 interval = 0.2
@@ -135,19 +135,21 @@ for point in points:
             sub_ax.legend(rects, configs_ordered, ncol=1,
                     fancybox=True, framealpha=0.2
                     )
-        if count == 2:
-            sub_ax.set_ylabel('Packet consumed', ha='left',)
-            sub_ax.set_xlabel('Packet consumed per cycle', ha='left',)
+        # if count == 2:
+        #     sub_ax.set_ylabel('# consumed tokens', ha='left',)
+        #     sub_ax.set_xlabel('Token consumed per cycle', ha='left',)
     count += 1
+fig.text(0.06, 0.5, '# consumed tokens', ha='left', rotation='vertical', va='center')
+fig.text(0.5, 0.04, 'Token consumed per cycle', ha='center', va='top')
 
-fig.suptitle("Packet consuming distribution", fontsize=14)
-
+fig.suptitle("Token consuming distribution",
+             # fontsize=14,
+             )
 
 # plt.tight_layout()
-for f in ['eps', 'png', 'pdf']:
+for f in ['png', 'pdf']:
     d = f
-    if f == 'pdf':
-        d = 'eps'
+    print(f'./{d}/flow_dist.{f}')
     plt.savefig(f'./{d}/flow_dist.{f}', format=f'{f}')
 
-plt.show(block=True)
+# plt.show(block=False)

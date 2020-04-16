@@ -46,7 +46,7 @@ def main():
     print(matrix)
 
     fig, ax = plt.subplots()
-    fig.set_size_inches(7, 5)
+    fig.set_size_inches(7, 4)
 
     colors = ColorRotater()
 
@@ -66,7 +66,7 @@ def main():
                     zorder=3,
                     )
     objs = [ooo, ff]
-    legends = ['IPC in Idealized OoO', 'IPC in Forwardflow']
+    legends = ['($TPI$, Ideal IPC)', '($TPI$, IPC)']
 
     # add cycle
     def add_circle(coordinate, text, text_shift, color_inc=1):
@@ -94,7 +94,7 @@ def main():
     bmk = 'bwaves'
     add_circle((matrix.loc[f'{bmk}_0']['TPI'] - 0.02, matrix.loc[f'{bmk}_0']['ideal_ipc'] + 0.05),
                text=f'{bmk}:\nhigh TPI & high IPC',
-               text_shift=(+0.2, +0.25),
+               text_shift=(+0.36, 0.1),
                color_inc=2
                )
     # bmk = 'deepsjeng'
@@ -129,7 +129,7 @@ def main():
     ax.set_ylim([0.0, 5.0])
 
     ax.set_ylabel('IPC', fontsize=14)
-    ax.set_xlabel('TPI: pointers per instruction', fontsize=14)
+    ax.set_xlabel('TPI: token per instruction', fontsize=14)
     ax.legend(objs, legends, fontsize=12)
     # plt.plot()
     # plt.show()

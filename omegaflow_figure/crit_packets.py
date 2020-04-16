@@ -61,7 +61,19 @@ print(num_points, num_configs)
 gm = graphs.GraphMaker(fig_size=(6,2.5))
 gm.config.bar_width, gm.config.bar_interval = 0.7, 0.3
 common_options = (data_all[:1], data_all[1:], xticklabels, names)
-print(data_all)
+print(data_all[1])
+
+non_crit_min = 1-np.max(data_all[1])
+non_crit_max = 1-np.min(data_all[1])
+print('non-crit min:', non_crit_min,
+      'non-crit max:', non_crit_max)
+
+speed_up = 3
+min_ = 1/((1-non_crit_min) + non_crit_min/speed_up)
+max_ = 1/((1-non_crit_max) + non_crit_max/speed_up)
+print(f'Speed up by {min_}~{max_}')
+
+
 if not do_normalization:
     fig, ax = gm.reduction_bar_graph(*common_options,
             ylabel='Number of tokens',

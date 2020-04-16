@@ -32,6 +32,8 @@ irregular_stat = {
     'O1': False,
     'OoO': True,
 }
+with open('../omegaflow_figure/bench_order.txt') as f:
+    index_order = [l.strip() for l in f]
 
 
 def get_power_df(arch: str):
@@ -91,6 +93,7 @@ def get_power_df(arch: str):
     df['ED'] = df['total'] * df_raw[sim_time]
     df['ED^2'] = df['total'] * df_raw[sim_time] * df_raw[sim_time]
     # df.drop([sim_time], axis=1, inplace=True)
+    df = df.reindex(index_order)
     df.to_csv(f'{arch}-Energy.csv')
     return df
 
@@ -99,7 +102,7 @@ def main():
     # fig
     fig, ax = plt.subplots(1, 1, sharex=True)
     axs = [ax]
-    fig.set_size_inches(7, 3)
+    fig.set_size_inches(7, 2.5)
     colors = plt.get_cmap('Dark2').colors
     rects = []
 
@@ -116,6 +119,11 @@ def main():
     for arch in archs:
         df = get_power_df(arch)
         df.loc['mean'] = df.mean()
+        df.loc['empty'] = np.nan
+        index = list(df.index)
+        df = df.reindex(index[:-2] + [index[-1], index[-2]])
+        print(df.index)
+
         shift = delta * iter
 
         l = len(df)
@@ -135,11 +143,18 @@ def main():
 
     axs[0].legend(rects, archs, ncol=3)
 
-    xtick_locations = np.arange(delta, l * one_bmk_width + delta, one_bmk_width)
-    plt.xticks(ticks=xtick_locations, labels=list(df.index), rotation=90, fontsize=7)
+    # xtick_locations = np.arange(delta, l * one_bmk_width + delta, one_bmk_width)
+    # plt.xticks(ticks=xtick_locations, labels=list(df.index), rotation=90, fontsize=7)
 
     # axs[-1].set_xlabel('SPECCPU 2017 benchmarks', fontsize=12)
     axs[0].set_ylabel('Energy consumption (mJ)', fontsize=12)
+
+    plt.tick_params(
+        axis='x',  # changes apply to the x-axis
+        which='both',  # both major and minor ticks are affected
+        bottom=False,  # ticks along the bottom edge are off
+        top=False,  # ticks along the top edge are off
+        labelbottom=False)  # labels along the bottom edge are off
 
     def save_to_file(name):
         for f in ['eps', 'png', 'pdf']:

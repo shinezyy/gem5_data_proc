@@ -335,8 +335,8 @@ def draw_ipc_throughput():
         legends = [configs_ordered[2], configs_ordered[0], configs_ordered[1]]
         fig, ax = gm.reduction_bar_graph(data_high, data_low, xticklabels, legends,
                 # xlabel='Simulation points from SPEC 2017',
-                # ylabel='IPCs with different configurations',
-                ylabel='IPCs',
+                # ylabel='IPC with different configurations',
+                ylabel='IPC',
                 xlim=(-0.5, num_points),
                 ylim=(0, 3),
                 title = "(c) IPC improved by Parallel DQ Bank\n" +\
@@ -348,8 +348,8 @@ def draw_ipc_throughput():
     else:
         fig, ax = gm.simple_bar_graph(data_all, xticklabels, configs_ordered,
                 # xlabel='Simulation points from SPEC 2017',
-                ylabel='IPCs',
-                # ylabel='IPCs with different configurations',
+                ylabel='IPC',
+                # ylabel='IPC with different configurations',
                 xlim=(-0.5, num_points-0.5),
                 ylim=(0, 3),
                 title = "(c) IPC improved by Parallel DQ Bank\n" +\

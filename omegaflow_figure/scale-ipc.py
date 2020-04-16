@@ -35,7 +35,7 @@ n_cols = 1
 n_rows = 2
 
 gm = graphs.GraphMaker(
-        fig_size=(7,4.8),
+        fig_size=(7, 3.5),
         multi_ax=True,
         legend_loc='best',
         with_xtick_label=False,
@@ -143,7 +143,7 @@ def ipc_scale():
     print(data_all.shape)
     fig, ax = gm.simple_bar_graph(data_all, xticklabels,
                                   legends,
-                                  ylabel='IPCs',
+                                  ylabel='IPC',
                                   xlim=(-0.5, num_points - 0.5),
                                   ylim=(0.5, 1.6),
                                   title='(a) IPC improvements from scaling up',
@@ -246,7 +246,7 @@ def scale_vs_soc():
     print(data_all.shape)
     fig, ax = gm.simple_bar_graph(data_all, xticklabels,
                                   legends,
-                                  ylabel='IPCs',
+                                  ylabel='IPC',
                                   xlim=(-0.5, num_points - 0.5),
                                   ylim=(0.5, 1.6),
                                   title='(b) WoC VS. scaling up',

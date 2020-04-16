@@ -405,7 +405,7 @@ def ipc_spec():
     print(data_all.shape)
     fig, ax = gm.simple_bar_graph(data_all, xticklabels,
             legends,
-            ylabel='IPCs',
+            ylabel='IPC',
             xlim=(-0.5, num_points-0.5),
             ylim=(0, 3),
             title='(c) IPC improvements from WoC on O1 and F1',
