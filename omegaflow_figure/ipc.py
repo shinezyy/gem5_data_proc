@@ -101,7 +101,7 @@ for i, config in enumerate(configs_ordered):
     df = dfs[config]
     # whitespace before geomean
     # insert_val = np.ones(1) if i == 2 and do_normalization else np.zeros(1)
-    data = np.concatenate((df['ipc'].values[:-1], [0], df['ipc'].values[-1:]))
+    data = np.concatenate((df['ipc'].values[:-1], [np.nan], df['ipc'].values[-1:]))
     data_all.append(data)
 num_points += 1
 data_all = np.array(data_all)
