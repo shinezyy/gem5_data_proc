@@ -67,6 +67,9 @@ def main():
     parser.add_argument('-l', '--fanout', action='store_true',
                         help='print fanout'
                        )
+    parser.add_argument('--fetch', action='store_true',
+                        help='print fetch info'
+                       )
     opt = parser.parse_args()
 
     pairs = c.pairs(opt.stat_dir, return_path=False)
@@ -94,6 +97,9 @@ def main():
                 targets += branch_targets
             if opt.fanout:
                 targets += fanout_targets
+            if opt.fetch:
+                targets += fetch_targets
+
             d = c.get_stats(path, targets, re_targets=True)
 
         if len(d):
