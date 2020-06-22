@@ -72,6 +72,7 @@ def main():
                        )
     parser.add_argument('--fetch', action='store_true',
                         help='print fetch info'
+                        )
     parser.add_argument('-k', '--breakdown', action='store_true',
                         help='print breakdown'
                        )
