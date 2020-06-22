@@ -70,10 +70,8 @@ def main():
     parser.add_argument('-l', '--fanout', action='store_true',
                         help='print fanout'
                        )
-<<<<<<< HEAD
     parser.add_argument('--fetch', action='store_true',
                         help='print fetch info'
-=======
     parser.add_argument('-k', '--breakdown', action='store_true',
                         help='print breakdown'
                        )
@@ -85,7 +83,6 @@ def main():
                        )
     parser.add_argument('-p', '--packet', action='store_true',
                         help='print type and number of different packets'
->>>>>>> c07c2ff56eba7b50fe3ded58eb381443ddecf6a5
                        )
     opt = parser.parse_args()
 
