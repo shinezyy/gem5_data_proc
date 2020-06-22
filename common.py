@@ -275,12 +275,18 @@ def get_stats_file_name(d: str):
 
 
 
-def get_stats_from_parent_dir(d: str, *args, **kwargs):
+def get_stats_from_parent_dir(d: str, selected_benchmarks: [], *args, **kwargs):
     ret = {}
     assert(os.path.isdir(d))
     for sub_d in os.listdir(d):
         if os.path.isdir(pjoin(d, sub_d)):
-            bmk = sub_d
+            if '_' in sub_d:
+                bmk = sub_d.split('_')[0]
+            else:
+                bmk = sub_d
+            if selected_benchmarks is not None and bmk not in selected_benchmarks:
+                continue
+
             stat_file = get_stats_file_name(pjoin(d, sub_d))
             if stat_file is not None:
                 ret[sub_d] = get_stats(pjoin(d, sub_d, stat_file), *args, **kwargs)
@@ -330,13 +336,26 @@ def add_branch_mispred(d: dict) -> None:
     branches = float(d['branches'])
     mispred = float(d['branchMispredicts'])
     d['mispredict rate'] = mispred / branches;
-    d['MPKI'] = int(mispred / float(d['Insts']) * 1000);
+    d['MPKI'] = mispred / float(d['Insts']) * 1000;
 
 def add_fanout(d: dict) -> None:
     large_fanout = float(d.get('largeFanoutInsts', 0)) + 1.0
     d['LF_rate'] = large_fanout / float(d.get('Insts', 200 * 10**6))
-    print(large_fanout)
+    # print(large_fanout)
     d['FP_rate'] = float(d.get('falsePositiveLF', 0)) / large_fanout
     d['FN_rate'] = float(d.get('falseNegativeLF', 0)) / large_fanout
     del d['falsePositiveLF']
     del d['falseNegativeLF']
+
+def get_spec2017_int():
+    with open(os.path.expanduser('~/gem5-results-2017/int.txt')) as f:
+        return [x for x in f.read().split('\n') if len(x) > 1]
+
+def get_spec2017_fp():
+    with open(os.path.expanduser('~/gem5-results-2017/fp.txt')) as f:
+        return [x for x in f.read().split('\n') if len(x) > 1]
+
+def add_packet(d: dict) -> None:
+    d['by_bw'] = d['Insts'] / (d['TotalP']/3.1)
+    d['by_chasing'] = d['Insts'] / (d['TotalP']/4.0)
+    d['by_crit_ptr'] = min(d['Insts'] / (d['KeySrcP']/4), 4.0, d['TotalP']/10.0)

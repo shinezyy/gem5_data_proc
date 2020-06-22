@@ -7,6 +7,10 @@ ipc_target = [
     'cpus\.(ipc)',
 ]
 
+flow_target = [
+        'dataflow_queue\.(WKFlowUsage::\d+)',
+        'dataflow_queue\.(WKFlowUsage::\w+)',
+        ]
 
 standard_targets = [
     '(numCycles)',
@@ -54,3 +58,25 @@ fetch_targets = [
 ]
 
 
+operand_targets = [
+        # 'arch_state\.(numBusyOperands::\d)',
+        'arch_state\.(numDispInsts::\d)',
+        'arch_state\.(meanBusyOp_\d)',
+
+        ]
+packet_targets = [
+        'dataflow_queue\.(KeySrcP)acket',
+        'dataflow_queue\.(SrcOpP)ackets',
+        'dataflow_queue\.(DestOpP)ackets',
+        'dataflow_queue\.(MemP)ackets',
+        'dataflow_queue\.(OrderP)ackets',
+        'dataflow_queue\.(MiscP)ackets',
+        'dataflow_queue\.(TotalP)ackets',
+        ]
+breakdown_targets= [
+        'diewc\.(queueingD)elay',
+        'diewc\.(ssrD)elay',
+        'diewc\.(pendingD)elay',
+        'diewc\.FU(ContentionD)elay',
+        'dataflow_queue\.(HalfSquash)es',
+        ]
