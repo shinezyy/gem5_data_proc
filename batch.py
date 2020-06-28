@@ -70,6 +70,9 @@ def main():
     parser.add_argument('-l', '--fanout', action='store_true',
                         help='print fanout'
                        )
+    parser.add_argument('--fetch', action='store_true',
+                        help='print fetch info'
+                        )
     parser.add_argument('-k', '--breakdown', action='store_true',
                         help='print breakdown'
                        )
@@ -109,6 +112,10 @@ def main():
                 targets += branch_targets
             if opt.fanout:
                 targets += fanout_targets
+
+            if opt.fetch:
+                targets += fetch_targets
+
             if opt.breakdown:
                 targets += breakdown_targets
             if opt.op:
@@ -117,6 +124,7 @@ def main():
                 targets += packet_targets
             if opt.flow:
                 targets += flow_target
+
             d = c.get_stats(path, targets, re_targets=True)
 
         if len(d):

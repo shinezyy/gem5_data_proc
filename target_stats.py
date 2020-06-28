@@ -51,6 +51,13 @@ fanout_targets = [
         'dataflow_queue\.(readyWaitTime)::total',
         'dataflow_queue(oldWaitYoung)',
         ]
+
+fetch_targets = [
+    'cpus\.fetch\.(fetchFromLoopBuffer)',
+    'cpus\.(fetch\.rate) ',
+]
+
+
 operand_targets = [
         # 'arch_state\.(numBusyOperands::\d)',
         'arch_state\.(numDispInsts::\d)',
