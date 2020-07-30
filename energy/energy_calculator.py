@@ -1,3 +1,6 @@
+import sys
+sys.path.append('..')
+
 import common as c
 import target_stats as t
 import os
@@ -20,26 +23,38 @@ pd.set_option('display.max_columns', 15)
 data = {
     'F1': osp.join(c.env.get_stat_dir(), 'f1_rand-full'),
     'O1': osp.join(c.env.get_stat_dir(), 'o1_rand_hint-full'),
-    'O1 w/o WoC': osp.join(c.env.get_stat_dir(), 'o1_rand_hint-full'),
+    'O1 w/o WoC': osp.join(c.env.get_stat_dir(), 'o1_rand-full'),
     'OoO': osp.join(c.env.get_stat_dir(), 'trad_4w-full'),
+    'O2 w/o WoC': osp.join(c.env.get_stat_dir(), 'o2_rand-full'),
+    'O2': osp.join(c.env.get_stat_dir(), 'o2_rand_hint-full'),
+    'O4 w/o WoC': osp.join(c.env.get_stat_dir(), 'o4_rand-full'),
 }
 power_sheet_file = {
     'F1': osp.join('ff_power.csv'),
     'O1': osp.join('of_power.csv'),
     'O1 w/o WoC': osp.join('of_no_woc_power.csv'),
+    'O2 w/o WoC': osp.join('of2_no_woc_power.csv'),
+    'O2': osp.join('of2_power.csv'),
+    'O4 w/o WoC': osp.join('of4_no_woc_power.csv'),
     'OoO': osp.join('ooo_power.csv'),
 }
 irregular_stat = {
     'F1': False,
     'O1': False,
+    'O2': False,
     'O1 w/o WoC': False,
+    'O2 w/o WoC': False,
+    'O4 w/o WoC': False,
     'OoO': True,
 }
 
 save_to = {
     'F1': 'F1',
     'O1': 'O1',
+    'O2': 'O2',
     'O1 w/o WoC': 'O1_no_woc',
+    'O2 w/o WoC': 'O2_no_woc',
+    'O4 w/o WoC': 'O4_no_woc',
     'OoO': 'OoO',
 }
 with open('../omegaflow_figure/bench_order.txt') as f:
@@ -114,22 +129,24 @@ def main():
     axs = [ax]
     fig.set_size_inches(7, 2.5)
     colors = plt.get_cmap('Dark2').colors
+    colors = colors + colors
     rects = []
 
     # stats
 
     # width = 0.25 + 1e-9
-    width = 0.15
+    width = 0.05
     delta = width + 0.05
     iter = 0
-    archs = ['OoO', 'F1', 'O1', 'O1 w/o WoC']
-    one_bmk_width = len(archs) * delta + 0.15
+    archs = ['OoO', 'O1', 'O1 w/o WoC', 'F1', 'O2 w/o WoC', 'O4 w/o WoC', 'O2']
+    one_bmk_width = len(archs) * delta + 0.05
 
     means = {}
     for arch in archs:
         df = get_power_df(arch)
         df.loc['mean'] = df.mean()
         df.loc['empty'] = np.nan
+        print(f'{arch} mean: {df.loc["mean"]["total"]}')
         index = list(df.index)
         df = df.reindex(index[:-2] + [index[-1], index[-2]])
         print(df.index)
