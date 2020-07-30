@@ -29,7 +29,13 @@ colors = plt.get_cmap('Dark2').colors
 with open('./bench_order.txt') as f:
     index_order = [l.strip() for l in f]
 
-suffix = '-full' if full else ""
+full = '_f'
+bp = '_o'
+# bp = '_perceptron'
+lbuf = '_lbuf'
+
+suffix = f'_ltu1_b2b_x5{lbuf}{bp}{full}'
+ooo_suffix = f'{lbuf}{bp}{full}'
 
 n_cols = 1
 n_rows = 2
@@ -47,17 +53,15 @@ gm = graphs.GraphMaker(
 
 def get_stat_dirs():
     return {
-        'Idealized-OoO': 'ideal_4w',
-        'Realistic-OoO': 'trad_4w',
-        'F1': 'f1_rand',
-        'O1 w\o WoC non-scale': 'omega-rand',
-        'O1 non-scale': 'omega-rand-hint',
-        'O1 w\o WoC': 'o1_rand',
-        'O1': 'o1_rand_hint',
-        'O2 w\o WoC': 'o2_rand',
-        'O2': 'o2_rand_hint',
-        'O4 w\o WoC': 'o4_rand',
-        'O4': 'o4_rand_hint',
+        'Idealized-OoO': f'trad_4w{ooo_suffix}',
+        'Realistic-OoO': f'realistic_trad_4w{ooo_suffix}',
+        'F1': f'f1_rand{suffix}',
+        'O1*': f'o1_rand{suffix}',
+        'O1': f'o1_rand_hint{suffix}',
+        'O2*': f'o2_rand{suffix}',
+        'O2': f'o2_rand_hint{suffix}',
+        'O4*': f'o4_rand{suffix}',
+        'O4': f'o4_rand_hint{suffix}',
     }
 
 
@@ -68,11 +72,11 @@ def ipc_scale():
 
     stat_dirs = get_stat_dirs()
     for k in stat_dirs:
-        stat_dirs[k] = c.env.data(f'{stat_dirs[k]}{suffix}')
+        stat_dirs[k] = c.env.data(f'{stat_dirs[k]}')
 
     baseline = 'Realistic-OoO'
     # configs_ordered = ['Xbar4', 'Xbar4-SpecSB','Omega16-OPR', 'Omega16-OPR-SpecSB']
-    configs_ordered = [baseline, 'O1', 'O2', 'O4']
+    configs_ordered = [baseline, 'O4', 'O2', 'O1', ]
 
     benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 
@@ -85,7 +89,7 @@ def ipc_scale():
     num_points, num_configs = 0, len(stat_dirs)
     dfs = dict()
     for config in configs_ordered:
-        print(config)
+        # print(config)
         stat_dir = stat_dirs[config]
         stat_dir = osp.expanduser(stat_dir)
         stat_files = [osp.join(stat_dir, point, 'stats.txt') for point in points]
@@ -104,30 +108,31 @@ def ipc_scale():
             num_points = len(df)
 
     dfs[baseline].loc['rel_geo_mean'] = [1.0]
-    print(baseline)
-    print(dfs[baseline])
+    # print(baseline)
+    # print(dfs[baseline])
     datas = dict()
     for config in configs_ordered:
         if config != baseline:
-            print(config)
+            # print(config)
             rel = dfs[config]['ipc'] / dfs[baseline]['ipc'][:-1]
             dfs[config]['rel'] = rel
 
             dfs[config].loc['rel_geo_mean'] = [rel.prod() ** (1 / len(rel))] * 2
 
-            print(dfs[config])
+            # print(dfs[config])
             stat = 'rel'
             data = np.concatenate([dfs[config][stat].values[:-1],
                                    [np.NaN], dfs[config][stat].values[-1:]])
+            print(f'IPC improvement of {config}: {(dfs[config][stat].values[-1:][0] - 1.0)*100}%', )
             datas[config] = data
 
     # legends = ['Omega16-OPR-SpecSB', 'Xbar4-SpecSB', 'Omega16-OPR', 'Xbar4']
     legends = configs_ordered[1:]
 
     data_all = [datas[x] for x in legends]
-    print(data_all)
+    # print(data_all)
     data_all = np.array(data_all)
-    print(data_all.shape)
+    # print(data_all.shape)
 
     num_points += 2
 
@@ -140,7 +145,7 @@ def ipc_scale():
     for i, benchmark in enumerate(benchmarks_ordered + ['rel_geomean']):
         xticklabels[i * strange_const + 1] = benchmark
 
-    print(data_all.shape)
+    # print(data_all.shape)
     fig, ax = gm.simple_bar_graph(data_all, xticklabels,
                                   legends,
                                   ylabel='Normalized IPC',
@@ -148,8 +153,8 @@ def ipc_scale():
                                   ylim=(0.5, 1.6),
                                   title='(a) IPC improvements from scaling up',
                                   # colors=['red', 'gray', 'green', 'blue'],
-                                  colors=[colors[1], colors[3], colors[0],],
-                                  markers=['+', 'x', 7],
+                                  colors=[colors[1], colors[2], colors[0],],
+                                  markers=['+', 'x', 6],
                                   with_borders=False,
                                   dont_legend=True,
                                   )
@@ -164,18 +169,18 @@ def ipc_scale():
     )
 
 
-def scale_vs_soc():
+def scale_vs_woc():
     global gm
     gm.set_cur_ax(gm.ax[1])
     plt.sca(gm.cur_ax)
 
     stat_dirs = get_stat_dirs()
     for k in stat_dirs:
-        stat_dirs[k] = c.env.data(f'{stat_dirs[k]}{suffix}')
+        stat_dirs[k] = c.env.data(f'{stat_dirs[k]}')
 
     # configs_ordered = ['Xbar4', 'Xbar4-SpecSB','Omega16-OPR', 'Omega16-OPR-SpecSB']
     baseline = 'Realistic-OoO'
-    configs_ordered = [baseline, 'O2 w\o WoC', 'O4 w\o WoC', 'O2']
+    configs_ordered = [baseline, 'O2', 'O2*', 'O4*', ]
 
     benchmarks = [*c.get_spec2017_int(), *c.get_spec2017_fp()]
 
@@ -188,7 +193,7 @@ def scale_vs_soc():
     num_points, num_configs = 0, len(stat_dirs)
     dfs = dict()
     for config in configs_ordered:
-        print(config)
+        # print(config)
         stat_dir = stat_dirs[config]
         stat_dir = osp.expanduser(stat_dir)
         stat_files = [osp.join(stat_dir, point, 'stats.txt') for point in points]
@@ -207,30 +212,31 @@ def scale_vs_soc():
             num_points = len(df)
 
     dfs[baseline].loc['rel_geo_mean'] = [1.0]
-    print(baseline)
-    print(dfs[baseline])
+    # print(baseline)
+    # print(dfs[baseline])
     datas = dict()
     for config in configs_ordered:
         if config != baseline:
-            print(config)
+            # print(config)
             rel = dfs[config]['ipc'] / dfs[baseline]['ipc'][:-1]
             dfs[config]['rel'] = rel
 
             dfs[config].loc['rel_geo_mean'] = [rel.prod() ** (1 / len(rel))] * 2
 
-            print(dfs[config])
+            # print(dfs[config])
             stat = 'rel'
             data = np.concatenate([dfs[config][stat].values[:-1],
                                    [np.NaN], dfs[config][stat].values[-1:]])
+            print(f'IPC improvement of {config}: {(dfs[config][stat].values[-1:][0] - 1.0)*100}%', )
             datas[config] = data
 
     # legends = ['Omega16-OPR-SpecSB', 'Xbar4-SpecSB', 'Omega16-OPR', 'Xbar4']
     legends = configs_ordered[1:]
 
     data_all = [datas[x] for x in legends]
-    print(data_all)
+    # print(data_all)
     data_all = np.array(data_all)
-    print(data_all.shape)
+    # print(data_all.shape)
 
     num_points += 2
 
@@ -243,22 +249,23 @@ def scale_vs_soc():
     for i, benchmark in enumerate(benchmarks_ordered + ['rel_geomean']):
         xticklabels[i * strange_const + 1] = benchmark
 
-    print(data_all.shape)
+    # print(data_all.shape)
     fig, ax = gm.simple_bar_graph(data_all, xticklabels,
                                   legends,
                                   ylabel='Normalized IPC',
+                                  xlabel='Simulation points from SPECCPU 2017 (sorted by TPI)',
                                   xlim=(-0.5, num_points - 0.5),
                                   ylim=(0.5, 1.6),
                                   title='(b) WoC VS. scaling up',
                                   # colors=['red', 'gray', 'green', 'blue'],
-                                  colors=[colors[1], colors[3], colors[0],],
-                                  markers=['+', 7, 'x'],
+                                  colors=[colors[1], colors[2], colors[0],],
+                                  markers=[7, '+', 'x', ],
                                   with_borders=False,
                                   dont_legend=True,
                                   )
     ax.legend(
         legends,
-        loc='upper right',
+        loc='upper left',
         # bbox_to_anchor=(0, 0),
         ncol=2,
         fancybox=True,
@@ -268,7 +275,7 @@ def scale_vs_soc():
 
 
 ipc_scale()
-scale_vs_soc()
+scale_vs_woc()
 
 plt.tight_layout()
 

@@ -14,20 +14,22 @@ import common as c
 import graphs
 import target_stats as t
 
-
-full = True
-suffix = '-full' if full else ""
+full = '_f'
+bp = '_o'
+# bp = '_perceptron'
+lbuf = '_lbuf'
+suffix = f'_ltu1_b2b_x5{lbuf}{bp}{full}'
 
 stat_dirs = {
         # 'Xbar4': 'xbar4',
-        'F1': 'xbar4-rand',
+        'F1': 'f1_rand',
         # 'Xbar4-SpecSB': 'xbar4-rand-hint',
         # 'Xbar4*2-SpecSB': 'dedi-xbar4-rand-hint',
         # 'Omega16': 'omega',
-        'O1': 'omega-rand',
+        'O1*': 'o1_rand',
         # 'Omega16-OPR-SpecSB': 'omega-rand-hint',
         # 'Xbar16': 'xbar',
-        'O1 w/ Xbar16': 'xbar-rand',
+        'O1* w/ Xbar16': 'o1_rand_xbar',
         # 'Xbar16-OPR-SpecSB': 'xbar-rand-hint',
         # 'Ideal-OOO': 'ruu-4-issue',
         }

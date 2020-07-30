@@ -1,26 +1,13 @@
 import sys
-import os
-import os.path as osp
 from os.path import join as pjoin
 from os.path import expanduser as expu
 import re
 from copy import deepcopy
-import numpy as np
 import pandas as pd
+
+from local_configs import Env
 from st_stat import make_st_stat_cache
 from paths import *
-
-
-class Env(object):
-    def __init__(self):
-        self.prefix = st_stat_dir
-
-    def get_stat_dir(self):
-        return '/home/zyy/gem5-results-2017'
-        # return os.path.abspath(self.prefix)
-
-    def data(self, s):
-        return os.path.abspath(pjoin(self.prefix, s))
 
 env = Env()
 
@@ -243,7 +230,8 @@ def to_num(x: str) -> (int, float):
 
 def get_stats(stat_file: str, targets: list,
               insts: int=200*(10**6), re_targets=False) -> dict:
-    # print(stat_file)
+    if not os.path.isfile(expu(stat_file)):
+        print(stat_file)
     assert(os.path.isfile(expu(stat_file)))
     lines = get_raw_stats_around(stat_file, insts)
 
@@ -373,6 +361,14 @@ def get_spec2017_fp():
         return [x for x in f.read().split('\n') if len(x) > 1]
 
 
+def get_all_spec2017_simpoints():
+    benchmarks = get_spec2017_int() + get_spec2017_fp()
+    points = []
+    for b in benchmarks:
+        for i in range(0, 3):
+            points.append(f'{b}_{i}')
+    return points
+
 def add_packet(d: dict) -> None:
     d['by_bw'] = d['Insts'] / (d['TotalP']/3.1)
     d['by_chasing'] = d['Insts'] / (d['TotalP']/4.0)
@@ -405,3 +401,9 @@ def get_df(path_dict: dict, arch: str, targets, filter_bmk=None):
     df = pd.DataFrame.from_dict(matrix, orient='index')
     return df
 
+
+def scale_tick(df: pd.DataFrame):
+    for col in df:
+        if 'Tick' in col:
+            df[col] = df[col] / 500.0
+    return df
