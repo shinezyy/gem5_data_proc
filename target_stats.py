@@ -8,8 +8,8 @@ ipc_target = [
 ]
 
 flow_target = [
-        'dataflow_queue\.(WKFlowUsage::\d+)',
-        'dataflow_queue\.(WKFlowUsage::\w+)',
+    'DQGroup\d\.(WKFlowUsage::\d+)',
+    'DQGroup\d\.(WKFlowUsage::\w+)',
         ]
 
 standard_targets = [
@@ -19,9 +19,11 @@ standard_targets = [
 ]
 
 cache_targets = [
-    '(dcache.*_m)iss_rate',
-    '(icache.*_m)iss_rate',
-    '(l2.*_m)iss_rate',
+    'cpu\.(dcache.*_miss_rate)::\.switch_cpus\.data',
+    'cpu\.(icache.*_miss_rate)::\.switch_cpus\.data',
+    '(l2.*_miss_rate)::\.switch_cpus\.data',
+    'cpu\.(dcache\.demand_avg_miss_latency)::\.switch_cpus\.data',
+    'switch_cpus\.iew\.iew(ExecLoadInsts)',
 ]
 
 branch_targets = [
@@ -51,6 +53,13 @@ fanout_targets = [
         'dataflow_queue\.(readyWaitTime)::total',
         'dataflow_queue(oldWaitYoung)',
         ]
+
+fetch_targets = [
+    'cpus\.fetch\.(fetchFromLoopBuffer)',
+    'cpus\.(fetch\.rate) ',
+]
+
+
 operand_targets = [
         # 'arch_state\.(numBusyOperands::\d)',
         'arch_state\.(numDispInsts::\d)',
@@ -67,11 +76,12 @@ packet_targets = [
         'DQGroup0\.(TotalP)ackets',
         ]
 breakdown_targets= [
-        'diewc\.(queueingD)elay',
-        'diewc\.(ssrD)elay',
-        'diewc\.(pendingD)elay',
-        'diewc\.FU(ContentionD)elay',
-        'dataflow_queue\.(HalfSquash)es',
+        'diewc\.(queueingDelay)',
+        'diewc\.(ssrDelay)',
+        'diewc\.(pendingDelay)',
+        # 'diewc\.FU(ContentionD)elay',
+        'diewc\.(readyExecDelayTicks)',
+        # 'dataflow_queue\.(HalfSquash)es',
         ]
 
 model_targets = [

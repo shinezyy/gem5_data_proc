@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
+import os.path as osp
 
 plt.rcParams["font.family"] = "Times New Roman"
 
@@ -77,8 +78,9 @@ class GraphMaker(object):
             # self.cur_ax.set_xticklabels(xticklabels, minor=True, rotation=0)
             self.cur_ax.set_xticklabels(xticklabels, rotation=90, fontsize=11)
         self.cur_ax.grid(axis="y", linestyle="--", color='gray', alpha=0.3)
-        self.cur_ax.set_xlabel(xlabel)
-        self.cur_ax.set_ylabel(ylabel, fontsize=14)
+        self.cur_ax.set_xlabel(xlabel, fontsize=13)
+        # self.cur_ax.set_ylabel(ylabel)
+        self.cur_ax.set_ylabel(ylabel, fontsize=13)
         if title is not None:
             self.cur_ax.title.set_text(title)
             self.cur_ax.title.set_fontsize(14)
@@ -103,7 +105,7 @@ class GraphMaker(object):
         if overlap:
             num_configs = 1
 
-        print(num_points, num_configs)
+        # print(num_points, num_configs)
         rects = []
         bar_size = self.config.bar_width + self.config.bar_interval
         assert markers is not None
@@ -186,7 +188,7 @@ class GraphMaker(object):
         if edgecolors is None:
             edgecolors = [self.config.colors, self.config.edgecolors]
 
-        print(data_high.shape, data_low.shape)
+        # print(data_high.shape, data_low.shape)
         assert(len(data_high.shape) == 2 and len(data_low.shape) == 2)
         num_configs, num_points = data_high.shape
         assert((num_configs, num_points) == data_low.shape)
@@ -297,10 +299,11 @@ class GraphMaker(object):
         return self.fig, self.cur_ax
 
     def save_to_file(self, name):
-        for f in ['eps', 'png', 'pdf']:
+        # for f in ['eps', 'png', 'pdf']:
+        for f in ['png', 'pdf']:
             d = f
             # if f == 'pdf':
             #     d = 'eps'
-            filename = f'./{d}/{name}.{f}'
+            filename = osp.join(f'{d}', f'{name}.{f}')
             print("save to", filename)
             plt.savefig(filename, format=f'{f}')
