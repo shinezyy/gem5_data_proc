@@ -49,7 +49,11 @@ fanout_targets = [
 
         'cpus\.(squashedFUTime)',
         'dataflow_queue\.(readyWaitTime)::total',
-        'dataflow_queue(oldWaitYoung)',
+        ]
+
+sched_targets = [
+        'DQGroup\d.(oldWaitYoung)',
+        'cpus\.diewc\.(meanHeadExecDistance)',
         ]
 
 fetch_targets = [
