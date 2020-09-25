@@ -41,7 +41,7 @@ def reverse_readline(filename: str, buf_size=8192):
                 # if the previous chunk starts right from the beginning of line
                 # do not concact the segment to the last line of new chunk
                 # instead, yield the segment first
-                if buffer[-1] is not '\n':
+                if buffer[-1] != '\n':
                     lines[-1] += segment
                 else:
                     yield segment
@@ -359,3 +359,10 @@ def add_packet(d: dict) -> None:
     d['by_bw'] = d['Insts'] / (d['TotalP']/3.1)
     d['by_chasing'] = d['Insts'] / (d['TotalP']/4.0)
     d['by_crit_ptr'] = min(d['Insts'] / (d['KeySrcP']/4), 4.0, d['TotalP']/10.0)
+
+def add_bypass_f1(d: dict) -> None:
+    d['bypass_precious'] = d['truePositiveBypass'] / (d['truePositiveBypass'] + d['falsePositiveBypass'] + 1)
+    d['bypass_recall'] = d['truePositiveBypass'] / (d['truePositiveBypass'] + d['falseNegativeBypass'] + 1)
+    d['bypass_f1'] = d['truePositiveBypass']*2 / (d['truePositiveBypass']*2
+            + d['falseNegativeBypass'] + d['falsePositiveBypass'] + 1)
+

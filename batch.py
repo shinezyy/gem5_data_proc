@@ -85,6 +85,9 @@ def main():
     parser.add_argument('-p', '--packet', action='store_true',
                         help='print type and number of different packets'
                        )
+    parser.add_argument('-m', '--mem-pred', action='store_true',
+                        help='print mem pred stats'
+                       )
     parser.add_argument('--sched', action='store_true',
                         help='print scheduling related stats'
                        )
@@ -131,6 +134,9 @@ def main():
             if opt.sched:
                 targets += sched_targets
 
+            if opt.mem_pred:
+                targets += mem_pred_targets
+
             d = c.get_stats(path, targets, re_targets=True)
 
         if len(d):
@@ -144,6 +150,8 @@ def main():
                 c.add_fanout(d)
             if opt.packet:
                 c.add_packet(d)
+            if opt.mem_pred:
+                c.add_bypass_f1(d)
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
     df = df.sort_index()

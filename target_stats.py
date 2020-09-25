@@ -84,3 +84,16 @@ breakdown_targets= [
         'diewc\.FU(ContentionD)elay',
         'dataflow_queue\.(HalfSquash)es',
         ]
+mem_pred_targets= [
+        'system\.switch_cpus\.diewc\.(trueNegativeBypass)',
+        'system\.switch_cpus\.diewc\.(truePositiveBypass)',
+        'system\.switch_cpus\.diewc\.(falseNegativeBypass)',
+        'system\.switch_cpus\.diewc\.(falsePositiveBypass)',
+        'system\.switch_cpus\.diewc\.(FPCanceledBypass)',
+        'system\.switch_cpus\.diewc\.(FPSquashedBypass)',
+        'system\.switch_cpus\.diewc\.(loadReExecRate)',
+        'system\.switch_cpus\.diewc\.(loadSquashRate)',
+        'system\.switch_cpus\.diewc\.(verifSkipRate)',
+        'system\.switch_cpus\.diewc\.(reExecutedNonBypass)',
+        'system\.switch_cpus\.diewc\.(reExecutedBypass)',
+        ]

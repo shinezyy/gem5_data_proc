@@ -30,6 +30,9 @@ parser.add_argument('--branch', action='store_true',
                     help='branch prediction information')
 parser.add_argument('--cache', action='store_true',
                     help='cache miss information')
+parser.add_argument('-m', '--mem-pred', action='store_true',
+        help='print mem pred stats'
+        )
 
 opt = parser.parse_args()
 curdir = os.getcwd()
@@ -62,10 +65,16 @@ if opt.brief:
 elif opt.breakdown_targets:
     used_target = slot_targets
 
+if opt.mem_pred:
+    used_target += mem_pred_targets
+
 d = c.get_stats(opt.stats, used_target, num_insts, re_targets=True)
 if used_target == standard_targets:
     if opt.branch:
         c.add_branch_mispred(d)
+
+if opt.mem_pred:
+    c.add_bypass_f1(d)
 
 c.print_dict(d)
 
