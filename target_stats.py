@@ -82,7 +82,7 @@ breakdown_targets= [
         'diewc\.(ssrD)elay',
         'diewc\.(pendingD)elay',
         'diewc\.FU(ContentionD)elay',
-        'dataflow_queue\.(HalfSquash)es',
+        'DQTop\.(HalfSquash)es',
         ]
 mem_pred_targets= [
         'system\.switch_cpus\.diewc\.(trueNegativeBypass)',
@@ -96,4 +96,5 @@ mem_pred_targets= [
         'system\.switch_cpus\.diewc\.(verifSkipRate)',
         'system\.switch_cpus\.diewc\.(reExecutedNonBypass)',
         'system\.switch_cpus\.diewc\.(reExecutedBypass)',
+        'system\.switch_cpus\.iew\.memOrder(Violation)Events',
         ]

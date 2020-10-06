@@ -3,7 +3,7 @@ import numpy as np
 import os
 from os.path import join as pjoin
 
-baseline_name = 'o3-4-issue.csv'
+baseline_name = 'ooo-128.csv'
 baseline = pd.read_csv(f'./data/{baseline_name}', index_col=0)
 
 result = None

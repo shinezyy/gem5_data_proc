@@ -361,8 +361,9 @@ def add_packet(d: dict) -> None:
     d['by_crit_ptr'] = min(d['Insts'] / (d['KeySrcP']/4), 4.0, d['TotalP']/10.0)
 
 def add_bypass_f1(d: dict) -> None:
-    d['bypass_precious'] = d['truePositiveBypass'] / (d['truePositiveBypass'] + d['falsePositiveBypass'] + 1)
-    d['bypass_recall'] = d['truePositiveBypass'] / (d['truePositiveBypass'] + d['falseNegativeBypass'] + 1)
-    d['bypass_f1'] = d['truePositiveBypass']*2 / (d['truePositiveBypass']*2
-            + d['falseNegativeBypass'] + d['falsePositiveBypass'] + 1)
+    if 'truePositiveBypass' in d:
+        d['bypass_precious'] = d['truePositiveBypass'] / (d['truePositiveBypass'] + d['falsePositiveBypass'] + 1)
+        d['bypass_recall'] = d['truePositiveBypass'] / (d['truePositiveBypass'] + d['falseNegativeBypass'] + 1)
+        d['bypass_f1'] = d['truePositiveBypass']*2 / (d['truePositiveBypass']*2
+                + d['falseNegativeBypass'] + d['falsePositiveBypass'] + 1)
 
