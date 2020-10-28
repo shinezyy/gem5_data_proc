@@ -367,3 +367,7 @@ def add_bypass_f1(d: dict) -> None:
         d['bypass_f1'] = d['truePositiveBypass']*2 / (d['truePositiveBypass']*2
                 + d['falseNegativeBypass'] + d['falsePositiveBypass'] + 1)
 
+        del d['truePositiveBypass']
+        del d['trueNegativeBypass']
+        # del d['falseNegativeBypass']
+        del d['falsePositiveBypass']
