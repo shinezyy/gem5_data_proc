@@ -1,10 +1,10 @@
 brief_targets = [
-    'cpus\.(ipc)',
-    'cpus\.committed(Insts)',
+    'cpus?\.(ipc)',
+    'cpus?\.committed(Insts)',
     #'cpus\.num(Cycles)'
 ]
 ipc_target = [
-    'cpus\.(ipc)',
+    'cpus?\.(ipc)',
 ]
 
 flow_target = [
@@ -157,3 +157,10 @@ ff_power_targets = [
     r'cpus\.iq\.(fp_inst_queue_writes)',
     r'cpus\.iq\.(fp_inst_queue_wakeup_accesses)',
 ]
+fu_targets= [
+        'system\.switch_cpus\.commit\.op_class_0::(IntDiv)',
+        'system\.switch_cpus\.commit\.op_class_0::(FloatDiv)',
+        #'system\.switch_cpus\.commit\.op_class_0::(IntMult)',
+        #'system\.switch_cpus\.commit\.op_class_0::(FloatMult)',
+        #'system\.switch_cpus\.commit\.op_class_0::(FloatMultAcc)',
+        ]

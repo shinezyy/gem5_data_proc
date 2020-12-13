@@ -160,8 +160,8 @@ def get_raw_stats_around(stat_file: str, insts: int=200*(10**6),
     new_insts = None
     new_cycles = None
 
-    p_insts = re.compile('switch_cpus.committedInsts\s+(\d+)\s+#')
-    p_cycles = re.compile('switch_cpus.numCycles\s+(\d+)\s+#')
+    p_insts = re.compile('cpus?.committedInsts\s+(\d+)\s+#')
+    p_cycles = re.compile('cpus?.numCycles\s+(\d+)\s+#')
 
     if insts > 500*(10**6):
         for line in reverse_readline(expu(stat_file)):
@@ -211,12 +211,10 @@ def get_raw_stats_around(stat_file: str, insts: int=200*(10**6),
                             old_buff = deepcopy(buff)
                             buff.clear()
 
-                elif line.startswith('system.switch_cpus.committedInsts'):
+                elif p_insts.search(line) is not None:
                     new_insts = int(p_insts.search(line).group(1))
-                elif line.startswith('system.switch_cpus.numCycles'):
+                elif p_cycles.search(line) is not None:
                     new_cylces = int(p_cycles.search(line).group(1))
-
-
 
     return old_buff
 
@@ -240,10 +238,10 @@ def get_stats(stat_file: str, targets: list,
         meta_pattern = re.compile('.*\((.+)\).*')
         for t in targets:
             meta = meta_pattern.search(t).group(1)
-            patterns[meta] = re.compile(t+'\s+(\d+\.?\d*)\s+#')
+            patterns[meta] = re.compile(t+'\s+(\d+\.?\d*)\s+')
     else:
         for t in targets:
-            patterns[t] = re.compile(t+'\s+(\d+\.?\d*)\s+#')
+            patterns[t] = re.compile(t+'\s+(\d+\.?\d*)\s+')
 
     # print(patterns)
     stats = {}

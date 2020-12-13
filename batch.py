@@ -85,6 +85,17 @@ def main():
     parser.add_argument('-p', '--packet', action='store_true',
                         help='print type and number of different packets'
                        )
+
+    parser.add_argument('-m', '--mem-pred', action='store_true',
+                        help='print mem pred stats'
+                       )
+    parser.add_argument('--fu', action='store_true',
+                        help='print fu stats'
+                       )
+    parser.add_argument('--sched', action='store_true',
+                        help='print scheduling related stats'
+                       )
+
     opt = parser.parse_args()
 
     pairs = c.pairs(opt.stat_dir, return_path=False)
@@ -124,6 +135,8 @@ def main():
                 targets += packet_targets
             if opt.flow:
                 targets += flow_target
+            if opt.fu:
+                targets += fu_targets
 
             d = c.get_stats(path, targets, re_targets=True)
 
