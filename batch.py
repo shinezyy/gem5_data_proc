@@ -58,8 +58,8 @@ def main():
                         default=0.0,
                         help='Only extract ipc'
                        )
-    parser.add_argument('--st', action='store_true',
-                        help='processing ST stats'
+    parser.add_argument('--smt', action='store_true',
+                        help='processing SMT stats'
                        )
     parser.add_argument('--pair-filter', action='store', default='',
                         help='file that filt pairs'
@@ -94,6 +94,9 @@ def main():
                        )
     parser.add_argument('--sched', action='store_true',
                         help='print scheduling related stats'
+                       )
+    parser.add_argument('--beta', action='store_true',
+                        help='print stats demanded by betapoint'
                        )
 
     opt = parser.parse_args()
@@ -137,11 +140,13 @@ def main():
                 targets += flow_target
             if opt.fu:
                 targets += fu_targets
+            if opt.beta:
+                targets += beta_targets
 
             d = c.get_stats(path, targets, re_targets=True)
 
         if len(d):
-            if not opt.st:
+            if opt.smt:
                 matrix[pair] = further_proc(pair, d, opt.verbose)
             else:
                 matrix[pair] = d

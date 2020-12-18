@@ -164,3 +164,12 @@ fu_targets= [
         #'system\.switch_cpus\.commit\.op_class_0::(FloatMult)',
         #'system\.switch_cpus\.commit\.op_class_0::(FloatMultAcc)',
         ]
+
+beta_targets = [
+    'cpus?\.(ipc)',
+    'cpus?\.committed(Insts)',
+    '(l2\.demand_miss)es::total',
+    'branchPred\.(condIncorrect)',
+    'branchPred\.(indirectMispredicted)',
+    'cpus?\.(dcache\.demand_misses)::total',
+        ]
