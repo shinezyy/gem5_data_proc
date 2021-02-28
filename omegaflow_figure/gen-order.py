@@ -4,16 +4,9 @@ import os.path as osp
 import sys
 sys.path.append('..')
 
-import matplotlib as mpl
-import numpy as np
 import pandas as pd
-import seaborn as sns
-from matplotlib import pyplot as plt
 
-import common as c
-import graphs
-import target_stats as t
-
+from utils import common as c, target_stats as t
 
 strange_const = 3
 show_lins = 62

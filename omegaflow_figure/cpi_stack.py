@@ -1,6 +1,5 @@
-import common as c
+from utils import common as c, target_stats as t
 import os.path as osp
-import target_stats as t
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
