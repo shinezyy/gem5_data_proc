@@ -1,12 +1,8 @@
-import common as c
-import target_stats as t
-import os
-import sys
+from utils import common as c, target_stats as t
 import os.path as osp
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import cm
 
 data = {
     'F1': osp.join(c.env.get_stat_dir(), 'f1_base-full'),

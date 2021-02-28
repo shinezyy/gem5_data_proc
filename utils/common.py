@@ -235,7 +235,7 @@ def get_stats(stat_file: str, targets: list,
 
     patterns = {}
     if re_targets:
-        meta_pattern = re.compile('.*\((.+)\).*')
+        meta_pattern = re.compile('.*\((\w.+)\).*')
         for t in targets:
             meta = meta_pattern.search(t).group(1)
             patterns[meta] = re.compile(t+'\s+(\d+\.?\d*)\s+')
@@ -338,6 +338,10 @@ def add_branch_mispred(d: dict) -> None:
     mispred = float(d['branchMispredicts'])
     d['mispredict rate'] = mispred / branches;
     d['MPKI'] = mispred / float(d['Insts']) * 1000;
+
+def add_cache_mpki(d: dict) -> None:
+    d['L2MPKI'] = float(d['l2.demand_misses']) / float(d['Insts']) * 1000;
+    d['L3MPKI'] = float(d['l3.demand_misses']) / float(d['Insts']) * 1000;
 
 def add_fanout(d: dict) -> None:
     large_fanout = float(d.get('largeFanoutInsts', 0)) + 1.0

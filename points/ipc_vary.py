@@ -1,27 +1,12 @@
-import common as c
-import target_stats as t
 import os
-import os.path as osp
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+from utils import glob_stats, get_ipc
+from utils.points_extraction import class_map_to_ipc_df
+
 top_dir = '/home51/zyy/projects/gem5_data_proc/expri_results/gem5_ooo_spec06_shotgun/gcc_200/'
-
-
-def get_ipc(stat_path: str):
-    targets = t.ipc_target
-    stats = c.get_stats(stat_path, targets, insts=100*10**6, re_targets=True)
-    return stats['ipc']
-
-
-def glob_stats(path: str):
-    stat_files = []
-    for x in os.listdir(path):
-        stat_path = osp.join(path, x, 'm5out/stats.txt')
-        if osp.isfile(stat_path) and osp.getsize(stat_path) > 10 * 1024:  # > 10K
-            stat_files.append((x, stat_path))
-    return stat_files
 
 
 def gen_csv(workload, name, input_dir):
@@ -36,32 +21,54 @@ def gen_csv(workload, name, input_dir):
     df.to_csv(f"outputs/{workload}/{name}.csv")
 
 
+def step_df(df, label, base):
+    if base is not None:
+        index = set(df.index) & set(base.index)
+        base = base.loc[index]
+        df = df.loc[index]
+        cumulative_error = (df.values - base.values)/base.values
+        print(cumulative_error)
+        print(f'cumulative error: {sum(np.abs(cumulative_error.reshape(-1))/len(df.index))}')
+        print(f'IPC error: {(df.values.mean() - base.values.mean())/base.values.mean()}')
+
+    df = df.loc[1000:1200]
+    plt.step(df.index, df.values, label=label)
+    if base is not None:
+        base = base.loc[1000:1200]
+        plt.fill_between(
+            df.index, df.values.reshape(-1), base.values.reshape(-1),
+            step='pre',
+        )
+
+
 def draw(csv):
     df = pd.read_csv(csv, index_col=[0])
-    df2 = {}
-    with open('outputs/class_map.txt') as f:
-        for line in f:
-            k, v = line.strip().split(' ')
-            df2[int(k)] = df.iloc[int(v)][0]
-
-    df2 = pd.DataFrame.from_dict(df2, orient='index')
-    df2 = df2.sort_index(ascending=True)
-
+    df = df.sort_index(ascending=True)
+    dfs = [df]
+    labels = ['Ground truth']
     print(df.mean())
-    print(df2.mean())
 
-    df = df.loc[400: 500]
-    df2 = df2.loc[400: 500]
+    # df2 = class_map_to_ipc_df(df, "/home51/zyy/projects/betapoint/models/simpoint_class_map.txt")
+    # dfs.append(df2)
+    # labels.append('Simpoint')
+    # print(df2.mean())
 
-    print(df)
-    print(df2)
+    # df3 = class_map_to_ipc_df(df, 'outputs/class_map_min_2.txt')
+    df3 = class_map_to_ipc_df(df, 'outputs/class_map_min.txt')
+    dfs.append(df3)
+    labels.append('Supervised(XGBoost)')
+    print(df3.mean())
 
     fig = plt.gcf()
     fig.set_size_inches(16, 5)
 
-    plt.step(df.index, df.values)
-    plt.step(df2.index, df2.values)
+    base = None
+    for df_, label in zip(dfs, labels):
+        step_df(df_, label, base)
+        if base is None:
+            base = df_
 
+    plt.legend()
     plt.tight_layout()
     plt.show()
 

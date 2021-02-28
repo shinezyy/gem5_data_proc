@@ -1,10 +1,8 @@
 import sys
 sys.path.append('..')
 
-import common as c
-import target_stats as t
+from utils import common as c, target_stats as t
 import os
-import sys
 import os.path as osp
 import pandas as pd
 import numpy as np

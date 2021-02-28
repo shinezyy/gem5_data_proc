@@ -1,18 +1,13 @@
 #!/usr/bin/env python3
 
-import os
-import sys
 from os.path import join as pjoin
-import time
-import re
+import os.path as osp
 import argparse
 import pandas as pd
-import numpy as np
 
-from paths import *
-import common as c
-from target_stats import *
-from st_stat import make_st_stat_cache
+from utils import common as c
+from utils.target_stats import *
+import utils as u
 
 show_lins = 62
 pd.set_option('precision', 3)
@@ -65,7 +60,7 @@ def main():
                         help='file that filt pairs'
                        )
     parser.add_argument('-f', '--stat-file', action='store',
-                        help='name of stats file', default='stats.txt'
+                        help='name of stats file', default='m5out/stats.txt'
                        )
     parser.add_argument('-l', '--fanout', action='store_true',
                         help='print fanout'
@@ -98,26 +93,21 @@ def main():
     parser.add_argument('--beta', action='store_true',
                         help='print stats demanded by betapoint'
                        )
+    parser.add_argument('--cache', action='store_true',
+                        help='print cache stats'
+                       )
 
     opt = parser.parse_args()
 
-    pairs = c.pairs(opt.stat_dir, return_path=False)
-
-    if (opt.pair_filter):
-        pairs = c.pair_filt(pairs, opt.pair_filter)
-
-    paths = c.pair_to_full_path(opt.stat_dir, pairs)
-
-    pairs, paths = c.stat_filt(pairs, paths, opt.stat_file)
-    # paths = c.time_filt(paths)
-    paths = [pjoin(x, opt.stat_file) for x in paths]
-
-    # make_st_stat_cache()
+    paths = u.glob_stats_l2(opt.stat_dir, opt.stat_file)
+    if len(paths) == 0:
+        paths = u.glob_stats(opt.stat_dir, opt.stat_file)
 
     matrix = {}
 
-    for pair, path in zip(pairs, paths):
-        # print(pair)
+    for workload, path in paths:
+        # print(workload, path)
+        # print(workload)
         if opt.ipc_only:
             d = c.get_stats(path, ipc_target, re_targets=True)
         else:
@@ -142,20 +132,24 @@ def main():
                 targets += fu_targets
             if opt.beta:
                 targets += beta_targets
+            if opt.cache:
+                targets += cache_targets
 
             d = c.get_stats(path, targets, re_targets=True)
 
         if len(d):
             if opt.smt:
-                matrix[pair] = further_proc(pair, d, opt.verbose)
+                matrix[workload] = further_proc(workload, d, opt.verbose)
             else:
-                matrix[pair] = d
+                matrix[workload] = d
             if opt.branch:
                 c.add_branch_mispred(d)
             if opt.fanout:
                 c.add_fanout(d)
-            if opt.packet:
-                c.add_packet(d)
+            if opt.cache:
+                c.add_cache_mpki(d)
+            # if opt.packet:
+            #     c.add_packet(d)
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
     df = df.sort_index()

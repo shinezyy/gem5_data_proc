@@ -67,7 +67,7 @@ def predict_npz_with_model(bbv_npz, xgb_model, id_limit, output_file):
 if __name__ == '__main__':
     predict_npz_with_model(
         osp.expanduser('~/projects/NEMU/outputs3/simpoint_profile_06/gcc_200/csc.dump.npz'),
-        xgb_model='/home51/zyy/projects/betapoint/betapoint_trained_with_100points.xgb',
+        xgb_model='/home51/zyy/projects/betapoint/betapoint_trained_with_100points_2.xgb',
         id_limit="/home51/zyy/projects/gem5_data_proc/points/outputs/gcc_200/shotgun_idmap.txt",
-        output_file='class_map_min.txt',
+        output_file='class_map_min_2.txt',
     )

@@ -1,10 +1,13 @@
 brief_targets = [
     'cpus?\.(ipc)',
+    'cpus?\.(cpi)',
     'cpus?\.committed(Insts)',
+    'host_(inst_rate)',
     #'cpus\.num(Cycles)'
 ]
 ipc_target = [
     'cpus?\.(ipc)',
+    'cpus?\.(cpi)',
 ]
 
 flow_target = [
@@ -14,21 +17,27 @@ flow_target = [
 
 standard_targets = [
     '(numCycles)',
-    'cpus\.committed(Insts)',
-    'cpus\.(ipc)',
+    'cpus?\.committed(Insts)',
+    'cpus?\.(ipc)',
 ]
 
 cache_targets = [
-    'cpu\.(dcache.*_miss_rate)::\.switch_cpus\.data',
-    'cpu\.(icache.*_miss_rate)::\.switch_cpus\.data',
-    '(l2.*_miss_rate)::\.switch_cpus\.data',
-    'cpu\.(dcache\.demand_avg_miss_latency)::\.switch_cpus\.data',
-    'switch_cpus\.iew\.iew(ExecLoadInsts)',
+    'cpu\.(dcache.demand_miss_rate)::\.cpu\.data',
+    # 'cpu\.(icache.*_miss_rate)::\.cpus\.data',
+    '(l3\.demand_miss_rate)::total',
+    '(l3\.demand_misses)::total',
+    '(l2\.demand_miss_rate)::total',
+    '(l2\.demand_misses)::total',
+    'cpu\.(dcache\.demand_avg_miss_latency)::\.cpu\.data',
+    'cpu\.(dcache\.demand_misses)::\.cpu\.data',
+    # 'cpu\.iew\.iew(ExecLoadInsts)',
 ]
 
 branch_targets = [
-    'd?iewc?\.?(branchMispredicts)',
-    'd?iewc?\.?exec_(branches)',
+    'cpus?\.(?:diewc|commit|iew)\.(branchMispredicts)',
+    'cpus?\.(?:diewc\.exec_|commit\.)(branches)',
+    # 'cpu\.commit\.(branches)',
+    # 'cpu\.commit\.(branchMispredicts)',
     # 'iew\.iewExec(LoadInsts)',
     # 'iew\.exec_(stores)',
     # 'thread(0\.squashedLoads)',
@@ -55,8 +64,8 @@ fanout_targets = [
         ]
 
 fetch_targets = [
-    'cpus\.fetch\.(fetchFromLoopBuffer)',
-    'cpus\.(fetch\.rate) ',
+    'cpus?\.fetch\.(fetchFromLoopBuffer)',
+    'cpus?\.(fetch\.rate) ',
 ]
 
 

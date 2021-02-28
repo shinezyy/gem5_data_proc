@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
-import target_stats as t
-import common as c
+from utils import common as c, target_stats as t
 import sys
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 assert len(sys.argv) == 3
 

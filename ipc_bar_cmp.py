@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 
-import target_stats as t
-import common as c
-import sys
+from utils import common as c, target_stats as t
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import argparse
 
 parser = argparse.ArgumentParser(usage='experiment_dir baseline_dir -f filter')
