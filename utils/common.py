@@ -225,13 +225,72 @@ def to_num(x: str) -> (int, float):
     else:
         return int(x)
 
+def getTime(line):
+    time_parrern = re.compile('.*\[time=\s*(\d+)\].*')
+    return int(time_parrern.search(line).group(1))
 
-def get_stats(stat_file: str, targets: list,
+def xs_get_raw_stats_around(stat_file: str)-> list:
+
+    buff = []
+    time = 0
+
+    for line in reverse_readline(expu(stat_file)):
+        if line.startswith('[PERF ]'):
+            if time == 0:
+                time = getTime(line)
+                # print(time)
+                buff.append('totalCycle,' + str(time))
+
+            if time != 0 and getTime(line) != time:
+                return buff
+
+            buff.append(line)
+
+    return buff
+
+def xs_get_stats(stat_file: str, targets: list,
               insts: int=200*(10**6), re_targets=False) -> dict:
     if not os.path.isfile(expu(stat_file)):
         print(stat_file)
     assert(os.path.isfile(expu(stat_file)))
-    lines = get_raw_stats_around(stat_file, insts)
+    lines = xs_get_raw_stats_around(stat_file)
+
+    patterns = {}
+    if re_targets:
+        meta_pattern = re.compile('.*\((\w.+)\).*')
+        for t in targets:
+            meta = meta_pattern.search(t).group(1)
+            # patterns[meta] = re.compile(t+'\s+(\d+\.?\d*)\s+')
+            patterns[meta] = re.compile('.*?' + meta + ',\s*(\d+)')
+    else:
+        for t in targets:
+            # patterns[t] = re.compile(t+'\s+(\d+\.?\d*)\s+')
+            patterns[t] = re.compile('.*?' + meta + ',\s*(\d+)')
+
+    # print(patterns)
+    stats = {}
+
+    for line in lines:
+        for k in patterns:
+            m = patterns[k].search(line)
+            if not m is None:
+                if re_targets:
+                    stats[k] = to_num(m.group(1))
+                else:
+                    stats[k] = to_num(m.group(1))
+    if not ('roq_commitInstr' in stats and 'totalCycle' in stats):
+        print("Warn: roq_commitInstr or totalCycle not exists")
+        stats['ipc'] = 0
+    else:
+        stats['ipc'] = stats['roq_commitInstr']/stats['totalCycle']
+    return stats
+
+def gem5_get_stats(stat_file: str, targets: list,
+              insts: int=200*(10**6), re_targets=False) -> dict:
+    if not os.path.isfile(expu(stat_file)):
+        print(stat_file)
+    assert(os.path.isfile(expu(stat_file)))
+    lines = gem5_get_raw_stats_around(stat_file, insts)
 
     patterns = {}
     if re_targets:

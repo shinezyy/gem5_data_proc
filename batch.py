@@ -97,6 +97,10 @@ def main():
                         help='print cache stats'
                        )
 
+    parser.add_argument('--xiangshan', action='store_true',
+                        help='handle XiangShan stats'
+                       )
+
     opt = parser.parse_args()
 
     paths = u.glob_stats_l2(opt.stat_dir, opt.stat_file)
@@ -109,33 +113,43 @@ def main():
         # print(workload, path)
         # print(workload)
         if opt.ipc_only:
-            d = c.get_stats(path, ipc_target, re_targets=True)
+            if opt.xiangshan:
+                d = c.xs_get_stats(path, xs_ipc_target, re_targets=True)
+            else:
+                d = c.gem5_get_stats(path, ipc_target, re_targets=True)
         else:
-            targets = brief_targets
-            if opt.branch:
-                targets += branch_targets
-            if opt.fanout:
-                targets += fanout_targets
+            if opt.xiangshan:
+                targets = xs_ipc_target
+                if opt.branch:
+                    targets += xs_branch_targets
 
-            if opt.fetch:
-                targets += fetch_targets
+                d = c.xs_get_stats(path, targets, re_targets=True)
+            else:
+                targets = brief_targets
+                if opt.branch:
+                    targets += branch_targets
+                if opt.fanout:
+                    targets += fanout_targets
 
-            if opt.breakdown:
-                targets += breakdown_targets
-            if opt.op:
-                targets += operand_targets
-            if opt.packet:
-                targets += packet_targets
-            if opt.flow:
-                targets += flow_target
-            if opt.fu:
-                targets += fu_targets
-            if opt.beta:
-                targets += beta_targets
-            if opt.cache:
-                targets += cache_targets
+                if opt.fetch:
+                    targets += fetch_targets
 
-            d = c.get_stats(path, targets, re_targets=True)
+                if opt.breakdown:
+                    targets += breakdown_targets
+                if opt.op:
+                    targets += operand_targets
+                if opt.packet:
+                    targets += packet_targets
+                if opt.flow:
+                    targets += flow_target
+                if opt.fu:
+                    targets += fu_targets
+                if opt.beta:
+                    targets += beta_targets
+                if opt.cache:
+                    targets += cache_targets
+
+                d = c.gem5_get_stats(path, targets, re_targets=True)
 
         if len(d):
             if opt.smt:
@@ -143,7 +157,8 @@ def main():
             else:
                 matrix[workload] = d
             if opt.branch:
-                c.add_branch_mispred(d)
+                if not opt.xiangshan:
+                    c.add_branch_mispred(d)
             if opt.fanout:
                 c.add_fanout(d)
             if opt.cache:
