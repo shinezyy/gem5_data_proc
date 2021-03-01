@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import re
 import json
+import utils as u
+import utils.target_stats as t
 
 
 stat_file = '/home51/zyy/expri_results/gem5_ooo_spec06_shotgun_dump_10000/gcc_200/140/m5out/stats.txt'
@@ -82,12 +84,17 @@ def multi_phase_labeled_ipc_extract(workload, workload_dir, large_point=True):
                 else:
                     print(f'{workload} {fname} yields None')
             else:
-                df = small_point_ipc_extract(
+                d = u.c.get_stats(
                         osp.join(phase_path, 'm5out', 'stats.txt'),
-                        osp.join(phase_path, 'm5out', 'config.json'),
+                        t.ipc_target,
+                        re_targets=True,
+                        all_chunks=True,
+                        config_file=osp.join(phase_path, 'm5out', 'config.json'),
                         )
+                df = pd.DataFrame.from_dict(d, orient='index')
+                df.sort_index(inplace=True)
+                df = df.iloc[1:]
                 dfs.append(df)
-
 
     if large_point:
         if len(d):
@@ -97,6 +104,7 @@ def multi_phase_labeled_ipc_extract(workload, workload_dir, large_point=True):
             return None
     else:
         df = pd.concat(dfs)
+        df.sort_index(inplace=True)
         return df
 
 def multi_workload_labeled_ipc_extract(task_dir, large_point=True):
@@ -108,7 +116,7 @@ def multi_workload_labeled_ipc_extract(task_dir, large_point=True):
                 df.to_csv(f'outputs/shotgun/{workload}.csv', header=None)
             else:
                 df = multi_phase_labeled_ipc_extract(workload, workload_path, False)
-                df.to_csv(f'outputs/shotgun_small_point/{workload}.csv', header=None)
+                df.to_csv(f'outputs/shotgun_continuous_point/{workload}.csv')
     # df = pd.concat(dfs)
     # df.to_csv(f'outputs/shotgun/mixed.csv', header=None)
 
@@ -116,6 +124,10 @@ def multi_workload_labeled_ipc_extract(task_dir, large_point=True):
 if __name__ == '__main__':
     # multi_workload_labeled_ipc_extract(stat_dir)
     # stat_dir = '/home51/zyy/expri_results/gem5_ooo_spec06_shotgun/'
-    stat_dir = '/home51/zyy/expri_results/shotgun/gem5_ooo_spec06_large_chunk'
-    multi_workload_labeled_ipc_extract(stat_dir, large_point=True)
+
+    # stat_dir = '/home51/zyy/expri_results/shotgun/gem5_ooo_spec06_large_chunk'
+    # multi_workload_labeled_ipc_extract(stat_dir, large_point=True)
+
+    stat_dir = '/home51/zyy/expri_results/shotgun/gem5_shotgun_cont_06/FullWindowO3Config'
+    multi_workload_labeled_ipc_extract(stat_dir, large_point=False)
 

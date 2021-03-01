@@ -2,11 +2,11 @@ import sys
 from os.path import join as pjoin
 from os.path import expanduser as expu
 import re
+import json
 from copy import deepcopy
 import pandas as pd
 
 from local_configs import Env
-from st_stat import make_st_stat_cache
 from paths import *
 
 env = Env()
@@ -150,6 +150,50 @@ def print_line():
     print('---------------------------------------------------------------')
 
 
+def extract_weight_from_config(config_file: str):
+    assert osp.isfile(config_file)
+    weight_pattern = re.compile('.*/{\w+}_\d+_(\d+\.\d+([eE][-+]?\d+)?)/.*\.gz')
+    with open(config_file) as jf:
+        js = json.load(jf)
+        gcpt_file = js['system']['gcpt_file']
+        m = weight_pattern.match(gcpt_file)
+        assert m is not None
+        weight = float(m.group(1))
+        return weight
+
+
+def extract_insts_from_config(config_file: str):
+    assert osp.isfile(config_file)
+    insts_pattern = re.compile(f'.*/_(\d+)_\.gz')
+    with open(config_file) as jf:
+        js = json.load(jf)
+        gcpt_file = js['system']['gcpt_file']
+        m = insts_pattern.match(gcpt_file)
+        assert m is not None
+        insts = int(m.group(1))
+        return insts
+
+
+# this functions get all stats dumps
+def get_all_chunks(stat_file: str, config_file: str):
+    buff = []
+    chunks = {}
+    p_insts = re.compile('cpus?.committedInsts\s+(\d+)\s+#')
+    insts = extract_insts_from_config(config_file)
+    with open(expu(stat_file)) as f:
+        for line in f:
+            buff.append(line)
+            if line.startswith('---------- End Simulation Statistics   ----------'):
+                assert(insts)
+                chunks[insts] = buff
+                buff = []
+            elif p_insts.search(line) is not None:
+                insts += int(p_insts.search(line).group(1))
+                insts = round(insts, -2)
+    return chunks
+
+
+# this functions get only the last dumps or the nearest stats dump
 def get_raw_stats_around(stat_file: str, insts: int=200*(10**6),
                          cycles: int = None)-> list:
     old_buff = []
@@ -227,13 +271,14 @@ def to_num(x: str) -> (int, float):
 
 
 def get_stats(stat_file: str, targets: list,
-              insts: int=200*(10**6), re_targets=False) -> dict:
+              insts: int=200*(10**6), re_targets=False,
+              all_chunks=False, config_file=None) -> dict:
     if not os.path.isfile(expu(stat_file)):
         print(stat_file)
     assert(os.path.isfile(expu(stat_file)))
-    lines = get_raw_stats_around(stat_file, insts)
 
     patterns = {}
+
     if re_targets:
         meta_pattern = re.compile('.*\((\w.+)\).*')
         for t in targets:
@@ -243,19 +288,34 @@ def get_stats(stat_file: str, targets: list,
         for t in targets:
             patterns[t] = re.compile(t+'\s+(\d+\.?\d*)\s+')
 
-    # print(patterns)
-    stats = {}
+    if not all_chunks:
+        lines = get_raw_stats_around(stat_file, insts)
+        stats = {}
 
-    for line in lines:
-        for k in patterns:
-            m = patterns[k].search(line)
-            if not m is None:
-                if re_targets:
-                    stats[m.group(1)] = to_num(m.group(2))
-                else:
-                    stats[k] = to_num(m.group(1))
-    return stats
+        for line in lines:
+            for k in patterns:
+                m = patterns[k].search(line)
+                if not m is None:
+                    if re_targets:
+                        stats[m.group(1)] = to_num(m.group(2))
+                    else:
+                        stats[k] = to_num(m.group(1))
+        return stats
+    else:
+        assert config_file is not None
+        chunks = get_all_chunks(stat_file, config_file)
+        chunk_stats = {}
+        for insts, chunk in chunks.items():
+            chunk_stats[insts] = {}
+            assert re_targets
+            meta_pattern = re.compile('.*\((\w.+)\).*')
 
+            for line in chunk:
+                for k in patterns:
+                    m = patterns[k].search(line)
+                    if not m is None:
+                        chunk_stats[insts][m.group(1)] = to_num(m.group(2))
+        return chunk_stats
 
 def get_stats_file_name(d: str):
     assert(os.path.isdir(d))
@@ -409,3 +469,11 @@ def scale_tick(df: pd.DataFrame):
         if 'Tick' in col:
             df[col] = df[col] / 500.0
     return df
+
+
+if __name__ == '__main__':
+    chunks = get_all_chunks(
+            '/home51/zyy/expri_results/shotgun/gem5_shotgun_cont_06/FullWindowO3Config/gcc_200/0/m5out/stats.txt',
+            '/home51/zyy/expri_results/shotgun/gem5_shotgun_cont_06/FullWindowO3Config/gcc_200/0/m5out/config.json',
+            )
+    print(chunks.keys())
