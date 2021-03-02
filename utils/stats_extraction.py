@@ -7,18 +7,23 @@ import utils.target_stats as t
 import json
 import re
 
-simpoints = '/home51/zyy/expri_results/simpoints.json'
-
 def get_ipc(stat_path: str):
     targets = t.ipc_target
     stats = c.get_stats(stat_path, targets, insts=100*10**6, re_targets=True)
     return stats['ipc']
 
-def single_stat_factory(targets, key):
+def single_stat_factory(targets, key, prefix=''):
     def get_single_stat(stat_path: str):
         # print(stat_path)
-        stats = c.get_stats(stat_path, targets, insts=100*10**6, re_targets=True)
-        return stats[key]
+        if prefix == '':
+            stats = c.get_stats(stat_path, targets, re_targets=True)
+        else:
+            assert prefix == 'xs_'
+            stats = c.xs_get_stats(stat_path, targets, re_targets=True)
+        if stats is not None:
+            return stats[key]
+        else:
+            return None
     return get_single_stat
 
 def glob_stats_l2(path: str, fname = 'm5out/stats.txt'):
@@ -38,7 +43,9 @@ def glob_stats(path: str, fname = 'm5out/stats.txt'):
             stat_files.append((x, stat_path))
     return stat_files
 
-def glob_weighted_stats(path: str, get_func, filtered=True):
+def glob_weighted_stats(path: str, get_func, filtered=True,
+        simpoints='/home51/zyy/expri_results/simpoints17.json',
+        stat_file='m5out/stats.txt'):
     stat_tree = {}
     with open(simpoints) as jf:
         points = json.load(jf)
@@ -55,18 +62,20 @@ def glob_weighted_stats(path: str, get_func, filtered=True):
             if point not in points[workload]:
                 continue
             point_dir = osp.join(workload_dir, point)
-            stats_file = osp.join(point_dir, 'm5out', 'stats.txt')
-            config_file = osp.join(point_dir, 'm5out', 'config.json')
-            with open(config_file) as jf:
-                js = json.load(jf)
-                gcpt_file = js['system']['gcpt_file']
-                m = weight_pattern.match(gcpt_file)
-                assert m is not None
-                weight = float(m.group(1))
-                stat_tree[bmk][workload][int(point)] = (weight, get_func(stats_file))
-        df = pd.DataFrame.from_dict(stat_tree[bmk][workload], orient='index')
-        df.columns = ['weight', 'cpi']
-        stat_tree[bmk][workload] = df
+            stats_file = osp.join(point_dir, stat_file)
+            weight = float(points[workload][str(point)])
+            stat = get_func(stats_file)
+            if stat is not None and stat > 0.001:
+                stat_tree[bmk][workload][int(point)] = (weight, stat)
+        if len(stat_tree[bmk][workload]):
+            df = pd.DataFrame.from_dict(stat_tree[bmk][workload], orient='index')
+            df.columns = ['weight', 'ipc']
+            stat_tree[bmk][workload] = df
+            print(df)
+        else:
+            stat_tree[bmk].pop(workload)
+            if not len(stat_tree[bmk]):
+                stat_tree.pop(bmk)
 
     return stat_tree
 
@@ -112,7 +121,11 @@ def coveraged(coverage: float, df: pd.DataFrame):
 
 
 def weighted_cpi(df: pd.DataFrame):
-    return np.dot(df['weight'], df['cpi']) / np.sum(df['weight'])
+    if 'cpi' in df.columns:
+        return np.dot(df['weight'], df['cpi']) / np.sum(df['weight']), np.sum(df['weight'])
+    else:
+        assert 'ipc' in df.columns
+        return np.dot(df['weight'], 1.0/df['ipc']) / np.sum(df['weight']), np.sum(df['weight'])
 
 
 def gen_json(path, output):
@@ -136,9 +149,9 @@ def gen_json(path, output):
 
 
 if __name__ == '__main__':
-    # tree = glob_weighted_stats(
-    #         '/home51/zyy/expri_results/omegaflow_spec17/of_g1_perf/',
-    #         single_stat_factory(t.ipc_target, 'cpi')
-    #         )
-    gen_json('/home51/zyy/expri_results/nemu_take_simpoint_cpt_06',
-            '/home51/zyy/expri_results/simpoints06')
+    tree = glob_weighted_stats(
+            '/home51/zyy/expri_results/omegaflow_spec17/of_g1_perf/',
+            single_stat_factory(t.ipc_target, 'cpi')
+            )
+    # gen_json('/home51/zyy/expri_results/nemu_take_simpoint_cpt_06',
+    #         '/home51/zyy/expri_results/simpoints06')

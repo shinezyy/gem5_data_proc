@@ -269,9 +269,73 @@ def to_num(x: str) -> (int, float):
     else:
         return int(x)
 
+def xs_get_time(line):
+    time_parrern = re.compile('.*\[time=\s*(\d+)\].*')
+    return int(time_parrern.search(line).group(1))
 
-def get_stats(stat_file: str, targets: list,
-              insts: int=200*(10**6), re_targets=False,
+
+def xs_get_raw_stats_around(stat_file: str)-> list:
+
+    buff = []
+    time = 0
+
+    for line in reverse_readline(expu(stat_file)):
+        if line.startswith('[PERF ]'):
+            if time == 0:
+                time = xs_get_time(line)
+                # print(time)
+
+            if time != 0 and xs_get_time(line) != time:
+                buff.append('totalCycle,' + str(time - xs_get_time(line)))
+                return buff
+
+            buff.append(line)
+
+    return None
+
+def xs_get_stats(stat_file: str, targets: list,
+              insts: int=200*(10**6), re_targets=False) -> dict:
+    if not os.path.isfile(expu(stat_file)):
+        print(stat_file)
+    assert(os.path.isfile(expu(stat_file)))
+    lines = xs_get_raw_stats_around(stat_file)
+
+    if lines is None:
+        return None
+
+    patterns = {}
+    if re_targets:
+        meta_pattern = re.compile('.*\((\w.+)\).*')
+        for t in targets:
+            meta = meta_pattern.search(t).group(1)
+            # patterns[meta] = re.compile(t+'\s+(\d+\.?\d*)\s+')
+            patterns[meta] = re.compile('.*?' + meta + ',\s*(\d+)')
+    else:
+        for t in targets:
+            # patterns[t] = re.compile(t+'\s+(\d+\.?\d*)\s+')
+            patterns[t] = re.compile('.*?' + meta + ',\s*(\d+)')
+
+    # print(patterns)
+    stats = {}
+
+    for line in lines:
+        for k in patterns:
+            m = patterns[k].search(line)
+            if not m is None:
+                if re_targets:
+                    stats[k] = to_num(m.group(1))
+                else:
+                    stats[k] = to_num(m.group(1))
+    if not ('roq_commitInstr' in stats and 'totalCycle' in stats):
+        print("Warn: roq_commitInstr or totalCycle not exists")
+        stats['ipc'] = 0
+    else:
+        stats['ipc'] = stats['roq_commitInstr']/stats['totalCycle']
+    return stats
+
+
+def gem5_get_stats(stat_file: str, targets: list,
+              insts: int=100*(10**6), re_targets=False,
               all_chunks=False, config_file=None) -> dict:
     if not os.path.isfile(expu(stat_file)):
         print(stat_file)
@@ -317,6 +381,11 @@ def get_stats(stat_file: str, targets: list,
                         chunk_stats[insts][m.group(1)] = to_num(m.group(2))
         return chunk_stats
 
+
+def get_stats(*args, **kwargs) -> dict:
+    return gem5_get_stats(*args, **kwargs)
+
+
 def get_stats_file_name(d: str):
     assert(os.path.isdir(d))
     results = []
@@ -333,7 +402,6 @@ def get_stats_file_name(d: str):
 
     else:
         return None
-
 
 
 def get_stats_from_parent_dir(d: str, selected_benchmarks: [], *args, **kwargs):
@@ -459,7 +527,7 @@ def get_df(path_dict: dict, arch: str, targets, filter_bmk=None):
             continue
         f = find_stats_file(stat_dir_path)
         tup = get_stats(f, targets, re_targets=True)
-        matrix[d] = tup
+        gatrix[d] = tup
     df = pd.DataFrame.from_dict(matrix, orient='index')
     return df
 
@@ -470,6 +538,31 @@ def scale_tick(df: pd.DataFrame):
             df[col] = df[col] / 500.0
     return df
 
+
+def get_spec_ref_time(bmk, ver):
+    if ver == '06':
+        top = "/home/zyy/research-data/spec2006/benchspec/CPU2006"
+        ref_file = "/home/zyy/research-data/spec2006/benchspec/CPU2006/{}/data/ref/reftime"
+    else:
+        assert ver == '17'
+        top = "/home/zyy/research-data/spec2017_20201126/benchspec/CPU"
+        ref_file = "/home/zyy/research-data/spec2017_20201126/benchspec/CPU/{}/data/refrate/reftime"
+
+    codename = None
+    for d in os.listdir(top):
+        if osp.isdir(osp.join(top, d)) and bmk in d and '_s' not in d:
+            codename = d
+    ref_file = ref_file.format(codename)
+
+    pattern = re.compile(r'\d+')
+    print(ref_file)
+    assert osp.isfile(ref_file)
+    with open(ref_file) as f:
+        for line in f:
+            m = pattern.search(line)
+            if m is not None:
+                return float(m.group(0))
+    return None
 
 if __name__ == '__main__':
     chunks = get_all_chunks(

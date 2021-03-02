@@ -182,3 +182,38 @@ beta_targets = [
     'branchPred\.(indirectMispredicted)',
     'cpus?\.(dcache\.demand_misses)::total',
         ]
+
+xs_ipc_target = [
+    '(ipc)',
+    '(totalCycle)',
+    '(roq_commitInstr)',
+]
+
+xs_branch_targets = [
+    '(BpInstr)',
+    '(BpBInstr)',
+    '(BpRight)',
+    '(BpWrong)',
+    '(BpBRight)',
+    '(BpBWrong)',
+    '(BpJRight)',
+    '(BpJWrong)',
+    '(BpIRight)',
+    '(BpIWrong)',
+    '(BpCRight)',
+    '(BpCWrong)',
+    '(BpRRight)',
+    '(BpRWrong)',
+
+    # '(ubtbRight)',
+    # '(ubtbWrong)',
+    # '(btbRight)',
+    # '(btbWrong)',
+    # '(tageRight)',
+    # '(tageWrong)',
+    # '(rasRight)',
+    # '(rasWrong)',
+    # '(loopRight)',
+    # '(loopWrong)',
+]
+
