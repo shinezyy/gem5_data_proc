@@ -12,5 +12,7 @@ def sample(fname: str, n_samples):
 
 
 if __name__ == '__main__':
-    df = sample('/home51/zyy/projects/gem5_data_proc/outputs/shotgun_continuous_point/gcc_200.csv', 300)
-    df.to_csv('/home51/zyy/projects/gem5_data_proc/outputs/shotgun_continuous_point/gcc_200_sampled.csv')
+    for workload in ['bzip2_liberty', 'gcc_200', 'gobmk_13x13',
+            'mcf',  'perlbench_diffmail',  'xalancbmk',]:
+        df = sample(f'/home51/zyy/projects/gem5_data_proc/outputs/shotgun_continuous_point/{workload}.csv', 300)
+        df.to_csv(f'/home51/zyy/projects/gem5_data_proc/outputs/shotgun_continuous_point/{workload}_sampled.csv')

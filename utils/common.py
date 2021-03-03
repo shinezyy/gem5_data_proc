@@ -173,13 +173,22 @@ def extract_insts_from_config(config_file: str):
         insts = int(m.group(1))
         return insts
 
+def extract_insts_from_path(d: str):
+    p_dir_insts = re.compile('/(\d+)/.*.txt')
+    m = p_dir_insts.search(d)
+    assert m is not None
+    return int(m.group(1))
+
 
 # this functions get all stats dumps
-def get_all_chunks(stat_file: str, config_file: str):
+def get_all_chunks(stat_file: str, config_file: str, insts_from_dir):
     buff = []
     chunks = {}
     p_insts = re.compile('cpus?.committedInsts\s+(\d+)\s+#')
-    insts = extract_insts_from_config(config_file)
+    if not insts_from_dir:
+        insts = extract_insts_from_config(config_file)
+    else:
+        insts = extract_insts_from_path(stat_file)
     with open(expu(stat_file)) as f:
         for line in f:
             buff.append(line)
@@ -336,7 +345,7 @@ def xs_get_stats(stat_file: str, targets: list,
 
 def gem5_get_stats(stat_file: str, targets: list,
               insts: int=100*(10**6), re_targets=False,
-              all_chunks=False, config_file=None) -> dict:
+              all_chunks=False, config_file=None, insts_from_dir=False) -> dict:
     if not os.path.isfile(expu(stat_file)):
         print(stat_file)
     assert(os.path.isfile(expu(stat_file)))
@@ -367,7 +376,7 @@ def gem5_get_stats(stat_file: str, targets: list,
         return stats
     else:
         assert config_file is not None
-        chunks = get_all_chunks(stat_file, config_file)
+        chunks = get_all_chunks(stat_file, config_file, insts_from_dir)
         chunk_stats = {}
         for insts, chunk in chunks.items():
             chunk_stats[insts] = {}

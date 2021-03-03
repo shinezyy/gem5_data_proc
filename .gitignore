@@ -103,3 +103,6 @@ figures
 omegaflow_figure/figures
 omegaflow_figure/pdf
 pdf
+/outputs
+class_map_min.txt
+/expri_results
