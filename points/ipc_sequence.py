@@ -110,7 +110,12 @@ def multi_phase_labeled_ipc_extract(workload, workload_dir, large_point=True, in
         print(df)
         return df
 
-def multi_workload_labeled_ipc_extract(task_dir, large_point=True, insts_from_dir=False):
+
+def multi_workload_labeled_ipc_extract(
+        task_dir,
+        large_point=True, insts_from_dir=False,
+        codename=None,
+):
     for workload in os.listdir(task_dir):
         workload_path = osp.join(task_dir, workload)
         if osp.isdir(workload_path):
@@ -119,7 +124,7 @@ def multi_workload_labeled_ipc_extract(task_dir, large_point=True, insts_from_di
                 df.to_csv(f'outputs/shotgun/{workload}.csv', header=None)
             else:
                 df = multi_phase_labeled_ipc_extract(workload, workload_path, False, insts_from_dir)
-                df.to_csv(f'outputs/shotgun_continuous_point/{workload}.csv')
+                df.to_csv(f'outputs/shotgun_continuous_point/{workload}_{codename}.csv')
     # df = pd.concat(dfs)
     # df.to_csv(f'outputs/shotgun/mixed.csv', header=None)
 
@@ -131,6 +136,6 @@ if __name__ == '__main__':
     # stat_dir = '/home51/zyy/expri_results/shotgun/gem5_ooo_spec06_large_chunk'
     # multi_workload_labeled_ipc_extract(stat_dir, large_point=True)
 
-    stat_dir = '/home/zyy/expri_results/shotgun/gem5_shotgun_cont_06/FullWindowO3Config'
-    multi_workload_labeled_ipc_extract(stat_dir, large_point=False, insts_from_dir=True)
+    stat_dir = '/home51/zyy/expri_results/shotgun/gem5_shotgun_cont_06/Smarts8WO3Config'
+    multi_workload_labeled_ipc_extract(stat_dir, large_point=False, insts_from_dir=True, codename='smarts8w')
 
