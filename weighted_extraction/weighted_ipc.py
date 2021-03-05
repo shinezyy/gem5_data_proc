@@ -129,9 +129,10 @@ def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, st
         rel = workload_dict[conf]['IPC']/workload_dict[base]['IPC']
         print(f'{conf}  Mean relative performance: {gmean(rel)}')
         tests.append(rel)
-    dfx = pd.concat(tests, axis=1)
-    print('Relative performance:')
-    print(dfx)
+    if len(tests):
+        dfx = pd.concat(tests, axis=1)
+        print('Relative performance:')
+        print(dfx)
 
 
 def gem5_spec2017():

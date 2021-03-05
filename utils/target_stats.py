@@ -186,7 +186,7 @@ beta_targets = [
 xs_ipc_target = [
     '(ipc)',
     '(totalCycle)',
-    '(roq_commitInstr)',
+    '(roq: commitInstr)',
 ]
 
 xs_branch_targets = [
