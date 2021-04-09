@@ -36,6 +36,8 @@ cache_targets = [
 branch_targets = [
     'cpus?\.(?:diewc|commit|iew)\.(branchMispredicts)',
     'cpus?\.(?:diewc\.exec_|commit\.)(branches)',
+    'cpus?\.(ipc)',
+    'cpus?\.committed(Insts)',
     # 'cpu\.commit\.(branches)',
     # 'cpu\.commit\.(branchMispredicts)',
     # 'iew\.iewExec(LoadInsts)',
@@ -190,19 +192,19 @@ xs_ipc_target = [
 ]
 
 xs_branch_targets = [
-    '(BpInstr)',
-    '(BpBInstr)',
-    '(BpRight)',
+    # '(BpInstr)',
+    # '(BpBInstr)',
+    # '(BpRight)',
     '(BpWrong)',
-    '(BpBRight)',
+    # '(BpBRight)',
     '(BpBWrong)',
-    '(BpJRight)',
+    # '(BpJRight)',
     '(BpJWrong)',
-    '(BpIRight)',
+    # '(BpIRight)',
     '(BpIWrong)',
-    '(BpCRight)',
+    # '(BpCRight)',
     '(BpCWrong)',
-    '(BpRRight)',
+    # '(BpRRight)',
     '(BpRWrong)',
 
     # '(ubtbRight)',
@@ -215,5 +217,7 @@ xs_branch_targets = [
     # '(rasWrong)',
     # '(loopRight)',
     # '(loopWrong)',
-]
 
+    '(roq: commitInstr)',
+    '(roq: clock_cycle)',
+]

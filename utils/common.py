@@ -335,11 +335,11 @@ def xs_get_stats(stat_file: str, targets: list,
                     stats[k] = to_num(m.group(1))
                 else:
                     stats[k] = to_num(m.group(1))
-    if not ('roq: commitInstr' in stats and 'totalCycle' in stats):
-        print("Warn: roq_commitInstr or totalCycle not exists")
+    if not ('roq: commitInstr' in stats and 'roq: clock_cycle' in stats):
+        print("Warn: roq_commitInstr or roq: clock_cycle not exists")
         stats['ipc'] = 0
     else:
-        stats['ipc'] = stats['roq: commitInstr']/stats['totalCycle']
+        stats['ipc'] = stats['roq: commitInstr']/stats['roq: clock_cycle']
     return stats
 
 

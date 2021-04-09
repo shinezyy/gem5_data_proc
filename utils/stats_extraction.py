@@ -12,19 +12,38 @@ def get_ipc(stat_path: str):
     stats = c.get_stats(stat_path, targets, insts=100*10**6, re_targets=True)
     return stats['ipc']
 
-def single_stat_factory(targets, key, prefix=''):
-    def get_single_stat(stat_path: str):
+def stats_factory(targets, keys, prefix=''):
+    def pattern_to_meta(p):
+        return re.compile('.*\((\w.+)\).*').search(p).group(1)
+    def keys_to_meta(ks):
+        if type(keys) == list:
+            if prefix == '':
+                meta_keys = [pattern_to_meta(k) for k in ks]
+            else:
+                meta_keys = ks
+        else:
+            assert type(ks) == str
+            if prefix == '':
+                meta_keys = [pattern_to_meta(ks)]
+            else:
+                meta_keys = [ks]
+        return meta_keys
+    def get_stat(stat_path: str):
         # print(stat_path)
         if prefix == '':
             stats = c.get_stats(stat_path, targets, re_targets=True)
         else:
             assert prefix == 'xs_'
             stats = c.xs_get_stats(stat_path, targets, re_targets=True)
-        if stats is not None:
-            return stats[key]
+        if stats is not None and len(stats):
+            res = {}
+            meta_keys = keys_to_meta(keys)
+            for k in meta_keys:
+                res[k] = stats[k]
+            return res
         else:
             return None
-    return get_single_stat
+    return get_stat
 
 def glob_stats_l2(path: str, fname = 'm5out/stats.txt'):
     stats_files = []
@@ -43,7 +62,7 @@ def glob_stats(path: str, fname = 'm5out/stats.txt'):
             stat_files.append((x, stat_path))
     return stat_files
 
-def glob_weighted_stats(path: str, get_func, filtered=True,
+def glob_weighted_stats(path: str, get_stats_func, filtered=True,
         simpoints='/home51/zyy/expri_results/simpoints17.json',
         stat_file='m5out/stats.txt'):
     stat_tree = {}
@@ -64,19 +83,20 @@ def glob_weighted_stats(path: str, get_func, filtered=True,
             point_dir = osp.join(workload_dir, point)
             stats_file = osp.join(point_dir, stat_file)
             weight = float(points[workload][str(point)])
-            stat = get_func(stats_file)
-            if stat is not None and stat > 0.001:
-                stat_tree[bmk][workload][int(point)] = (weight, stat)
+            stats = get_stats_func(stats_file)
+            # stat = get_func(stats_file)
+            if stats is not None:
+                stat_tree[bmk][workload][int(point)] = [weight] + [s for s in stats.values()]
         if len(stat_tree[bmk][workload]):
             df = pd.DataFrame.from_dict(stat_tree[bmk][workload], orient='index')
-            df.columns = ['weight', 'ipc']
+            df.columns = ['weight'] + [k for k in stats.keys()]
             stat_tree[bmk][workload] = df
             print(df)
         else:
             stat_tree[bmk].pop(workload)
             if not len(stat_tree[bmk]):
                 stat_tree.pop(bmk)
-
+    print(stat_tree)
     return stat_tree
 
 
@@ -127,6 +147,29 @@ def weighted_cpi(df: pd.DataFrame):
         assert 'ipc' in df.columns
         return np.dot(df['weight'], 1.0/df['ipc']) / np.sum(df['weight']), np.sum(df['weight'])
 
+def weighted_mpkis(df: pd.DataFrame):
+    assert 'Insts' in df.columns
+    assert 'branchMispredicts' in df.columns
+    mpki = 1000 * np.true_divide(df['branchMispredicts'], df['Insts'])
+    weighted = np.dot(df['weight'], mpki) / np.sum(df['weight'])
+    return weighted
+
+def xs_weighted_mpkis(df: pd.DataFrame,
+    targets=[
+        'BpWrong',
+        'BpBWrong',
+        'BpJWrong',
+        'BpIWrong',
+        'BpCWrong',
+        'BpRWrong'
+    ]):
+    assert 'roq: commitInstr' in df.columns
+    for t in targets:
+        assert t in df.columns
+    mpkis = [1000 * np.true_divide(df[t], df['roq: commitInstr']) for t in targets]
+    weighted = [np.dot(df['weight'], m) / np.sum(df['weight']) for m in mpkis]
+    return weighted
+
 
 def gen_json(path, output):
     tree = glob_weighted_cpts(path)
@@ -151,7 +194,7 @@ def gen_json(path, output):
 if __name__ == '__main__':
     tree = glob_weighted_stats(
             '/home51/zyy/expri_results/omegaflow_spec17/of_g1_perf/',
-            single_stat_factory(t.ipc_target, 'cpi')
+            {'cpi': stats_factory(t.ipc_target, 'cpi')}
             )
     # gen_json('/home51/zyy/expri_results/nemu_take_simpoint_cpt_06',
     #         '/home51/zyy/expri_results/simpoints06')
