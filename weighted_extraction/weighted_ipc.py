@@ -169,8 +169,8 @@ def gem5_spec2017():
 def xiangshan_spec2006():
     ver = '06'
     confs = {
-            'XiangShan1': '/home/zyy/expri_results/xs_simpoint_batch/SPEC06_EmuTasksConfig-04-06-2021',
-            # 'XiangShan2': '/home/zyy/expri_results/xs_simpoint_batch/SPEC06_EmuTasksConfig',
+            'XiangShan1': '/home/zyy/expri_results/xs_simpoint_batch/SPEC06_EmuTasksConfig',
+            'XiangShan2': '/home/zyy/expri_results/xs_simpoint_batch/SPEC06_EmuTasksConfig-04-06-2021',
             }
 
     compute_weighted_cpi(

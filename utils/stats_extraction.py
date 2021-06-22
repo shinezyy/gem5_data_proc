@@ -17,24 +17,17 @@ def stats_factory(targets, keys, prefix=''):
         return re.compile('.*\((\w.+)\).*').search(p).group(1)
     def keys_to_meta(ks):
         if type(keys) == list:
-            if prefix == '':
-                meta_keys = [pattern_to_meta(k) for k in ks]
-            else:
-                meta_keys = ks
+            meta_keys = [pattern_to_meta(k) for k in ks]
         else:
             assert type(ks) == str
-            if prefix == '':
-                meta_keys = [pattern_to_meta(ks)]
-            else:
-                meta_keys = [ks]
+            meta_keys = [pattern_to_meta(ks)]
         return meta_keys
     def get_stat(stat_path: str):
         # print(stat_path)
-        if prefix == '':
-            stats = c.get_stats(stat_path, targets, re_targets=True)
-        else:
-            assert prefix == 'xs_'
-            stats = c.xs_get_stats(stat_path, targets, re_targets=True)
+        assert prefix == 'xs_' or prefix == ''
+        get_stat_func = eval(f'c.{prefix}get_stats')
+        stats = get_stat_func(stat_path, targets, re_targets=True)
+        # print(stats)
         if stats is not None and len(stats):
             res = {}
             meta_keys = keys_to_meta(keys)
@@ -58,6 +51,7 @@ def glob_stats(path: str, fname = 'm5out/stats.txt'):
     stat_files = []
     for x in os.listdir(path):
         stat_path = osp.join(path, x, fname)
+        print(stat_path)
         if osp.isfile(stat_path) and osp.getsize(stat_path) > 10 * 1024:  # > 10K
             stat_files.append((x, stat_path))
     return stat_files
@@ -68,8 +62,9 @@ def glob_weighted_stats(path: str, get_stats_func, filtered=True,
     stat_tree = {}
     with open(simpoints) as jf:
         points = json.load(jf)
-    print(points.keys())
+    # print(points.keys())
     for workload in os.listdir(path):
+        print(os.listdir(path))
         print('Extracting', workload)
         weight_pattern = re.compile(f'.*/{workload}_\d+_(\d+\.\d+([eE][-+]?\d+)?)/.*\.gz')
         workload_dir = osp.join(path, workload)
@@ -77,7 +72,9 @@ def glob_weighted_stats(path: str, get_stats_func, filtered=True,
         if bmk not in stat_tree:
             stat_tree[bmk] = {}
         stat_tree[bmk][workload] = {}
+        keys = []
         for point in os.listdir(workload_dir):
+            # print('point ' + str(point))
             if point not in points[workload]:
                 continue
             point_dir = osp.join(workload_dir, point)
@@ -86,17 +83,19 @@ def glob_weighted_stats(path: str, get_stats_func, filtered=True,
             stats = get_stats_func(stats_file)
             # stat = get_func(stats_file)
             if stats is not None:
+                assert 'ipc' in stats.keys()
                 stat_tree[bmk][workload][int(point)] = [weight] + [s for s in stats.values()]
+                keys = list(stats.keys())
         if len(stat_tree[bmk][workload]):
             df = pd.DataFrame.from_dict(stat_tree[bmk][workload], orient='index')
-            df.columns = ['weight'] + [k for k in stats.keys()]
+            df.columns = ['weight'] + keys
             stat_tree[bmk][workload] = df
-            print(df)
+            # print(df)
         else:
             stat_tree[bmk].pop(workload)
             if not len(stat_tree[bmk]):
                 stat_tree.pop(bmk)
-    print(stat_tree)
+    # print(stat_tree)
     return stat_tree
 
 
@@ -150,14 +149,20 @@ def weighted_cpi(df: pd.DataFrame):
 def weighted_mpkis(df: pd.DataFrame):
     assert 'Insts' in df.columns
     assert 'branchMispredicts' in df.columns
+    assert 'branches' in df.columns
     mpki = 1000 * np.true_divide(df['branchMispredicts'], df['Insts'])
-    weighted = np.dot(df['weight'], mpki) / np.sum(df['weight'])
-    return weighted
+    bpki = 1000 * np.true_divide(df['branches'], df['Insts'])
+    weighted_mpki = np.dot(df['weight'], mpki) / np.sum(df['weight'])
+    weigthed_bpki = np.dot(df['weight'], bpki) / np.sum(df['weight'])
+    weighted_b_misrate = 100 * weighted_mpki / weighted_bpki
+    return (weighted_mpki, weighted_bpki, weighted_b_misrate)
 
 def xs_weighted_mpkis(df: pd.DataFrame,
     targets=[
         'BpWrong',
         'BpBWrong',
+        'ftq: ubtbWrong',
+        'ftq: btbWrong',
         'BpJWrong',
         'BpIWrong',
         'BpCWrong',
@@ -165,10 +170,19 @@ def xs_weighted_mpkis(df: pd.DataFrame,
     ]):
     assert 'roq: commitInstr' in df.columns
     for t in targets:
+        print(t)
         assert t in df.columns
+    assert 'sc_mispred_but_tage_correct' in df.columns
+    assert 'sc_correct_and_tage_wrong' in df.columns
+    assert 'BpBInstr' in df.columns
     mpkis = [1000 * np.true_divide(df[t], df['roq: commitInstr']) for t in targets]
-    weighted = [np.dot(df['weight'], m) / np.sum(df['weight']) for m in mpkis]
-    return weighted
+    bpki = 1000 * np.true_divide(df['BpBInstr'], df['roq: commitInstr'])
+    sc_rdc_mpki = 1000 * np.true_divide(df['sc_correct_and_tage_wrong']-df['sc_mispred_but_tage_correct'], df['roq: commitInstr'])
+    weighted_mpkis = [np.dot(df['weight'], m) / np.sum(df['weight']) for m in mpkis]
+    weighted_bpki = np.dot(df['weight'], bpki) / np.sum(df['weight'])
+    weighted_b_misrate = 100 * weighted_mpkis[1] / weighted_bpki
+    weighted_sc_rdc_mpki = np.dot(df['weight'], sc_rdc_mpki) / np.sum(df['weight'])
+    return (weighted_mpkis, weighted_bpki, weighted_b_misrate, weighted_sc_rdc_mpki)
 
 
 def gen_json(path, output):

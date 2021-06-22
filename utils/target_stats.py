@@ -193,7 +193,7 @@ xs_ipc_target = [
 
 xs_branch_targets = [
     # '(BpInstr)',
-    # '(BpBInstr)',
+    '(BpBInstr)',
     # '(BpRight)',
     '(BpWrong)',
     # '(BpBRight)',
@@ -207,10 +207,12 @@ xs_branch_targets = [
     # '(BpRRight)',
     '(BpRWrong)',
 
+    '(sc_mispred_but_tage_correct)',
+    '(sc_correct_and_tage_wrong)',
     # '(ubtbRight)',
-    # '(ubtbWrong)',
+    '(ftq: ubtbWrong)',
     # '(btbRight)',
-    # '(btbWrong)',
+    '(ftq: btbWrong)',
     # '(tageRight)',
     # '(tageWrong)',
     # '(rasRight)',
@@ -220,4 +222,17 @@ xs_branch_targets = [
 
     '(roq: commitInstr)',
     '(roq: clock_cycle)',
+]
+
+branch_misp = [
+    'cpus?\.(?:diewc|commit|iew)\.(branchMispredicts)'
+]
+
+xs_l2_target = [
+    'l3_cache\.mods_0: nAcquire',
+    'l3_cache\.mods_0: nAcquireMiss'
+]
+
+xs_branch_misp = [
+    '(BpBWrong)'
 ]

@@ -290,24 +290,25 @@ def xs_get_raw_stats_around(stat_file: str)-> list:
 
     for line in reverse_readline(expu(stat_file)):
         if line.startswith('[PERF ]'):
+            t = xs_get_time(line)
             if time == 0:
-                time = xs_get_time(line)
+                time = t
                 # print(time)
-
-            if time != 0 and xs_get_time(line) != time:
+            elif t != time:
                 buff.append('totalCycle,' + str(time - xs_get_time(line)))
                 return buff
 
             buff.append(line)
+    
 
-    return None
+    return buff
 
 def xs_get_stats(stat_file: str, targets: list,
               insts: int=200*(10**6), re_targets=False) -> dict:
     if not os.path.isfile(expu(stat_file)):
         print(stat_file)
     assert(os.path.isfile(expu(stat_file)))
-    lines = xs_get_raw_stats_around(stat_file)
+    lines = xs_get_raw_stats_around(expu(stat_file))
 
     if lines is None:
         return None
@@ -326,20 +327,32 @@ def xs_get_stats(stat_file: str, targets: list,
 
     # print(patterns)
     stats = {}
+    pattern_status = {m: None for m in patterns.keys()}
+    patterns_left = len(pattern_status.keys())
 
     for line in lines:
-        for k in patterns:
-            m = patterns[k].search(line)
-            if not m is None:
-                if re_targets:
-                    stats[k] = to_num(m.group(1))
-                else:
-                    stats[k] = to_num(m.group(1))
+        if patterns_left > 0:
+            for k in patterns:
+                if (pattern_status[k] is None):
+                    m = patterns[k].search(line)
+                    if not m is None:
+                        # print('found pattern '+ str(k) + ' in line '+ line)
+                        if re_targets:
+                            stats[k] = to_num(m.group(1))
+                        else:
+                            stats[k] = to_num(m.group(1))
+                        pattern_status[k] = True
+                        patterns_left -= 1
     if not ('roq: commitInstr' in stats and 'roq: clock_cycle' in stats):
         print("Warn: roq_commitInstr or roq: clock_cycle not exists")
         stats['ipc'] = 0
     else:
         stats['ipc'] = stats['roq: commitInstr']/stats['roq: clock_cycle']
+        print('ipc is ' + str(stats['ipc']))
+    for k in pattern_status:
+        if pattern_status[k] is None:
+            print(k + ' is none')
+            return None
     return stats
 
 
