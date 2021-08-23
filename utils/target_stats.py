@@ -177,16 +177,15 @@ fu_targets= [
 beta_targets = [
     'cpus?\.(ipc)',
     'cpus?\.committed(Insts)',
-    '(l2\.demand_miss)es::total',
+    '(l2\.demand_misses)::total',
     'branchPred\.(condIncorrect)',
     'branchPred\.(indirectMispredicted)',
     'cpus?\.(dcache\.demand_misses)::total',
         ]
 
 xs_ipc_target = [
-    '(ipc)',
-    '(totalCycle)',
-    '(roq: commitInstr)',
+    'TOP\.XSSimSoC\.soc\.xs_core\.ctrlBlock\.roq: clock_(cycle)',
+    'TOP\.XSSimSoC\.soc\.xs_core\.ctrlBlock\.roq: (commitInstr)',
 ]
 
 xs_branch_targets = [
@@ -217,3 +216,13 @@ xs_branch_targets = [
     # '(loopWrong)',
 ]
 
+mem_pred_targets = [
+        'cpu\.diewc\.(falseNegativeBypass)',
+        'cpu\.diewc\.(falsePositiveBypass)',
+        'cpu\.diewc\.(reExecutedBypass)',
+        'cpu\.diewc\.(reExecutedNonBypass)',
+        'cpu\.diewc\.(trueNegativeBypass)',
+        'cpu\.diewc\.(truePositiveBypass)',
+        'cpu\.diewc\.(FPCanceledBypass)',
+        'cpu\.diewc\.(FPSquashedBypass)',
+        ]

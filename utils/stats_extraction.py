@@ -61,6 +61,7 @@ def glob_weighted_stats(path: str, get_func, filtered=True,
         for point in os.listdir(workload_dir):
             if point not in points[workload]:
                 continue
+            print(workload, point)
             point_dir = osp.join(workload_dir, point)
             stats_file = osp.join(point_dir, stat_file)
             weight = float(points[workload][str(point)])

@@ -148,6 +148,8 @@ def main():
                     targets += beta_targets
                 if opt.cache:
                     targets += cache_targets
+                if opt.mem_pred:
+                    targets += mem_pred_targets
 
                 d = c.gem5_get_stats(path, targets, re_targets=True)
 

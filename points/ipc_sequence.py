@@ -86,12 +86,16 @@ def multi_phase_labeled_ipc_extract(workload, workload_dir, large_point=True, in
             else:
                 d = u.c.get_stats(
                         osp.join(phase_path, 'm5out', 'stats.txt'),
-                        t.ipc_target,
+                        # t.ipc_target,
+                        t.beta_targets,
                         re_targets=True,
                         all_chunks=True,
                         config_file=osp.join(phase_path, 'm5out', 'config.json'),
                         insts_from_dir=insts_from_dir,
                         )
+                # print(d)
+                for k in d:
+                    u.c.add_cache_mpki(d[k])
                 df = pd.DataFrame.from_dict(d, orient='index')
                 df.sort_index(inplace=True)
                 df = df.iloc[1:]
@@ -134,8 +138,13 @@ if __name__ == '__main__':
     # stat_dir = '/home51/zyy/expri_results/gem5_ooo_spec06_shotgun/'
 
     # stat_dir = '/home51/zyy/expri_results/shotgun/gem5_ooo_spec06_large_chunk'
-    # multi_workload_labeled_ipc_extract(stat_dir, large_point=True)
+    # stat_dir = '/home51/zyy/expri_results/shotgun/gem5_shotgun_cont_06/Smarts8WO3Config'
+    # stat_dir = '/home/zyy/expri_results/shotgun/gem5_shotgun_cont_06/Smarts8WO3Config'
 
-    stat_dir = '/home51/zyy/expri_results/shotgun/gem5_shotgun_cont_06/Smarts8WO3Config'
-    multi_workload_labeled_ipc_extract(stat_dir, large_point=False, insts_from_dir=True, codename='smarts8w')
+    # stat_dir = '/home51/zyy/expri_results/shotgun/gem5_shotgun_small_cont_06/Smarts8WO3Config'
+    # multi_workload_labeled_ipc_extract(stat_dir, large_point=False, insts_from_dir=True, codename='smarts8w_mpki_small')
+
+    # stat_dir = '/home51/zyy/expri_results/shotgun/gem5_shotgun_cont_06/Smarts8WO3Config'
+    stat_dir = '/home/zyy/expri_results/shotgun/gem5_shotgun_cont_06/Smarts8WO3Config'
+    multi_workload_labeled_ipc_extract(stat_dir, large_point=False, insts_from_dir=True, codename='smarts8w_ltlb')
 

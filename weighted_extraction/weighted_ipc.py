@@ -13,6 +13,9 @@ import re
 
 simpoints17 = '/home51/zyy/expri_results/simpoints.json'
 
+np.set_printoptions(precision=2)
+pd.set_option("precision", 2)
+
 def gen_coverage():
     tree = u.glob_weighted_stats(
             '/home51/zyy/expri_results/omegaflow_spec17/of_g1_perf/',
@@ -44,10 +47,11 @@ def get_insts(fname: str):
 
 
 def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, stat_file,
-        clock_rate, min_coverage=0.0, blacklist=[], whitelist=[], merge_benckmark=False):
+        clock_rate, min_coverage=0.0, blacklist=[], whitelist=[], merge_benckmark=False, outf=None):
     target = eval(f't.{prefix}ipc_target')
     workload_dict = {}
     bmk_stat = {}
+    raw_df = []
     for conf, file_path in confs.items():
         workload_dict[conf] = {}
         bmk_stat[conf] = {}
@@ -76,6 +80,7 @@ def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, st
                 keys = [int(x) for x in selected]
                 keys = [x for x in keys if x in df.index]
                 df = df.loc[keys]
+                raw_df.append(df)
                 cpi, weight = u.weighted_cpi(df)
                 weights.append(weight)
 
@@ -110,6 +115,10 @@ def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, st
         df = pd.DataFrame.from_dict(workload_dict[conf], orient='index')
         workload_dict[conf] = df
         print(df)
+        if outf is not None:
+            raw_df = pd.concat(raw_df)
+            print(raw_df)
+            raw_df.to_csv(outf)
 
         if merge_benckmark:
             df = pd.DataFrame.from_dict(bmk_stat[conf], orient='index')
@@ -119,7 +128,7 @@ def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, st
             print(df)
             print('Estimated score @ 1.5GHz:', geometric_mean(df['score']))
             print('Estimated score per GHz:', geometric_mean(df['score'])/(clock_rate/(10**9)))
-            print('Excluded because of low coverage:', list(excluded.index))
+            print('Excluded because of low coverage or crash:', list(excluded.index) + blacklist)
 
 
     tests = []
@@ -140,6 +149,8 @@ def gem5_spec2017():
     confs = {
             # 'O1': '/home51/zyy/expri_results/omegaflow_spec17/OmegaH1S1G1Config',
             # 'O2': '/home51/zyy/expri_results/omegaflow_spec17/OmegaH1S1G2CL0Config',
+            # 'O2': '/home51/zyy/expri_results/omegaflow_spec17/OmegaH1S1G2CL0Config',
+            # 'O2X': '/home51/zyy/expri_results/omegaflow_spec17/XOmegaH1S1G2CL0CG1Config',
             # 'O1S0': '/home51/zyy/expri_results/omegaflow_spec17/OmegaH1S0G1Config',
             # 'O1X': '/home51/zyy/expri_results/omegaflow_spec17/XOmegaH1S1G1Config',
             # 'O1*-': '/home51/zyy/expri_results/omegaflow_spec17/OmegaH0S0G1Config',
@@ -147,13 +158,20 @@ def gem5_spec2017():
             # 'F1H': '/home51/zyy/expri_results/omegaflow_spec17/FFH1Config',
             'F1': '/home51/zyy/expri_results/omegaflow_spec17/TypicalFFConfig',
             'F2': '/home51/zyy/expri_results/omegaflow_spec17/FFG2CL0CG1Config',
-            'FullO3': '/home51/zyy/expri_results/omegaflow_spec17/FullWindowO3Config'
+            # 'Haswell': '/home51/zyy/expri_results/omegaflow_spec17/SimHaswellConfig',
+            # 'Skylake': '/home51/zyy/expri_results/omegaflow_spec17/SimSkylakeConfig',
+            # 'FullO3': '/home51/zyy/expri_results/omegaflow_spec17/FullWindowO3Config',
+            # 'ShiftO3': '/home51/zyy/expri_results/omegaflow_spec17_ltage/SWQUENoBOPNoPipeConfig',
+            'RandO3': '/home51/zyy/expri_results/omegaflow_spec17_ltage/SWQUENoBOPNoPipeRandConfig',
+            # 'CircO3': '/home51/zyy/expri_results/omegaflow_spec17_ltage/SWQUENoBOPNoPipeCircConfig',
+            # 'DistO3': '/home51/zyy/expri_results/omegaflow_spec17/SWQUENoPipeDistConfig',
+            # 'O1B8': '/home51/zyy/expri_results/omegaflow_spec17/OmegaH1S1G1B8Config',
             }
 
     compute_weighted_cpi(
             ver=ver,
             confs=confs,
-            base='FullO3',
+            base='RandO3',
             simpoints=f'/home51/zyy/expri_results/simpoints{ver}.json',
             prefix = '',
             stat_file='m5out/stats.txt',
@@ -161,7 +179,7 @@ def gem5_spec2017():
             '/bigdata/zyy/checkpoints_profiles/betapoint_profile_{}_fix_mem_addr/{}/nemu_out.txt',
             clock_rate = 4 * 10**9,
             min_coverage = 0.75,
-            # blacklist = ['gamess'],
+            # blacklist = ['gcc', 'xalancbmk'],
             merge_benckmark=True,
             )
 
@@ -169,8 +187,9 @@ def gem5_spec2017():
 def xiangshan_spec2006():
     ver = '06'
     confs = {
+            # 'XiangShan1': '/home/zyy/expri_results/xs_simpoint_batch/SPEC06_EmuTasksConfig',
+            # 'XiangShan2': '/home/zyy/expri_results/xs_simpoint_batch/SPEC06_EmuTasksConfig',
             'XiangShan1': '/home/zyy/expri_results/xs_simpoint_batch/SPEC06_EmuTasksConfig',
-            'XiangShan2': '/home/zyy/expri_results/xs_simpoint_batch/SPEC06_EmuTasksConfig',
             }
 
     compute_weighted_cpi(
@@ -184,8 +203,11 @@ def xiangshan_spec2006():
             '/bigdata/zyy/checkpoints_profiles/betapoint_profile_{}_fix_mem_addr/{}/nemu_out.txt',
             clock_rate = 1.5 * 10**9,
             min_coverage = 0.75,
-            # blacklist = ['gamess'],
+            # whitelist = u.spec_bmks['06']['int'],
+            blacklist = ['gamess', 'wrf'],
+            # blacklist = u.spec_bmks['06']['int'] + ['gamess'],
             merge_benckmark=True,
+            outf='./outputs/xs/xs.csv'
             )
 
 
