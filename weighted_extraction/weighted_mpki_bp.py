@@ -10,6 +10,7 @@ from scipy.stats import gmean
 from statistics import geometric_mean
 import argparse
 import re
+import functools as ft
 
 simpoints17 = '/home51/zyy/expri_results/simpoints.json'
 
@@ -58,7 +59,8 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
             stats = target + ['(ipc)']
         tree = u.glob_weighted_stats(
                 file_path,
-                u.stats_factory(target, stats, prefix),
+                ft.partial(u.stats_factory, target, stats, prefix=prefix),
+                whitelist,
                 simpoints=simpoints,
                 stat_file=stat_file,
                 )
@@ -66,6 +68,7 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
             js = json.load(jf)
             # print(js.keys())
         times = {}
+        print(tree)
         for bmk in tree:
             if bmk in blacklist:
                 continue
@@ -95,13 +98,13 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
                 keys = [int(x) for x in selected]
                 keys = [x for x in keys if x in df.index]
                 df = df.loc[keys]
-                print(df)
+                # print(df)
                 cpi, weight = u.weighted_cpi(df)
                 if prefix == '':
                     (b_mpki, bpki, b_misrate) = u.weighted_mpkis(df)
                 else:
                     assert prefix == 'xs_'
-                    ([total_mpki, b_mpki, ubtb_b_mpki, btb_b_mpki, j_mpki, i_mpki, c_mpki, r_mpki], bpki, b_misrate, sc_rdc_mpki) = u.xs_weighted_mpkis(df)
+                    ([total_mpki, b_mpki, j_mpki, i_mpki, c_mpki, r_mpki], bpki, b_misrate, sc_rdc_mpki) = u.xs_weighted_mpkis(df)
                 weights.append(weight)
 
                 workload_dict[conf][workload] = {}
@@ -112,8 +115,8 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
                 workload_dict[conf][workload]['MISRATE_B'] = b_misrate
                 if prefix == 'xs_':
                     workload_dict[conf][workload]['MPKI'] = total_mpki
-                    workload_dict[conf][workload]['MPKI_B_UBTB'] = ubtb_b_mpki
-                    workload_dict[conf][workload]['MPKI_B_BTB'] = btb_b_mpki
+                    # workload_dict[conf][workload]['MPKI_B_UBTB'] = ubtb_b_mpki
+                    # workload_dict[conf][workload]['MPKI_B_BTB'] = btb_b_mpki
                     workload_dict[conf][workload]['MPKI_J'] = j_mpki
                     workload_dict[conf][workload]['MPKI_I'] = i_mpki
                     workload_dict[conf][workload]['MPKI_C'] = c_mpki
@@ -123,7 +126,7 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
 
                 # merge multiple sub-items of a benchmark
                 if merge_benckmark:
-                    insts_file = insts_file_fmt.format(ver, workload)
+                    insts_file = insts_file_fmt.format(workload)
                     insts = int(get_insts(insts_file))
                     workload_dict[conf][workload]['TotalInst'] = insts
                     workload_dict[conf][workload]['PredictedCycles'] = insts*cpi
@@ -136,8 +139,8 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
                     total_branches += insts*bpki/1000
                     if prefix == 'xs_':
                         total_misp += insts*total_mpki/1000
-                        total_misp_b_ubtb += insts*ubtb_b_mpki/1000
-                        total_misp_b_btb += insts*btb_b_mpki/1000
+                        # total_misp_b_ubtb += insts*ubtb_b_mpki/1000
+                        # total_misp_b_btb += insts*btb_b_mpki/1000
                         total_misp_j += insts*j_mpki/1000
                         total_misp_i += insts*i_mpki/1000
                         total_misp_c += insts*c_mpki/1000
@@ -145,7 +148,9 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
                         total_rdc_sc += insts*sc_rdc_mpki/1000
                     coverage += weight
                     count += 1
-
+            # print(1111)
+            # print(tree)
+            # print(bmk_stat)
             if merge_benckmark:
                 bmk_stat[conf][bmk] = {}
                 bmk_stat[conf][bmk]['time'] = time
@@ -160,20 +165,19 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
 
                 if prefix == 'xs_':
                     bmk_stat[conf][bmk]['mpki'] = 1000 * total_misp / total_inst
-                    bmk_stat[conf][bmk]['mpki_b_ubtb'] = 1000 * total_misp_b_ubtb / total_inst
-                    bmk_stat[conf][bmk]['mpki_b_btb'] = 1000 * total_misp_b_btb / total_inst
+                    # bmk_stat[conf][bmk]['mpki_b_ubtb'] = 1000 * total_misp_b_ubtb / total_inst
+                    # bmk_stat[conf][bmk]['mpki_b_btb'] = 1000 * total_misp_b_btb / total_inst
                     bmk_stat[conf][bmk]['mpki_j'] = 1000 * total_misp_j / total_inst
                     bmk_stat[conf][bmk]['mpki_i'] = 1000 * total_misp_i / total_inst
                     bmk_stat[conf][bmk]['mpki_c'] = 1000 * total_misp_c / total_inst
                     bmk_stat[conf][bmk]['mpki_r'] = 1000 * total_misp_r / total_inst
                     bmk_stat[conf][bmk]['mpki_rdc_sc'] = 1000 * total_rdc_sc / total_inst
-            print(tree)
-            print(bmk_stat)
 
     for conf in confs:
         print(conf, '='*60)
         df = pd.DataFrame.from_dict(workload_dict[conf], orient='index')
         workload_dict[conf] = df
+        # pd.set_option('display.max_columns', None)
         print(df)
 
         if merge_benckmark:
@@ -181,9 +185,11 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
             bmk_stat[conf] = df
             excluded = df[df['Coverage'] <= min_coverage]
             df = df[df['Coverage'] > min_coverage]
-            print(df)
+            
+            # print(df)
+            print(df.sort_index())
             df.to_csv('spec06_'+conf+'.csv')
-            print('Estimated score @ 1.5GHz:', geometric_mean(df['score']))
+            print(f'Estimated score @ {clock_rate/(10**9)}GHz:', geometric_mean(df['score']))
             print('Estimated score per GHz:', geometric_mean(df['score'])/(clock_rate/(10**9)))
             print('Excluded because of low coverage:', list(excluded.index))
 
@@ -211,7 +217,14 @@ def gem5_spec2006():
             # 'O1*-': '/home51/zyy/expri_results/omegaflow_spec17/OmegaH0S0G1Config',
             # 'F1-': '/home51/zyy/expri_results/omegaflow_spec17/FFS0Config',
             # 'F1H': '/home51/zyy/expri_results/omegaflow_spec17/FFH1Config',
-            'GEM5': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-04-09_22:21:46'
+            # 'GEM5': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-04-09_22:21:46'
+            'GEM5_LTAGE': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-10-12_21:52:21',
+            'GEM5_TAGE': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-09-30_15:46:10',
+            'GEM5_Tour': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-10-12_21:31:41',
+            'GEM5_BiMode': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-10-12_21:37:50',
+            # 'GEM5hist128': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-06-23_14:08:12',
+            # 'GEM5hist256': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-06-23_14:25:29',
+            # 'GEM5hist512': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-06-23_14:55:46',
             # 'F2': '/home51/zyy/expri_results/omegaflow_spec17/FFG2CL0CG1Config',
             # 'FullO3': '/home51/zyy/expri_results/omegaflow_spec17/FullWindowO3Config'
             }
@@ -219,15 +232,16 @@ def gem5_spec2006():
     compute_weighted_mpki(
             ver=ver,
             confs=confs,
-            base='GEM5',
-            simpoints=f'/home51/zyy/expri_results/simpoints{ver}.json',
+            base='GEM5_TAGE',
+            simpoints=f'/home/glr/gem5_data_proc/simpoint_coverage0.3.json',
             prefix = '',
             stat_file='m5out/stats.txt',
             insts_file_fmt =
-            '/bigdata/zyy/checkpoints_profiles/betapoint_profile_{}_fix_mem_addr/{}/nemu_out.txt',
+            '/bigdata/zzf/spec_cpt/logs/profiling/{}.log',
             clock_rate = 4 * 10**9,
-            min_coverage = 0.75,
+            min_coverage = 0.1,
             # blacklist = ['gamess'],
+            whitelist = ['hmmer'],
             merge_benckmark=True,
             )
 
@@ -235,21 +249,42 @@ def gem5_spec2006():
 def xiangshan_spec2006():
     ver = '06'
     confs = {
-            'XiangShan1': '/home51/glr/expri_results/xs_simpoint_batch/emu_ghist_repair/SPEC06_EmuTasksConfig',
-            'XiangShan2': '/home51/glr/expri_results/xs_simpoint_batch/emu_master/SPEC06_EmuTasksConfig'
-            # 'XiangShan2': '/home/zyy/expri_results/xs_simpoint_batch/SPEC06_EmuTasksConfig-04-06-2021',
+            # 'XiangShan_decoupled': '/home/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasksConfig_2021-09-03',
+            # 'XiangShan_decoupled': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasksConfig_2021-09-06',
+            # 'XiangShan_his128': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasksConfig_hist128_2021-10-05',
+            'XiangShan_his64': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasksConfig_hist64_2021-10-06',
+            'XiangShan_br1': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasksConfig_br1_2021-10-08',
+            # 'XiangShan_master_fp_0.3': '/home/ljw/master-40-perf/output',
+            # 'XiangShan2': '/home51/glr/expri_results/xs_simpoint_batch/emu-master-4t/SPEC06_EmuTasksConfig'
+            # 'XiangShan2': '/home/zyy/expri_results/xs_simpoint_batch/SPEC06_EmuTasksConfig-04-19-2021',
             }
+    int_list = [
+        "perlbench", "bzip2", "gcc", "mcf", 
+        "gobmk", "hmmer", "sjeng", "libquantum",
+        "h264ref", "omnetpp", "astar", "xalancbmk"
+        ]
+    bp_list = [
+        "perlbench", "povray", "astar", "gcc",
+        "omnetpp", "mcf", "soplex", "bzip2",
+        "namd", "sjeng", "hmmer", "xalancbmk", "sphinx3"
+    ]
+    fp_list = []
     compute_weighted_mpki(
             ver=ver,
             confs=confs,
-            base='XiangShan1',
-            simpoints=f'/home51/zyy/expri_results/simpoints{ver}.json',
+            # base='XiangShan_master_fp_0.3',
+            base='XiangShan_his64',
+            simpoints=f'/home/glr/gem5_data_proc/simpoint_coverage0.3.json',
             prefix = 'xs_',
-            stat_file='simulator_err.txt',
+            stat_file='main_err.txt',
             insts_file_fmt =
-            '/bigdata/zyy/checkpoints_profiles/betapoint_profile_{}_fix_mem_addr/{}/nemu_out.txt',
-            clock_rate = 1.5 * 10**9,
-            min_coverage = 0.75,
+            '/bigdata/zzf/spec_cpt/logs/profiling/{}.log',
+            clock_rate = 2 * 10**9,
+            min_coverage = 0.1,
+            # blacklist = int_list,
+            # whitelist = int_list,
+            # whitelist = bp_list,
+            # whitelist = ['gobmk'],
             # blacklist = ['calculix'],
             merge_benckmark=True,
             )

@@ -279,7 +279,7 @@ def to_num(x: str) -> (int, float):
         return int(x)
 
 def xs_get_time(line):
-    time_parrern = re.compile('.*\[time=\s*(\d+)\].*')
+    time_parrern = re.compile('\[PERF \]\[time=\s+(\d+)\].+')
     return int(time_parrern.search(line).group(1))
 
 
@@ -295,7 +295,7 @@ def xs_get_raw_stats_around(stat_file: str)-> list:
                 time = t
                 # print(time)
             elif t != time:
-                buff.append('totalCycle,' + str(time - xs_get_time(line)))
+                # buff.append('totalCycle,' + str(time - xs_get_time(line)))
                 return buff
 
             buff.append(line)
@@ -319,7 +319,7 @@ def xs_get_stats(stat_file: str, targets: list,
         for t in targets:
             meta = meta_pattern.search(t).group(1)
             # patterns[meta] = re.compile(t+'\s+(\d+\.?\d*)\s+')
-            patterns[meta] = re.compile('.*?' + meta + ',\s*(\d+)')
+            patterns[meta] = re.compile('.+' + meta + ',\s+(\d+)')
     else:
         for t in targets:
             # patterns[t] = re.compile(t+'\s+(\d+\.?\d*)\s+')
@@ -344,11 +344,11 @@ def xs_get_stats(stat_file: str, targets: list,
                         pattern_status[k] = True
                         patterns_left -= 1
     if not ('roq: commitInstr' in stats and 'roq: clock_cycle' in stats):
-        print("Warn: roq_commitInstr or roq: clock_cycle not exists")
+        print(f"Warn: {stat_file} roq_commitInstr or roq: clock_cycle not exists")
         stats['ipc'] = 0
     else:
         stats['ipc'] = stats['roq: commitInstr']/stats['roq: clock_cycle']
-        print('ipc is ' + str(stats['ipc']))
+        # print('ipc is ' + str(stats['ipc']))
     for k in pattern_status:
         if pattern_status[k] is None:
             print(k + ' is none')

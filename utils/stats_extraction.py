@@ -6,6 +6,7 @@ import utils.common as c
 import utils.target_stats as t
 import json
 import re
+from multiprocessing import Pool
 
 def get_ipc(stat_path: str):
     targets = t.ipc_target
@@ -56,36 +57,77 @@ def glob_stats(path: str, fname = 'm5out/stats.txt'):
             stat_files.append((x, stat_path))
     return stat_files
 
-def glob_weighted_stats(path: str, get_stats_func, filtered=True,
+def get_stat_of_point(args):
+    [path, stat_file, weight, func, bmk, workload, point] = args
+    stat_dir = osp.join(path, workload, point, stat_file)
+    stats = func()(stat_dir)
+    print(workload, point, 'extracted')
+    if stats is not None:
+        assert 'ipc' in stats.keys()
+        dct = [weight] + [s for s in stats.values()]
+        keys = list(stats.keys())
+        return ((bmk, workload, point), (dct, keys))
+    else:
+        return None
+
+def glob_weighted_stats(path: str, get_stats_func, white_list, filtered=True,
         simpoints='/home51/zyy/expri_results/simpoints17.json',
         stat_file='m5out/stats.txt'):
     stat_tree = {}
     with open(simpoints) as jf:
         points = json.load(jf)
     # print(points.keys())
-    for workload in os.listdir(path):
-        print(os.listdir(path))
-        print('Extracting', workload)
-        weight_pattern = re.compile(f'.*/{workload}_\d+_(\d+\.\d+([eE][-+]?\d+)?)/.*\.gz')
-        workload_dir = osp.join(path, workload)
-        bmk = workload.split('_')[0]
+    tp = Pool(100)
+    
+    def get_bmk(workload):
+        return workload.split('_')[0]
+
+    def get_point_to_be_extracted(path):
+        point_list = []
+        arg_list = []
+        workload_list = []
+        for workload in os.listdir(path):
+            if len(white_list):
+                is_in = False
+                for w in white_list:
+                    is_in = is_in or (w in workload)
+                if not is_in:
+                    # print(f"{workload} excluded")
+                    continue
+            workload_dir = osp.join(path, workload)
+            if osp.isfile(workload_dir):
+                continue
+            workload_list += [workload]
+            for point in os.listdir(workload_dir):
+                if point in points[workload]:
+                    bmk = get_bmk(workload)
+                    weight = float(points[workload][str(point)])
+                    point_list += [(bmk, workload, point)]
+                    arg_list += [[path, stat_file, weight, get_stats_func, bmk, workload, point]]
+        # print(point_list)
+        return point_list, arg_list, workload_list
+    
+    point_list, arg_list, workload_list = get_point_to_be_extracted(path)
+    stats_list = tp.map(get_stat_of_point, arg_list)
+    # print(stats_list)
+    for bmk, workload, point in point_list:
         if bmk not in stat_tree:
             stat_tree[bmk] = {}
-        stat_tree[bmk][workload] = {}
-        keys = []
-        for point in os.listdir(workload_dir):
-            # print('point ' + str(point))
-            if point not in points[workload]:
-                continue
-            point_dir = osp.join(workload_dir, point)
-            stats_file = osp.join(point_dir, stat_file)
-            weight = float(points[workload][str(point)])
-            stats = get_stats_func(stats_file)
-            # stat = get_func(stats_file)
-            if stats is not None:
-                assert 'ipc' in stats.keys()
-                stat_tree[bmk][workload][int(point)] = [weight] + [s for s in stats.values()]
-                keys = list(stats.keys())
+        if workload not in stat_tree[bmk]:
+            stat_tree[bmk][workload] = {}
+
+    keys = []
+    for stat in stats_list:
+        if stat is not None:
+            ((bmk, workload, point), (dct, stat_keys)) = stat
+            stat_tree[bmk][workload][int(point)] = dct
+            keys = stat_keys
+
+    for workload in workload_list:
+        workload_dir = osp.join(path, workload)
+        if osp.isfile(workload_dir):
+            continue
+        bmk = get_bmk(workload)
         if len(stat_tree[bmk][workload]):
             df = pd.DataFrame.from_dict(stat_tree[bmk][workload], orient='index')
             df.columns = ['weight'] + keys
@@ -95,6 +137,7 @@ def glob_weighted_stats(path: str, get_stats_func, filtered=True,
             stat_tree[bmk].pop(workload)
             if not len(stat_tree[bmk]):
                 stat_tree.pop(bmk)
+
     # print(stat_tree)
     return stat_tree
 
@@ -153,7 +196,7 @@ def weighted_mpkis(df: pd.DataFrame):
     mpki = 1000 * np.true_divide(df['branchMispredicts'], df['Insts'])
     bpki = 1000 * np.true_divide(df['branches'], df['Insts'])
     weighted_mpki = np.dot(df['weight'], mpki) / np.sum(df['weight'])
-    weigthed_bpki = np.dot(df['weight'], bpki) / np.sum(df['weight'])
+    weighted_bpki = np.dot(df['weight'], bpki) / np.sum(df['weight'])
     weighted_b_misrate = 100 * weighted_mpki / weighted_bpki
     return (weighted_mpki, weighted_bpki, weighted_b_misrate)
 
@@ -161,8 +204,6 @@ def xs_weighted_mpkis(df: pd.DataFrame,
     targets=[
         'BpWrong',
         'BpBWrong',
-        'ftq: ubtbWrong',
-        'ftq: btbWrong',
         'BpJWrong',
         'BpIWrong',
         'BpCWrong',
@@ -170,7 +211,7 @@ def xs_weighted_mpkis(df: pd.DataFrame,
     ]):
     assert 'roq: commitInstr' in df.columns
     for t in targets:
-        print(t)
+        # print(t)
         assert t in df.columns
     assert 'sc_mispred_but_tage_correct' in df.columns
     assert 'sc_correct_and_tage_wrong' in df.columns
