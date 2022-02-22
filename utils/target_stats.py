@@ -209,6 +209,8 @@ xs_branch_targets = [
 
     '(sc_mispred_but_tage_correct)',
     '(sc_correct_and_tage_wrong)',
+    '(ftb_commit_misses)',
+    '(ftb_update_req)',
     # '(ubtbRight)',
     # '(ftq: ubtbWrong)',
     # '(btbRight)',
@@ -220,8 +222,8 @@ xs_branch_targets = [
     # '(loopRight)',
     # '(loopWrong)',
 
-    '(roq: commitInstr)',
-    '(roq: clock_cycle)',
+    '(commitInstr)',
+    '(clock_cycle)',
 ]
 
 branch_misp = [

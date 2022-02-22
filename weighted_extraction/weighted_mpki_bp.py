@@ -43,12 +43,19 @@ def get_insts(fname: str):
                 return m.group(1)
     return None
 
+def print_score(df: pd.DataFrame, clock_rate, name):
+    print(f"----------- SPEC {name} ------------")
+    print(df.sort_index())
+    print(f'Estimated score @ {clock_rate/(10**9)}GHz:', geometric_mean(df['score']))
+    print('Estimated score per GHz:', geometric_mean(df['score'])/(clock_rate/(10**9)))
+    # print('Excluded because of low coverage:', list(excluded.index))
 
 def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, stat_file,
         clock_rate, min_coverage=0.0, blacklist=[], whitelist=[], merge_benckmark=False):
     target = eval(f't.{prefix}branch_targets')
     workload_dict = {}
     bmk_stat = {}
+
     for conf, file_path in confs.items():
         workload_dict[conf] = {}
         bmk_stat[conf] = {}
@@ -68,7 +75,7 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
             js = json.load(jf)
             # print(js.keys())
         times = {}
-        print(tree)
+        # print(tree)
         for bmk in tree:
             if bmk in blacklist:
                 continue
@@ -82,6 +89,8 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
             count = 0
             total_misp = 0
             total_misp_b = 0
+            total_miss_ftb = 0
+            total_update_ftb = 0
             total_misp_b_ubtb = 0
             total_misp_b_btb = 0
             total_misp_j = 0
@@ -93,10 +102,13 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
             total_branches = 0
             total_cycle = 0
             for workload, df in tree[bmk].items():
+                if (workload in blacklist):
+                    continue
                 # print(workload)
                 selected = dict(js[workload])
                 keys = [int(x) for x in selected]
                 keys = [x for x in keys if x in df.index]
+                # print(keys)
                 df = df.loc[keys]
                 # print(df)
                 cpi, weight = u.weighted_cpi(df)
@@ -104,7 +116,7 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
                     (b_mpki, bpki, b_misrate) = u.weighted_mpkis(df)
                 else:
                     assert prefix == 'xs_'
-                    ([total_mpki, b_mpki, j_mpki, i_mpki, c_mpki, r_mpki], bpki, b_misrate, sc_rdc_mpki) = u.xs_weighted_mpkis(df)
+                    ([total_mpki, b_mpki, j_mpki, i_mpki, c_mpki, r_mpki, ftb_mpki, ftb_upki], bpki, b_misrate, sc_rdc_mpki) = u.xs_weighted_mpkis(df)
                 weights.append(weight)
 
                 workload_dict[conf][workload] = {}
@@ -121,6 +133,8 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
                     workload_dict[conf][workload]['MPKI_I'] = i_mpki
                     workload_dict[conf][workload]['MPKI_C'] = c_mpki
                     workload_dict[conf][workload]['MPKI_R'] = r_mpki
+                    # workload_dict[conf][workload]['MPKI_FTB'] = ftb_mpki
+                    # workload_dict[conf][workload]['UPKI_FTB'] = ftb_upki
                     workload_dict[conf][workload]['MPKI_RDC_SC'] = sc_rdc_mpki
                 workload_dict[conf][workload]['Coverage'] = weight
 
@@ -145,6 +159,8 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
                         total_misp_i += insts*i_mpki/1000
                         total_misp_c += insts*c_mpki/1000
                         total_misp_r += insts*r_mpki/1000
+                        total_miss_ftb += insts*ftb_mpki/1000
+                        total_update_ftb += insts*ftb_upki/1000
                         total_rdc_sc += insts*sc_rdc_mpki/1000
                     coverage += weight
                     count += 1
@@ -171,8 +187,21 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
                     bmk_stat[conf][bmk]['mpki_i'] = 1000 * total_misp_i / total_inst
                     bmk_stat[conf][bmk]['mpki_c'] = 1000 * total_misp_c / total_inst
                     bmk_stat[conf][bmk]['mpki_r'] = 1000 * total_misp_r / total_inst
+                    bmk_stat[conf][bmk]['misrate_ftb'] = total_miss_ftb / total_update_ftb * 100
+                    bmk_stat[conf][bmk]['mpki_ftb'] = 1000 * total_miss_ftb / total_inst
                     bmk_stat[conf][bmk]['mpki_rdc_sc'] = 1000 * total_rdc_sc / total_inst
-
+    int_list = [
+        "perlbench", "bzip2", "gcc", "mcf", 
+        "gobmk", "hmmer", "sjeng", "libquantum",
+        "h264ref", "omnetpp", "astar", "xalancbmk"
+    ]
+    fp_list = [
+        'bwaves', 'gamess', 'milc', 'zeusmp',
+        'gromacs', 'cactusADM', 'leslie3d',
+        'namd', 'dealII', 'soplex', 'povray',
+        'calculix', 'GemsFDTD', 'tonto',
+        'lbm', 'sphinx3'
+    ]
     for conf in confs:
         print(conf, '='*60)
         df = pd.DataFrame.from_dict(workload_dict[conf], orient='index')
@@ -185,12 +214,18 @@ def compute_weighted_mpki(ver, confs, base, simpoints, prefix, insts_file_fmt, s
             bmk_stat[conf] = df
             excluded = df[df['Coverage'] <= min_coverage]
             df = df[df['Coverage'] > min_coverage]
-            
-            # print(df)
-            print(df.sort_index())
-            df.to_csv('spec06_'+conf+'.csv')
-            print(f'Estimated score @ {clock_rate/(10**9)}GHz:', geometric_mean(df['score']))
-            print('Estimated score per GHz:', geometric_mean(df['score'])/(clock_rate/(10**9)))
+        # int_df = df.loc[int_list]
+        # # print(int_df.sort_index())
+        # fp_df = df.loc[fp_list]
+        # # print(fp_df.sort_index())
+        # # print(df.sort_index())
+        # int_df.to_csv('spec06_int_'+conf+'.csv')
+        # fp_df.to_csv('spec06_fp_'+conf+'.csv')
+        df.to_csv('spec06_total_'+conf+'.csv')
+        # print_score(int_df, clock_rate, 'INT')
+        # print_score(fp_df, clock_rate, 'FP')
+        print_score(df, clock_rate, 'TOTAL')
+        if len(list(excluded.index)):
             print('Excluded because of low coverage:', list(excluded.index))
 
 
@@ -218,10 +253,13 @@ def gem5_spec2006():
             # 'F1-': '/home51/zyy/expri_results/omegaflow_spec17/FFS0Config',
             # 'F1H': '/home51/zyy/expri_results/omegaflow_spec17/FFH1Config',
             # 'GEM5': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-04-09_22:21:46'
-            'GEM5_LTAGE': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-10-12_21:52:21',
-            'GEM5_TAGE': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-09-30_15:46:10',
-            'GEM5_Tour': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-10-12_21:31:41',
-            'GEM5_BiMode': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-10-12_21:37:50',
+            'GEM5_LTAGE': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-11-05_18:02:01',
+            'GEM5_TAGE': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-11-05_20:52:29',
+            'GEM5_TAGE_his4-64': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-11-05_20:50:10',
+            'GEM5_TAGE_his2-128': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-11-05_21:28:09',
+            'GEM5_TAGE_his4-128': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-11-05_21:31:52',
+            # 'GEM5_Tour': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-10-12_21:31:41',
+            # 'GEM5_BiMode': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-10-12_21:37:50',
             # 'GEM5hist128': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-06-23_14:08:12',
             # 'GEM5hist256': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-06-23_14:25:29',
             # 'GEM5hist512': '/home51/glr/expri_results/SPEC06/FullWindowO3Config_2021-06-23_14:55:46',
@@ -241,22 +279,30 @@ def gem5_spec2006():
             clock_rate = 4 * 10**9,
             min_coverage = 0.1,
             # blacklist = ['gamess'],
-            whitelist = ['hmmer'],
+            whitelist = ['mcf', 'astar', 'gobmk', 'gcc', 'sjeng', 'bzip2'],
             merge_benckmark=True,
             )
 
 
-def xiangshan_spec2006():
+def xiangshan_spec2006(stat_file='main_err.txt'):
     ver = '06'
     confs = {
             # 'XiangShan_decoupled': '/home/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasksConfig_2021-09-03',
             # 'XiangShan_decoupled': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasksConfig_2021-09-06',
             # 'XiangShan_his128': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasksConfig_hist128_2021-10-05',
-            'XiangShan_his64': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasksConfig_hist64_2021-10-06',
-            'XiangShan_br1': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasksConfig_br1_2021-10-08',
+            # 'XiangShan_his64': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasksConfig_hist64_2021-10-06',
+            # 'XiangShan_br1': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasksConfig_br1_2021-10-08',
+            'XiangShan': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasks_12_15',
+            'XiangShanNew': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasks_01_07',
+            # 'lzs_run' :'/home/lzs/project/run_spec06/output1020',
             # 'XiangShan_master_fp_0.3': '/home/ljw/master-40-perf/output',
             # 'XiangShan2': '/home51/glr/expri_results/xs_simpoint_batch/emu-master-4t/SPEC06_EmuTasksConfig'
-            # 'XiangShan2': '/home/zyy/expri_results/xs_simpoint_batch/SPEC06_EmuTasksConfig-04-19-2021',
+            # 'XiangShan_yqh': '/home/glr/SPEC06_EmuTasksConfig-04-27-2021',
+            # 'no-ium': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasksConfig_hist64_2021-10-06',
+            # 'ium': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasksConfig_ium_2021-10-10',
+            
+            # 'XiangShan_master_10-28': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasks_10_28_2021_cov100',
+            # 'XiangShan_master_10-22': '/home53/glr/spec_output/xs_simpoint_batch/SPEC06_EmuTasks_10_22_2021_cov100',
             }
     int_list = [
         "perlbench", "bzip2", "gcc", "mcf", 
@@ -269,28 +315,59 @@ def xiangshan_spec2006():
         "namd", "sjeng", "hmmer", "xalancbmk", "sphinx3"
     ]
     fp_list = []
+    # white_list = bp_list
+    white_list = []
+    black_list = ['gcc_expr2']
+    # if (int_stat and not fp_stat):
+    #     white_list = int_list
+    # elif (fp_stat and not int_stat):
+    #     black_list = int_list
     compute_weighted_mpki(
             ver=ver,
             confs=confs,
-            # base='XiangShan_master_fp_0.3',
-            base='XiangShan_his64',
-            simpoints=f'/home/glr/gem5_data_proc/simpoint_coverage0.3.json',
+            # base='XiangShan_master_10-28',
+            # base='XiangShan_master_10-22',
+            # base='XiangShan_decoupled',
+            base='XiangShan',
+            # base='lzs_run',
+            # simpoints=f'/home/glr/gem5_data_proc/simpoint_coverage0.3.json',
+            # simpoints=f'/home/lzs/project/run_spec06/simpoint_coverage0.3_test.json',
+            simpoints=f'/bigdata/zfw/spec_cpt/json/simpoint_summary.json',
+            # simpoints=f'/bigdata/zzf/spec_cpt/simpoint_summary.json',
+            # simpoints=f'/home51/zyy/expri_results/simpoints{ver}.json',
+            
             prefix = 'xs_',
-            stat_file='main_err.txt',
+            stat_file=stat_file,
             insts_file_fmt =
-            '/bigdata/zzf/spec_cpt/logs/profiling/{}.log',
+            # '/bigdata/zzf/spec_cpt/logs/profiling/{}.log',
+            '/bigdata/zfw/spec_cpt/logs/profiling/{}.log',
+            # '/bigdata/zyy/checkpoints_profiles/betapoint_profile_06_fix_mem_addr/{}/nemu_out.txt',
             clock_rate = 2 * 10**9,
             min_coverage = 0.1,
             # blacklist = int_list,
-            # whitelist = int_list,
+            whitelist = white_list,
+            blacklist = black_list,
             # whitelist = bp_list,
             # whitelist = ['gobmk'],
-            # blacklist = ['calculix'],
+            # blacklist = ['gcc_expr2'],
             merge_benckmark=True,
             )
 
 
 
 if __name__ == '__main__':
-    xiangshan_spec2006()
-    # gem5_spec2006()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-m', '--mode', action='store', choices=['xs', 'gem5'], type=str)
+    parser.add_argument('--stat-file', action='store', type=str)
+    parser.add_argument('--simpoint-json', action='store', type=str)
+    parser.add_argument('--inst-profile', action='store', type=str)
+    parser.add_argument('--spec-result', action='store', type=str)
+    
+    args = parser.parse_args()
+    if (args.mode == 'gem5'):
+        gem5_spec2006()
+    else:
+        if (args.stat_file):
+            xiangshan_spec2006(args.stat_file)
+        else:
+            xiangshan_spec2006()

@@ -343,11 +343,11 @@ def xs_get_stats(stat_file: str, targets: list,
                             stats[k] = to_num(m.group(1))
                         pattern_status[k] = True
                         patterns_left -= 1
-    if not ('roq: commitInstr' in stats and 'roq: clock_cycle' in stats):
-        print(f"Warn: {stat_file} roq_commitInstr or roq: clock_cycle not exists")
+    if not ('commitInstr' in stats and 'clock_cycle' in stats):
+        print(f"Warn: {stat_file} commitInstr or clock_cycle not exists")
         stats['ipc'] = 0
     else:
-        stats['ipc'] = stats['roq: commitInstr']/stats['roq: clock_cycle']
+        stats['ipc'] = stats['commitInstr']/stats['clock_cycle']
         # print('ipc is ' + str(stats['ipc']))
     for k in pattern_status:
         if pattern_status[k] is None:

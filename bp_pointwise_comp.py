@@ -7,10 +7,12 @@ import os
 from os.path import join as opj
 import pandas as pd
 import matplotlib.pyplot as plt
+import functools as ft
 
-res_base = '/home51/glr/expri_results'
-gem5_res_path = opj(res_base, 'SPEC06/FullWindowO3Config_2021-04-09_22:21:46')
-xs_res_path = opj(res_base, 'xs_simpoint_batch/SPEC06_EmuTasksConfig-04-06-2021')
+gem5_res_base = '/home51/glr/expri_results'
+gem5_res_path = opj(gem5_res_base, 'SPEC06/FullWindowO3Config_2021-09-30_15:46:10')
+xs_res_base = '/home53/glr/spec_output'
+xs_res_path = opj(xs_res_base, 'xs_simpoint_batch/SPEC06_EmuTasksConfig_br1_2021-10-08')
 
 ver = '06'
 def get_tree(prefix, simpoints, file_path, stat_file):
@@ -22,7 +24,8 @@ def get_tree(prefix, simpoints, file_path, stat_file):
         branch_misp = ['BpBWrong']
     tree = u.glob_weighted_stats(
         file_path,
-        u.stats_factory(target, target, prefix),
+        ft.partial(u.stats_factory, target, target, prefix),
+        white_list=[],
         simpoints=simpoints,
         stat_file=stat_file
     )
@@ -31,17 +34,17 @@ def get_tree(prefix, simpoints, file_path, stat_file):
 
 tree_gem5 = get_tree(
     prefix='',
-    simpoints=f'/home51/zyy/expri_results/simpoints{ver}.json',
+    simpoints=f'/home/glr/gem5_data_proc/simpoint_coverage0.3.json',
     file_path=gem5_res_path,
     stat_file='m5out/stats.txt')
 
 tree_xs = get_tree(
     prefix='xs_',
-    simpoints=f'/home51/zyy/expri_results/simpoints{ver}.json',
+    simpoints=f'/home/glr/gem5_data_proc/simpoint_coverage0.3.json',
     file_path=xs_res_path,
-    stat_file='simulator_err.txt')
+    stat_file='main_err.txt')
 
-tar_path = opj(res_base, 'bp_diff')
+tar_path = opj(gem5_res_base, 'bp_diff')
 plot_path = opj(tar_path, 'png')
 csv_path = opj(tar_path, 'csv')
 
@@ -51,8 +54,9 @@ def check_dir(d):
 
 res_tree = {}
 abnormal_points = {}
-ratio_thres = 0.5
-misp_abs_thres = 50000 # mpki 1 for 50M insts
+ratio_thres = 0.9
+total_inst = 20 * 10**6
+misp_abs_thres = int(total_inst / 1000) # mpki 1 for 50M insts
 dump_to_json = True
 
 save_to_csv = False
@@ -66,9 +70,10 @@ for bench in tree_xs:
         if bench in tree_gem5.keys() and subbench in tree_gem5[bench].keys():
             gem5_subbench_stat = tree_gem5[bench][subbench]
         else:
-            print(f'bench {bench} in stats: {bench in tree_gem5.keys()}')
-            print(f'subbench {subbench} in stats: {subbench in tree_gem5[bench].keys()}')
-            print('skip!')
+            # print(f'bench {bench} in stats: {bench in tree_gem5.keys()}')
+            # if bench in tree_gem5.keys():
+            #     print(f'subbench {subbench} in stats: {subbench in tree_gem5[bench].keys()}')
+            # print('skip!')
             continue
         # print(gem5_subbench_stat.columns)
         # print(gem5_subbench_stat.shape)
@@ -78,7 +83,9 @@ for bench in tree_xs:
         res.columns=['xs', 'gem5']
         short_inds = [int(str(i)[:-7]) for i in res.index]
         res.index = short_inds
+        print(bench, subbench)
         print(res)
+        print()
 
         # save to csv file
         if (save_to_csv):
@@ -101,8 +108,8 @@ for bench in tree_xs:
                 point_name = subbench + '/' + str(i) + '0'*7
                 abnormal_points[point_name] = {}
                 abnormal_points[point_name]['xs_gem5_misp_ratio'] = ratio
-                abnormal_points[point_name]['xs_mpki']   = rl[0] / 50000
-                abnormal_points[point_name]['gem5_mpki'] = rl[1] / 50000
+                abnormal_points[point_name]['xs_mpki']   = round(rl[0] / total_inst * 1000, 5)
+                abnormal_points[point_name]['gem5_mpki'] = round(rl[1] / total_inst * 1000, 5)
 
 
         if bench not in res_tree:
@@ -110,7 +117,9 @@ for bench in tree_xs:
         if subbench not in res_tree[bench]:
             res_tree[bench][subbench] = res
 
-print(abnormal_points)
+for p, v in abnormal_points.items():
+    print(p, v)
+# print(abnormal_points)
 if (dump_to_json):
     json_path = opj(tar_path, 'abnormal_points.json')
     with open(json_path, 'w') as j:

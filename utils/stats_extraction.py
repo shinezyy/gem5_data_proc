@@ -7,6 +7,7 @@ import utils.target_stats as t
 import json
 import re
 from multiprocessing import Pool
+import multiprocessing
 
 def get_ipc(stat_path: str):
     targets = t.ipc_target
@@ -63,12 +64,11 @@ def get_stat_of_point(args):
     stats = func()(stat_dir)
     print(workload, point, 'extracted')
     if stats is not None:
-        assert 'ipc' in stats.keys()
+        # if 'ipc' in stats.keys():
         dct = [weight] + [s for s in stats.values()]
         keys = list(stats.keys())
         return ((bmk, workload, point), (dct, keys))
-    else:
-        return None
+    return None
 
 def glob_weighted_stats(path: str, get_stats_func, white_list, filtered=True,
         simpoints='/home51/zyy/expri_results/simpoints17.json',
@@ -77,7 +77,10 @@ def glob_weighted_stats(path: str, get_stats_func, white_list, filtered=True,
     with open(simpoints) as jf:
         points = json.load(jf)
     # print(points.keys())
-    tp = Pool(100)
+
+    num_cores = multiprocessing.cpu_count()
+    print(num_cores)
+    tp = Pool(int(num_cores/2))
     
     def get_bmk(workload):
         return workload.split('_')[0]
@@ -105,6 +108,7 @@ def glob_weighted_stats(path: str, get_stats_func, white_list, filtered=True,
                     point_list += [(bmk, workload, point)]
                     arg_list += [[path, stat_file, weight, get_stats_func, bmk, workload, point]]
         # print(point_list)
+        print(workload_list)
         return point_list, arg_list, workload_list
     
     point_list, arg_list, workload_list = get_point_to_be_extracted(path)
@@ -135,8 +139,12 @@ def glob_weighted_stats(path: str, get_stats_func, white_list, filtered=True,
             # print(df)
         else:
             stat_tree[bmk].pop(workload)
-            if not len(stat_tree[bmk]):
-                stat_tree.pop(bmk)
+
+    print(stat_tree.keys())
+    for workload in workload_list:
+        bmk = get_bmk(workload)
+        if not len(stat_tree[bmk]):
+            stat_tree.pop(bmk)
 
     # print(stat_tree)
     return stat_tree
@@ -207,18 +215,21 @@ def xs_weighted_mpkis(df: pd.DataFrame,
         'BpJWrong',
         'BpIWrong',
         'BpCWrong',
-        'BpRWrong'
+        'BpRWrong',
+        'ftb_commit_misses',
+        'ftb_update_req'
     ]):
-    assert 'roq: commitInstr' in df.columns
+    assert 'commitInstr' in df.columns
+
     for t in targets:
         # print(t)
         assert t in df.columns
     assert 'sc_mispred_but_tage_correct' in df.columns
     assert 'sc_correct_and_tage_wrong' in df.columns
     assert 'BpBInstr' in df.columns
-    mpkis = [1000 * np.true_divide(df[t], df['roq: commitInstr']) for t in targets]
-    bpki = 1000 * np.true_divide(df['BpBInstr'], df['roq: commitInstr'])
-    sc_rdc_mpki = 1000 * np.true_divide(df['sc_correct_and_tage_wrong']-df['sc_mispred_but_tage_correct'], df['roq: commitInstr'])
+    mpkis = [1000 * np.true_divide(df[t], df['commitInstr']) for t in targets]
+    bpki = 1000 * np.true_divide(df['BpBInstr'], df['commitInstr'])
+    sc_rdc_mpki = 1000 * np.true_divide(df['sc_correct_and_tage_wrong']-df['sc_mispred_but_tage_correct'], df['commitInstr'])
     weighted_mpkis = [np.dot(df['weight'], m) / np.sum(df['weight']) for m in mpkis]
     weighted_bpki = np.dot(df['weight'], bpki) / np.sum(df['weight'])
     weighted_b_misrate = 100 * weighted_mpkis[1] / weighted_bpki
