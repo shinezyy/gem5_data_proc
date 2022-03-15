@@ -217,3 +217,9 @@ xs_branch_targets = [
     # '(loopWrong)',
 ]
 
+xgroup_targets = [
+    'cpus?\.num(Load)Insts',
+    'cpus?\.(inter)_num',
+    'cpus?\.(intra)_num',
+    ]
+

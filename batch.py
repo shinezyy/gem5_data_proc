@@ -10,7 +10,7 @@ from utils.target_stats import *
 import utils as u
 
 show_lins = 62
-pd.set_option('precision', 3)
+pd.set_option('display.precision', 3)
 pd.set_option('display.max_rows', show_lins)
 pd.set_option('display.min_rows', show_lins)
 
@@ -29,7 +29,6 @@ def further_proc(pair: str, d: dict, verbose: bool) -> None:
         c.print_dict(d)
 
     return d
-
 
 
 def main():
@@ -101,11 +100,18 @@ def main():
                         help='handle XiangShan stats'
                        )
 
+    parser.add_argument('--eval-stat', action='store',
+            help='evaled stats',
+            )
+
     opt = parser.parse_args()
 
     paths = u.glob_stats_l2(opt.stat_dir, opt.stat_file)
     if len(paths) == 0:
         paths = u.glob_stats(opt.stat_dir, opt.stat_file)
+
+    print(paths)
+    assert len(paths) > 0
 
     matrix = {}
 
@@ -150,6 +156,11 @@ def main():
                     targets += cache_targets
 
                 d = c.gem5_get_stats(path, targets, re_targets=True)
+
+                if opt.eval_stat:
+                    stat_targets = opt.eval_stat.split('#')
+                    for stat_target in stat_targets:
+                        targets += eval(stat_target)
 
         if len(d):
             if opt.smt:
