@@ -180,7 +180,7 @@ def main():
     df = pd.DataFrame.from_dict(matrix, orient='index')
     df = df.sort_index()
     df = df.sort_index(1)
-    df = df.sort_values(['ipc'])
+    # df = df.sort_values(['ipc'])
     # for x in df.index:
     #     print(x)
     if len(df):

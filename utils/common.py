@@ -473,12 +473,13 @@ def add_overall_qos(hpt: str, lpt: str, d: dict) -> None:
 def add_branch_mispred(d: dict) -> None:
     branches = float(d['branches'])
     mispred = float(d['branchMispredicts'])
-    d['mispredict rate'] = mispred / branches;
-    d['MPKI'] = mispred / float(d['Insts']) * 1000;
+    d['mispredict rate'] = mispred / branches
+    d['MPKI'] = mispred / float(d['Insts']) * 1000
 
 def add_cache_mpki(d: dict) -> None:
-    d['L2MPKI'] = float(d['l2.demand_misses']) / float(d['Insts']) * 1000;
-    d['L3MPKI'] = float(d['l3.demand_misses']) / float(d['Insts']) * 1000;
+    d['L2MPKI'] = float(d['l2.demandMisses']) / float(d['Insts']) * 1000
+    d['L3MPKI'] = float(d['l3.demandMisses']) / float(d['Insts']) * 100;
+    d['L2/L1 acc'] = float(d['l2.overallAccesses']) / float(d['dcache.overallAccesses'])
 
 def add_fanout(d: dict) -> None:
     large_fanout = float(d.get('largeFanoutInsts', 0)) + 1.0

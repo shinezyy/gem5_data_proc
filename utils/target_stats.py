@@ -2,6 +2,7 @@ brief_targets = [
     'cpus?\.(ipc)',
     'cpus?\.(cpi)',
     'cpus?\.committed(Insts)',
+    'cpus?\.(lastCommitTick)',
     'host_(inst_rate)',
     #'cpus\.num(Cycles)'
 ]
@@ -22,20 +23,23 @@ standard_targets = [
 ]
 
 cache_targets = [
-    'cpu\.(dcache.demand_miss_rate)::\.cpu\.data',
+    # '(l3\.demandMissRate)::total',
+    '(l3\.demandMisses)::total',
+    # '(l2\.demandMissRate)::total',
+    '(l2\.demandMisses)::total',
+    # 'cpu\.(dcache\.demandAvgMissLatency)::\.cpu\.data',
+    # 'cpu\.(dcache\.demandMisses)::\.cpu\.data',
+    # 'cpu\.(dcache.demandMissRate)::\.cpu\.data',
+    'cpu\.(dcache\.overallAccesses)::cpu\.data',
+    '(l2\.overallAccesses)::total',
     # 'cpu\.(icache.*_miss_rate)::\.cpus\.data',
-    '(l3\.demand_miss_rate)::total',
-    '(l3\.demand_misses)::total',
-    '(l2\.demand_miss_rate)::total',
-    '(l2\.demand_misses)::total',
-    'cpu\.(dcache\.demand_avg_miss_latency)::\.cpu\.data',
-    'cpu\.(dcache\.demand_misses)::\.cpu\.data',
     # 'cpu\.iew\.iew(ExecLoadInsts)',
 ]
 
 branch_targets = [
     'cpus?\.(?:diewc|commit|iew)\.(branchMispredicts)',
     'cpus?\.(?:diewc\.exec_|commit\.)(branches)',
+    'cpus?\.branchPred\.(indirectMispred)icted',
     # 'cpu\.commit\.(branches)',
     # 'cpu\.commit\.(branchMispredicts)',
     # 'iew\.iewExec(LoadInsts)',
