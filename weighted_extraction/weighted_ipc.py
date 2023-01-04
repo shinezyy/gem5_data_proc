@@ -33,6 +33,7 @@ def gen_coverage():
 
 
 def get_insts(fname: str):
+    print(fname)
     assert osp.isfile(fname)
     p = re.compile('total guest instructions = (\d+)')
     with open(fname) as f:
@@ -44,7 +45,7 @@ def get_insts(fname: str):
 
 
 def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, stat_file,
-        clock_rate, min_coverage=0.0, blacklist=[], whitelist=[], merge_benckmark=False):
+                         clock_rate, min_coverage=0.0, blacklist=[], whitelist=[], merge_benckmark=False, output_csv='default.csv'):
     target = eval(f't.{prefix}ipc_target')
     workload_dict = {}
     bmk_stat = {}
@@ -116,8 +117,9 @@ def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, st
             bmk_stat[conf] = df
             excluded = df[df['Coverage'] <= min_coverage]
             df = df[df['Coverage'] > min_coverage]
+            df.to_csv(output_csv)
             print(df)
-            print('Estimated score @ 1.5GHz:', geometric_mean(df['score']))
+            print('Estimated score @ 2GHz:', geometric_mean(df['score']))
             print('Estimated score per GHz:', geometric_mean(df['score'])/(clock_rate/(10**9)))
             print('Excluded because of low coverage:', list(excluded.index))
 
@@ -138,16 +140,6 @@ def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, st
 def gem5_spec2017():
     ver = '17'
     confs = {
-            # 'O1': '/home51/zyy/expri_results/omegaflow_spec17/OmegaH1S1G1Config',
-            # 'O2': '/home51/zyy/expri_results/omegaflow_spec17/OmegaH1S1G2CL0Config',
-            # 'O1S0': '/home51/zyy/expri_results/omegaflow_spec17/OmegaH1S0G1Config',
-            # 'O1X': '/home51/zyy/expri_results/omegaflow_spec17/XOmegaH1S1G1Config',
-            # 'O1*-': '/home51/zyy/expri_results/omegaflow_spec17/OmegaH0S0G1Config',
-            # 'F1-': '/home51/zyy/expri_results/omegaflow_spec17/FFS0Config',
-            # 'F1H': '/home51/zyy/expri_results/omegaflow_spec17/FFH1Config',
-            'F1': '/home51/zyy/expri_results/omegaflow_spec17/TypicalFFConfig',
-            'F2': '/home51/zyy/expri_results/omegaflow_spec17/FFG2CL0CG1Config',
-            'FullO3': '/home51/zyy/expri_results/omegaflow_spec17/FullWindowO3Config'
             }
 
     compute_weighted_cpi(
@@ -165,30 +157,52 @@ def gem5_spec2017():
             merge_benckmark=True,
             )
 
-
-def xiangshan_spec2006():
+def gem5_spec2006():
     ver = '06'
     confs = {
-            'XiangShan1': '/home/zyy/expri_results/xs_simpoint_batch/SPEC06_EmuTasksConfig',
-            'XiangShan2': '/home/zyy/expri_results/xs_simpoint_batch/SPEC06_EmuTasksConfig',
+            'XS-GEM5': '/local/zhouyaoyang/exec-storage/perf-gcb-sms-dramsim-elim-sqrt-FM_A-fl2u'
             }
 
     compute_weighted_cpi(
             ver=ver,
             confs=confs,
-            base='XiangShan1',
-            simpoints=f'/home51/zyy/expri_results/simpoints{ver}.json',
-            prefix = 'xs_',
-            stat_file='simulator_err.txt',
+            base='XS-GEM5',
+            simpoints=f'/nfs-nvme/home/zhouyaoyang/projects/BatchTaskTemplate/resources/simpoint_cpt_desc/spec{ver}_rv64gcb_o2_20m.json',
+            prefix = '',
+            stat_file='m5out/stats.txt',
             insts_file_fmt =
-            '/bigdata/zyy/checkpoints_profiles/betapoint_profile_{}_fix_mem_addr/{}/nemu_out.txt',
-            clock_rate = 1.5 * 10**9,
+            '/nfs-nvme/home/share/checkpoints_profiles/spec{}_rv64gcb_o2_20m/logs/profiling/{}.log',
+            clock_rate = 2 * 10**9,
             min_coverage = 0.75,
             # blacklist = ['gamess'],
             merge_benckmark=True,
+            output_csv='xs-gem5-12-10-dramsim-me-FM_A-sqrt.csv',
+            )
+
+def xiangshan_spec2006():
+    ver = '06'
+    confs = {
+            'XiangShan-Nanhu': '/nfs/home/share/EmuTasks/SPEC06_EmuTasks_2022_11_12',
+            }
+
+    compute_weighted_cpi(
+            ver=ver,
+            confs=confs,
+            base='XiangShan-Nanhu',
+            simpoints=f'/nfs-nvme/home/zhouyaoyang/projects/BatchTaskTemplate/resources/simpoint_cpt_desc/spec{ver}_rv64gcb_o2_20m.json',
+            prefix = 'xs_',
+            stat_file='simulator_err.txt',
+            insts_file_fmt =
+            '/nfs-nvme/home/share/checkpoints_profiles/spec{}_rv64gcb_o2_20m/logs/profiling/{}.log',
+            clock_rate = 2 * 10**9,
+            min_coverage = 0.75,
+            # blacklist = ['gamess'],
+            merge_benckmark=True,
+            output_csv='nanhu-11-12.csv',
             )
 
 
 if __name__ == '__main__':
-    xiangshan_spec2006()
-    # gem5_spec2017()
+    # xiangshan_spec2006()
+    gem5_spec2006()
+

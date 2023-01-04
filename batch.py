@@ -95,6 +95,12 @@ def main():
     parser.add_argument('--cache', action='store_true',
                         help='print cache stats'
                        )
+    parser.add_argument('-w', '--warmup', action='store_true',
+                        help='print warmup stats'
+                       )
+    parser.add_argument('-F', '--filter-bmk', action='store',
+                        help='Only print select benchmark'
+                       )
 
     parser.add_argument('--xiangshan', action='store_true',
                         help='handle XiangShan stats'
@@ -116,6 +122,17 @@ def main():
     matrix = {}
 
     for workload, path in paths:
+        if opt.filter_bmk and not workload.startswith(opt.filter_bmk):
+            continue
+        if opt.xiangshan:
+            flag_file = osp.join(osp.dirname(path), 'completed')
+        else:
+            flag_file = osp.join(osp.dirname(osp.dirname(path)), 'completed')
+        if not osp.isfile(flag_file):
+            print('Skip unfinished job:', workload, path, flag_file)
+            continue
+        
+        print('Process finished job:', workload)
         # print(workload, path)
         # print(workload)
         if opt.ipc_only:
@@ -127,7 +144,9 @@ def main():
             if opt.xiangshan:
                 targets = xs_ipc_target
                 if opt.branch:
-                    targets += xs_branch_targets
+                    targets = {**xs_branch_targets, **targets}
+                if opt.cache:
+                    targets = {**xs_cache_targets, **targets}
 
                 d = c.xs_get_stats(path, targets, re_targets=True)
             else:
@@ -154,32 +173,42 @@ def main():
                     targets += beta_targets
                 if opt.cache:
                     targets += cache_targets
+                if opt.warmup:
+                    targets += warmup_targets
 
                 d = c.gem5_get_stats(path, targets, re_targets=True)
 
-                if opt.eval_stat:
-                    stat_targets = opt.eval_stat.split('#')
-                    for stat_target in stat_targets:
+            if opt.eval_stat:
+                stat_targets = opt.eval_stat.split('#')
+                for stat_target in stat_targets:
+                    if opt.xiangshan:
+                        targets += eval('xs_'+stat_target)
+                    else:
                         targets += eval(stat_target)
 
+        if opt.xiangshan:
+            prefix = 'xs_'
+        else:
+            prefix = ''
         if len(d):
             if opt.smt:
                 matrix[workload] = further_proc(workload, d, opt.verbose)
             else:
                 matrix[workload] = d
             if opt.branch:
-                if not opt.xiangshan:
-                    c.add_branch_mispred(d)
+                eval(f"c.{prefix}add_branch_mispred(d)")
+            if opt.cache:
+                eval(f"c.{prefix}add_cache_mpki(d)")
             if opt.fanout:
                 c.add_fanout(d)
-            if opt.cache:
-                c.add_cache_mpki(d)
+            if opt.warmup:
+                c.add_warmup_mpki(d)
             # if opt.packet:
             #     c.add_packet(d)
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
     df = df.sort_index()
-    df = df.sort_index(1)
+    # df = df.sort_index(1)
     # df = df.sort_values(['ipc'])
     # for x in df.index:
     #     print(x)

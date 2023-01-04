@@ -1,14 +1,14 @@
 brief_targets = [
-    'cpus?\.(ipc)',
-    'cpus?\.(cpi)',
-    'cpus?\.committed(Insts)',
-    'cpus?\.(lastCommitTick)',
-    'host_(inst_rate)',
+    '(?:cpus?|switch_cpus_1)\.(ipc)',
+    # '(?:cpus?|switch_cpus_1)\.(cpi)',
+    '(?:cpus?|switch_cpus_1)\.committed(Insts)',
+    # '(?:cpus?|switch_cpus_1)\.(lastCommitTick)',
+    # 'host_(inst_rate)',
     #'cpus\.num(Cycles)'
 ]
 ipc_target = [
-    'cpus?\.(ipc)',
-    'cpus?\.(cpi)',
+    '(?:cpus?|switch_cpus_1)\.(ipc)',
+    '(?:cpus?|switch_cpus_1)\.(cpi)',
 ]
 
 flow_target = [
@@ -18,28 +18,45 @@ flow_target = [
 
 standard_targets = [
     '(numCycles)',
-    'cpus?\.committed(Insts)',
-    'cpus?\.(ipc)',
+    '(?:cpus?|switch_cpus_1)?\.committed(Insts)',
+    '(?:cpus?|switch_cpus_1)?\.(ipc)',
 ]
+
+icache_targets = [
+        '(icache\.demandMisses)::total',
+        '(icache\.overallAccesses)::total',
+        ]
 
 cache_targets = [
     # '(l3\.demandMissRate)::total',
     '(l3\.demandMisses)::total',
+    '(l3\.overallMisses)::total',
     # '(l2\.demandMissRate)::total',
     '(l2\.demandMisses)::total',
+    '(l2\.overallMisses)::total',
     # 'cpu\.(dcache\.demandAvgMissLatency)::\.cpu\.data',
     # 'cpu\.(dcache\.demandMisses)::\.cpu\.data',
     # 'cpu\.(dcache.demandMissRate)::\.cpu\.data',
     'cpu\.(dcache\.overallAccesses)::cpu\.data',
     '(l2\.overallAccesses)::total',
-    # 'cpu\.(icache.*_miss_rate)::\.cpus\.data',
+    'cpu\.(icache\.demandMisses)::total',
     # 'cpu\.iew\.iew(ExecLoadInsts)',
 ]
 
+warmup_targets = [
+    '(?:cpus?|switch_cpus_1)\.(?:diewc|commit)\.(branchMispredicts)',
+    '(?:cpus?|switch_cpus_1)\.(?:diewc|commit)\.(branches)',
+    '(l3\.demandMisses)::total',
+    '(l2\.demandMisses)::total',
+    '(numCycles)',
+    '(?:cpus?|switch_cpus_1)?\.committed(Insts)',
+]
+
 branch_targets = [
-    'cpus?\.(?:diewc|commit|iew)\.(branchMispredicts)',
-    'cpus?\.(?:diewc\.exec_|commit\.)(branches)',
-    'cpus?\.branchPred\.(indirectMispred)icted',
+    '(?:cpus?|switch_cpus_1)\.(?:diewxc|commit|iewx)\.(branchMispredicts)',
+    '(?:cpus?|switch_cpus_1)?\.(?:diewxc\.exec_|commit\.)(branches)',
+    '(?:cpus?|switch_cpus_1)?\.branchPred\.(indirectMispred)icted',
+    '(?:cpus?|switch_cpus_1)?\.branchPred\.(RASIncorrect)',
     # 'cpu\.commit\.(branches)',
     # 'cpu\.commit\.(branchMispredicts)',
     # 'iew\.iewExec(LoadInsts)',
@@ -187,27 +204,26 @@ beta_targets = [
     'cpus?\.(dcache\.demand_misses)::total',
         ]
 
-xs_ipc_target = [
-    '(ipc)',
-    '(totalCycle)',
-    '(roq: commitInstr)',
-]
+xs_ipc_target = {
+    "commitInstr": r"\[PERF \]\[time=\s+\d+\] TOP.SimTop.l_soc.core_with_l2.core.ctrlBlock.rob: commitInstr,\s+(\d+)",
+    "clock_cycle": r"\[PERF \]\[time=\s+\d+\] TOP.SimTop.l_soc.core_with_l2.core.ctrlBlock.rob: clock_cycle,\s+(\d+)",
+}
 
-xs_branch_targets = [
-    '(BpInstr)',
-    '(BpBInstr)',
-    '(BpRight)',
-    '(BpWrong)',
-    '(BpBRight)',
-    '(BpBWrong)',
-    '(BpJRight)',
-    '(BpJWrong)',
-    '(BpIRight)',
-    '(BpIWrong)',
-    '(BpCRight)',
-    '(BpCWrong)',
-    '(BpRRight)',
-    '(BpRWrong)',
+xs_branch_targets = {
+    'BpInstr':  r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpInstr,\s+(\d+)",
+    'BpBWrong': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpBWrong,\s+(\d+)",
+    'BpJWrong': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpJWrong,\s+(\d+)",
+    'BpIWrong': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpIWrong,\s+(\d+)",
+    # 'BpBInstr': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpBInstr,\s+(\d+)",
+    # 'BpRight':  r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpRight,\s+(\d+)",
+    # 'BpWrong':  r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpWrong,\s+(\d+)",
+    # 'BpBRight': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpBRight,\s+(\d+)",
+    # 'BpJRight': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpJRight,\s+(\d+)",
+    # 'BpIRight': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpIRight,\s+(\d+)",
+    # 'BpCRight': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpCRight,\s+(\d+)",
+    # 'BpCWrong': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpCWrong,\s+(\d+)",
+    # 'BpRRight': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpRRight,\s+(\d+)",
+    # 'BpRWrong': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpRWrong,\s+(\d+)",
 
     # '(ubtbRight)',
     # '(ubtbWrong)',
@@ -219,7 +235,35 @@ xs_branch_targets = [
     # '(rasWrong)',
     # '(loopRight)',
     # '(loopWrong)',
-]
+}
+
+xs_cache_targets = {
+    'l3_acc': (r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt: selfdir_A_req,\s+(\d+)", 4),
+    'l3_hit': (r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt: selfdir_A_hit,\s+(\d+)", 4),
+
+    'l2_acc': (r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache: selfdir_A_req,\s+(\d+)", 4),
+    'l2_hit': (r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache: selfdir_A_hit,\s+(\d+)", 4),
+}
+
+xs_cache_targets_nanhu_12 = {
+    'l3b0_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_0\.directory: selfdir_A_req,\s+(\d+)",
+    'l3b1_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_1\.directory: selfdir_A_req,\s+(\d+)",
+    'l3b2_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_2\.directory: selfdir_A_req,\s+(\d+)",
+    'l3b3_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_3\.directory: selfdir_A_req,\s+(\d+)",
+    'l3b0_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_0\.directory: selfdir_A_hit,\s+(\d+)",
+    'l3b1_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_1\.directory: selfdir_A_hit,\s+(\d+)",
+    'l3b2_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_2\.directory: selfdir_A_hit,\s+(\d+)",
+    'l3b3_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_3\.directory: selfdir_A_hit,\s+(\d+)",
+
+    'l2b0_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_0\.directory: selfdir_A_req,\s+(\d+)",
+    'l2b1_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_1\.directory: selfdir_A_req,\s+(\d+)",
+    'l2b2_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_2\.directory: selfdir_A_req,\s+(\d+)",
+    'l2b3_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_3\.directory: selfdir_A_req,\s+(\d+)",
+    'l2b0_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_0\.directory: selfdir_A_hit,\s+(\d+)",
+    'l2b1_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_1\.directory: selfdir_A_hit,\s+(\d+)",
+    'l2b2_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_2\.directory: selfdir_A_hit,\s+(\d+)",
+    'l2b3_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_3\.directory: selfdir_A_hit,\s+(\d+)",
+}
 
 xgroup_targets = [
     'cpus?\.num(Load)Insts',

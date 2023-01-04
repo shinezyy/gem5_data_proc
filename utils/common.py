@@ -202,74 +202,39 @@ def get_all_chunks(stat_file: str, config_file: str, insts_from_dir):
     return chunks
 
 
+def get_host_seconds(stat_file: str):
+    p_host_time = re.compile('hostSeconds\s+(\S+)\s+#.*')
+    host_time = 0.0
+    with open(expu(stat_file)) as f:
+        for line in f:
+            m = p_host_time.match(line.strip())
+            if m is not None:
+                host_time += float(m.group(1))
+            else:
+                if line.startswith('hostSeconds'):
+                    print(line)
+                    assert False
+    assert host_time > 0.1
+    return host_time
+    
+
 # this functions get only the last dumps or the nearest stats dump
 def get_raw_stats_around(stat_file: str, insts: int=200*(10**6),
                          cycles: int = None)-> list:
-    old_buff = []
     buff = []
 
-    old_insts = None
-    old_cycles = None
-    new_insts = None
-    new_cycles = None
+    # p_insts = re.compile('(?:cpus?|switch_cpus_1)\.committedInsts\s+(\d+)\s+#')
+    # p_cycles = re.compile('(?:cpus?|switch_cpus_1)\.numCycles\s+(\d+)\s+#')
 
-    p_insts = re.compile('cpus?.committedInsts\s+(\d+)\s+#')
-    p_cycles = re.compile('cpus?.numCycles\s+(\d+)\s+#')
+    print(stat_file)
+    for line in reverse_readline(expu(stat_file)):
+        buff.append(line)
 
-    if insts > 500*(10**6):
-        for line in reverse_readline(expu(stat_file)):
-            buff.append(line)
+        if line.startswith('---------- Begin Simulation Statistics ----------'):
+            return buff
 
-            if line.startswith('---------- Begin Simulation Statistics ----------'):
-                if cycles:
-                    pass
-                else:
-                    if insts >= new_insts:
-                        if old_insts is None:
-                            return buff
-                        elif abs(insts - old_insts) > abs(new_insts - insts):
-                            return buff
-                        else:
-                            return old_buff
-                    else:
-                        old_insts = new_insts
-                        old_cycles = new_cylces
-                        old_buff = deepcopy(buff)
-                        buff.clear()
-
-            elif line.startswith('system.switch_cpus.committedInsts'):
-                new_insts = int(p_insts.search(line).group(1))
-            elif line.startswith('system.switch_cpus.numCycles'):
-                new_cylces = int(p_cycles.search(line).group(1))
-
-    else:
-        with open(expu(stat_file)) as f:
-            for line in f:
-                buff.append(line)
-
-                if line.startswith('---------- End Simulation Statistics   ----------'):
-                    if cycles:
-                        pass
-                    else:
-                        if insts <= new_insts:
-                            if old_insts is None:
-                                return buff
-                            elif abs(insts - old_insts) > abs(new_insts - insts):
-                                return buff
-                            else:
-                                return old_buff
-                        else:
-                            old_insts = new_insts
-                            old_cycles = new_cylces
-                            old_buff = deepcopy(buff)
-                            buff.clear()
-
-                elif p_insts.search(line) is not None:
-                    new_insts = int(p_insts.search(line).group(1))
-                elif p_cycles.search(line) is not None:
-                    new_cylces = int(p_cycles.search(line).group(1))
-
-    return old_buff
+    return []
+    # raise Exception("No beginning line found")
 
 
 def to_num(x: str) -> (int, float):
@@ -278,68 +243,55 @@ def to_num(x: str) -> (int, float):
     else:
         return int(x)
 
+time_pattern = re.compile('\[PERF \]\[time=\s*(\d+)\].*')
 def xs_get_time(line):
-    time_parrern = re.compile('.*\[time=\s*(\d+)\].*')
-    return int(time_parrern.search(line).group(1))
+    return int(time_pattern.match(line).group(1))
 
-
-def xs_get_raw_stats_around(stat_file: str)-> list:
-
-    buff = []
-    time = 0
-
-    for line in reverse_readline(expu(stat_file)):
-        if line.startswith('[PERF ]'):
-            if time == 0:
-                time = xs_get_time(line)
-                # print(time)
-
-            if time != 0 and xs_get_time(line) != time:
-                buff.append('totalCycle,' + str(time - xs_get_time(line)))
-                return buff
-
-            buff.append(line)
-
-    return None
 
 def xs_get_stats(stat_file: str, targets: list,
               insts: int=200*(10**6), re_targets=False) -> dict:
     if not os.path.isfile(expu(stat_file)):
         print(stat_file)
     assert(os.path.isfile(expu(stat_file)))
-    lines = xs_get_raw_stats_around(stat_file)
+    with open(stat_file) as f:
+        lines = f.read().splitlines()
 
     if lines is None:
         return None
 
     patterns = {}
-    if re_targets:
-        meta_pattern = re.compile('.*\((\w.+)\).*')
-        for t in targets:
-            meta = meta_pattern.search(t).group(1)
-            # patterns[meta] = re.compile(t+'\s+(\d+\.?\d*)\s+')
-            patterns[meta] = re.compile('.*?' + meta + ',\s*(\d+)')
-    else:
-        for t in targets:
-            # patterns[t] = re.compile(t+'\s+(\d+\.?\d*)\s+')
-            patterns[t] = re.compile('.*?' + meta + ',\s*(\d+)')
-
-    # print(patterns)
+    accumulate_table = {}  # key: pattern, value: (count, [matched values])
+    for k, p in targets.items():
+        if isinstance(p, str):
+            patterns[k] = re.compile(p)
+        else:
+            patterns[k] = re.compile(p[0])
+            accumulate_table[k] = (p[1], [])
     stats = {}
 
-    for line in lines:
+    for ln, line in enumerate(lines):
+        # print(line)
         for k in patterns:
             m = patterns[k].search(line)
             if not m is None:
-                if re_targets:
-                    stats[k] = to_num(m.group(1))
+                if k in accumulate_table:
+                    accumulate_table[k][1].append(to_num(m.group(1)))
                 else:
                     stats[k] = to_num(m.group(1))
-    if not ('roq: commitInstr' in stats and 'totalCycle' in stats):
-        print("Warn: roq_commitInstr or totalCycle not exists")
+                # print(f"Matched {k} at line {ln}")
+                # print(m.group(0))
+                break
+    # print(accumulate_table)
+    for k in accumulate_table:
+        stats[k] = sum(accumulate_table[k][1][-accumulate_table[k][0]:])
+                    
+    # print(stats)
+
+    if not ('commitInstr' in stats and 'clock_cycle' in stats):
+        print("Warn: rob_commitInstr or totalCycle not exists")
         stats['ipc'] = 0
     else:
-        stats['ipc'] = stats['roq: commitInstr']/stats['totalCycle']
+        stats['ipc'] = stats['commitInstr']/stats['clock_cycle']
     return stats
 
 
@@ -365,11 +317,17 @@ def gem5_get_stats(stat_file: str, targets: list,
         lines = get_raw_stats_around(stat_file, insts)
         stats = {}
 
+        # sim_time = get_host_seconds(stat_file)
+        # stats['time'] = sim_time
+
         for line in lines:
             for k in patterns:
                 m = patterns[k].search(line)
                 if not m is None:
                     if re_targets:
+                        # print(line)
+                        # print(m.group(1))
+                        # print(m.group(2))
                         stats[m.group(1)] = to_num(m.group(2))
                     else:
                         stats[k] = to_num(m.group(1))
@@ -472,14 +430,55 @@ def add_overall_qos(hpt: str, lpt: str, d: dict) -> None:
 
 def add_branch_mispred(d: dict) -> None:
     branches = float(d['branches'])
-    mispred = float(d['branchMispredicts'])
+    mispred = float(d.get('branchMispredicts', 0.0))
+    ind_mispred = float(d.get('indirectMispred', 0.0))
     d['mispredict rate'] = mispred / branches
-    d['MPKI'] = mispred / float(d['Insts']) * 1000
+    d['total branch MPKI'] = mispred / float(d['Insts']) * 1000
+    d['indirect branch MPKI'] = ind_mispred / float(d['Insts']) * 1000
+    d['direct branch MPKI'] = d['total branch MPKI'] - d['indirect branch MPKI']
+    d['return MPKI'] = float(d['RASIncorrect']) / float(d['Insts']) * 1000
+
+def xs_add_branch_mispred(d: dict) -> None:
+    mispred = float(d['BpBWrong']) + float(d['BpJWrong']) + float(d['BpIWrong'])
+    branches = float(d['BpInstr'])
+    d['mispredict rate'] = mispred / branches
+    d['total branch MPKI'] = mispred / float(d['commitInstr']) * 1000
+    # d['indirect branch MPKI'] = ind_mispred / float(d['Insts']) * 1000
+    # d['direct branch MPKI'] = d['total branch MPKI'] - d['indirect branch MPKI']
+    # d['return MPKI'] = float(d['RASIncorrect']) / float(d['Insts']) * 1000
 
 def add_cache_mpki(d: dict) -> None:
-    d['L2MPKI'] = float(d['l2.demandMisses']) / float(d['Insts']) * 1000
-    d['L3MPKI'] = float(d['l3.demandMisses']) / float(d['Insts']) * 100;
-    d['L2/L1 acc'] = float(d['l2.overallAccesses']) / float(d['dcache.overallAccesses'])
+    d['L2MPKI'] = float(d.get('l2.demandMisses', 0.0)) / float(d['Insts']) * 1000
+    d['L3MPKI'] = float(d.get('l3.demandMisses', 0.0)) / float(d['Insts']) * 1000
+    # d['L2/L1 acc'] = float(d['l2.overallAccesses']) / float(d['dcache.overallAccesses'])
+    if 'icache.demandMisses' in d:
+        d['L1I_MPKI'] = float(d['icache.demandMisses']) / float(d['Insts']) * 1000
+    else:
+        d['L1I_MPKI'] = 0.0
+
+def xs_add_cache_mpki(d: dict) -> None:
+    for cache in ['l2', 'l3']:
+        # d[f'{cache}_acc'] = 0
+        # d[f'{cache}_hit'] = 0
+        # for i in range(4):
+        #     d[f'{cache}_acc'] += d[f'{cache}b{i}_acc']
+        #     d.pop(f'{cache}b{i}_acc')
+        #     d[f'{cache}_hit'] += d[f'{cache}b{i}_hit']
+        #     d.pop(f'{cache}b{i}_hit')
+        d[f'{cache}_miss'] = d[f'{cache}_acc'] - d[f'{cache}_hit']
+        d[cache.upper() + 'MPKI'] = d[f'{cache}_miss'] / d['commitInstr'] * 1000
+        d[f'{cache}_miss_rate'] = d[f'{cache}_miss'] / (d[f'{cache}_acc'] + 1)
+        d.pop(f'{cache}_hit')
+        # d.pop(f'{cache}_acc')
+
+def add_warmup_mpki(d: dict) -> None:
+    d['L2MPKI'] = float(d.get('l2.demandMisses', 0)) / float(d['Insts']) * 1000
+    d['L3MPKI'] = float(d.get('l3.demandMisses', 0)) / float(d['Insts']) * 1000
+    if 'branchMispredicts' in d:
+        mispred = float(d['branchMispredicts'])
+    else:
+        mispred = 0.0
+    d['total branch MPKI'] = mispred / float(d['Insts']) * 1000
 
 def add_fanout(d: dict) -> None:
     large_fanout = float(d.get('largeFanoutInsts', 0)) + 1.0
@@ -551,8 +550,8 @@ def scale_tick(df: pd.DataFrame):
 
 def get_spec_ref_time(bmk, ver):
     if ver == '06':
-        top = "/home/zyy/research-data/spec2006/benchspec/CPU2006"
-        ref_file = "/home/zyy/research-data/spec2006/benchspec/CPU2006/{}/data/ref/reftime"
+        top = "/nfs-nvme/home/share/cpu2006v99/benchspec/CPU2006"
+        ref_file = "/nfs-nvme/home/share/cpu2006v99/benchspec/CPU2006/{}/data/ref/reftime"
     else:
         assert ver == '17'
         top = "/home/zyy/research-data/spec2017_20201126/benchspec/CPU"

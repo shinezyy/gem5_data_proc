@@ -20,7 +20,7 @@ def single_stat_factory(targets, key, prefix=''):
         else:
             assert prefix == 'xs_'
             stats = c.xs_get_stats(stat_path, targets, re_targets=True)
-        if stats is not None:
+        if stats is not None and key in stats:
             return stats[key]
         else:
             return None
@@ -45,37 +45,58 @@ def glob_stats(path: str, fname = 'm5out/stats.txt'):
 
 def glob_weighted_stats(path: str, get_func, filtered=True,
         simpoints='/home51/zyy/expri_results/simpoints17.json',
-        stat_file='m5out/stats.txt'):
+        stat_file='m5out/stats.txt', dir_layout='flatten'):
+
+    assert dir_layout == 'flatten' or dir_layout == 'two_layer'
+    stat_path_tree = {}
     stat_tree = {}
     with open(simpoints) as jf:
         points = json.load(jf)
     print(points.keys())
-    for workload in os.listdir(path):
-        print('Extracting', workload)
-        weight_pattern = re.compile(f'.*/{workload}_\d+_(\d+\.\d+([eE][-+]?\d+)?)/.*\.gz')
-        workload_dir = osp.join(path, workload)
-        bmk = workload.split('_')[0]
+
+    if dir_layout == 'flatten':
+        for point_path in os.listdir(path):
+            point_dir = osp.join(path, point_path)
+            if not osp.isdir(point_dir):
+                continue
+            if dir_layout == 'flatten':
+                if '-0' in point_path:
+                    point = point_path.split('-0')[0]
+                elif '_0.' in point_path:
+                    point = point_path.split('_0.')[0]
+            print('Extracting', point_path, point)
+            workload = '_'.join(point.split('_')[:-1])
+            point = int(point.split('_')[-1])
+            bmk = workload.split('_')[0]
+            point_stat_file = osp.join(point_dir, stat_file)
+            assert osp.isfile(point_stat_file)
+            stat_path_tree[(bmk, workload, point)] = point_stat_file
+    
+    weight_dict = json.load(open(simpoints))
+
+    for (bmk, workload, point), stats_file in stat_path_tree.items():
+        weight = float(weight_dict[workload][str(point)])
+        stat = get_func(stats_file)
         if bmk not in stat_tree:
             stat_tree[bmk] = {}
-        stat_tree[bmk][workload] = {}
-        for point in os.listdir(workload_dir):
-            if point not in points[workload]:
-                continue
-            point_dir = osp.join(workload_dir, point)
-            stats_file = osp.join(point_dir, stat_file)
-            weight = float(points[workload][str(point)])
-            stat = get_func(stats_file)
-            if stat is not None and stat > 0.001:
-                stat_tree[bmk][workload][int(point)] = (weight, stat)
-        if len(stat_tree[bmk][workload]):
-            df = pd.DataFrame.from_dict(stat_tree[bmk][workload], orient='index')
-            df.columns = ['weight', 'ipc']
-            stat_tree[bmk][workload] = df
-            print(df)
-        else:
-            stat_tree[bmk].pop(workload)
-            if not len(stat_tree[bmk]):
-                stat_tree.pop(bmk)
+        if workload not in stat_tree[bmk]:
+            stat_tree[bmk][workload] = {}
+        if stat is not None:
+            print(bmk, workload, point)
+            print(weight, stat)
+            assert int(point) not in stat_tree[bmk][workload]
+            stat_tree[bmk][workload][int(point)] = (weight, stat)
+
+    for bmk in stat_tree:
+        for workload in stat_tree[bmk]:
+            if len(stat_tree[bmk][workload]):
+                df = pd.DataFrame.from_dict(stat_tree[bmk][workload], orient='index')
+                df.columns = ['weight', 'ipc']
+                stat_tree[bmk][workload] = df
+            else:
+                stat_tree[bmk].pop(workload)
+                if not len(stat_tree[bmk]):
+                    stat_tree.pop(bmk)
 
     return stat_tree
 
@@ -125,6 +146,8 @@ def weighted_cpi(df: pd.DataFrame):
         return np.dot(df['weight'], df['cpi']) / np.sum(df['weight']), np.sum(df['weight'])
     else:
         assert 'ipc' in df.columns
+        print(df['weight'])
+        print(df['ipc'])
         return np.dot(df['weight'], 1.0/df['ipc']) / np.sum(df['weight']), np.sum(df['weight'])
 
 
