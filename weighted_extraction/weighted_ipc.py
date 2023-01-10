@@ -45,7 +45,8 @@ def get_insts(fname: str):
 
 
 def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, stat_file,
-                         clock_rate, min_coverage=0.0, blacklist=[], whitelist=[], merge_benckmark=False, output_csv='default.csv'):
+                         clock_rate, min_coverage=0.0, blacklist=[], whitelist=[],
+                         merge_benckmark=False, output_csv='default.csv', dir_layout='maze'):
     target = eval(f't.{prefix}ipc_target')
     workload_dict = {}
     bmk_stat = {}
@@ -57,6 +58,7 @@ def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, st
                 u.single_stat_factory(target, 'ipc', prefix),
                 simpoints=simpoints,
                 stat_file=stat_file,
+                dir_layout=dir_layout,
                 )
         with open(simpoints) as jf:
             js = json.load(jf)
@@ -157,24 +159,56 @@ def gem5_spec2017():
             merge_benckmark=True,
             )
 
-def gem5_spec2006():
+'''
+what to change:
+1. the path in confs
+2. simpoints: the json file that describes the simpoint weights
+3. insts_file_fmt: the log file that records total instruction count
+'''
+
+def gem5_spec2006_gcb_o3_example():
     ver = '06'
     confs = {
-            'XS-GEM5': '/local/zhouyaoyang/exec-storage/perf-gcb-sms-dramsim-FM_A-fl2u'
+            'XS-GEM5': '/nfs-nvme/home/share/xuyan/22-0110-L3test/checkpoint-spec06/spec06_rv64gcb_o3_20m/take_cpt'
             }
 
     compute_weighted_cpi(
             ver=ver,
             confs=confs,
             base='XS-GEM5',
+            # simpoint weight file
+            simpoints='/nfs-nvme/home/share/checkpoints_profiles/spec06_rv64gcb_o3_20m/simpoint_summary.json',
+            prefix = '',
+            stat_file='stats.txt',
+            # the log file which contains instruction count in NEMU profiling
+            insts_file_fmt =
+            '/nfs-nvme/home/share/checkpoints_profiles/spec{}_rv64gcb_o3_20m/logs/profiling/{}.log',
+            clock_rate = 2 * 10**9,
+            min_coverage = 0.75,
+            merge_benckmark=True,
+            output_csv='xs-gem5-gcb-o3-test.csv',
+            dir_layout='maze',
+            )
+
+def gem5_spec2006_gcb_o2_example():
+    ver = '06'
+    confs = {
+            'XS-GEM5': '/nfs-nvme/home/share/zyy/gem5-results/perf-gcb-sms-dramsim-FM_A-fl2u'
+            }
+
+    compute_weighted_cpi(
+            ver=ver,
+            confs=confs,
+            base='XS-GEM5',
+            # simpoint weight file
             simpoints='/nfs-nvme/home/share/checkpoints_profiles/spec06_rv64gcb_o2_20m/json/simpoint_summary.json',
             prefix = '',
-            stat_file='m5out/stats.txt',
+            stat_file='stats.txt',
+            # the log file which contains instruction count in NEMU profiling
             insts_file_fmt =
             '/nfs-nvme/home/share/checkpoints_profiles/spec{}_rv64gcb_o2_20m/logs/profiling/{}.log',
             clock_rate = 2 * 10**9,
             min_coverage = 0.75,
-            # blacklist = ['gamess'],
             merge_benckmark=True,
             output_csv='xs-gem5-12-10-dramsim-me-FM_A-sqrt.csv',
             )
@@ -204,5 +238,6 @@ def xiangshan_spec2006():
 
 if __name__ == '__main__':
     # xiangshan_spec2006()
-    gem5_spec2006()
+    gem5_spec2006_gcb_o3_example()
+    # gem5_spec2006_gcb_o2_example()
 

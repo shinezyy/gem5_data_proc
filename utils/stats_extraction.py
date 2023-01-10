@@ -43,34 +43,57 @@ def glob_stats(path: str, fname = 'm5out/stats.txt'):
             stat_files.append((x, stat_path))
     return stat_files
 
+
+def find_file_in_maze(path: str, stat_file='stats.txt'):
+    if osp.isfile(osp.join(path, stat_file)):
+        return osp.join(path, stat_file)
+    for l2_dir in os.listdir(path):
+        l2_path = osp.join(path, l2_dir)
+        if not osp.isdir(l2_path):
+            continue
+        ret = find_file_in_maze(l2_path, stat_file)
+        if ret is not None:
+            return ret
+    return None
+
+
 def glob_weighted_stats(path: str, get_func, filtered=True,
         simpoints='/home51/zyy/expri_results/simpoints17.json',
         stat_file='m5out/stats.txt', dir_layout='flatten'):
 
-    assert dir_layout == 'flatten' or dir_layout == 'two_layer'
+    assert dir_layout == 'flatten' or dir_layout == 'maze'
     stat_path_tree = {}
     stat_tree = {}
     with open(simpoints) as jf:
         points = json.load(jf)
     print(points.keys())
 
-    if dir_layout == 'flatten':
-        for point_path in os.listdir(path):
-            point_dir = osp.join(path, point_path)
-            if not osp.isdir(point_dir):
-                continue
-            if dir_layout == 'flatten':
-                if '-0' in point_path:
-                    point = point_path.split('-0')[0]
-                elif '_0.' in point_path:
-                    point = point_path.split('_0.')[0]
-            print('Extracting', point_path, point)
-            workload = '_'.join(point.split('_')[:-1])
-            point = int(point.split('_')[-1])
-            bmk = workload.split('_')[0]
+    for point_path in os.listdir(path):
+        point_dir = osp.join(path, point_path)
+        if not osp.isdir(point_dir):
+            continue
+        if '-0' in point_path:
+            point = point_path.split('-0')[0]
+        elif '_0.' in point_path:
+            point = point_path.split('_0.')[0]
+        print('Extracting', point_path, point)
+        workload = '_'.join(point.split('_')[:-1])
+        point = int(point.split('_')[-1])
+        bmk = workload.split('_')[0]
+        if dir_layout == 'flatten':
             point_stat_file = osp.join(point_dir, stat_file)
+            print(point_dir)
             assert osp.isfile(point_stat_file)
             stat_path_tree[(bmk, workload, point)] = point_stat_file
+        elif dir_layout == 'maze': # has to search until find stat_file
+            stat_path = find_file_in_maze(point_dir, stat_file)
+            assert stat_path is not None
+            if stat_path is not None:
+                stat_path_tree[(bmk, workload, point)] = stat_path
+            else:
+                print(f'No stat file found in {point_dir}')
+        else:
+            raise NotImplementedError
     
     weight_dict = json.load(open(simpoints))
 
