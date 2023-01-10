@@ -160,14 +160,14 @@ def gem5_spec2017():
 def gem5_spec2006():
     ver = '06'
     confs = {
-            'XS-GEM5': '/local/zhouyaoyang/exec-storage/perf-gcb-sms-dramsim-elim-sqrt-FM_A-fl2u'
+            'XS-GEM5': '/local/zhouyaoyang/exec-storage/perf-gcb-sms-dramsim-FM_A-fl2u'
             }
 
     compute_weighted_cpi(
             ver=ver,
             confs=confs,
             base='XS-GEM5',
-            simpoints=f'/nfs-nvme/home/zhouyaoyang/projects/BatchTaskTemplate/resources/simpoint_cpt_desc/spec{ver}_rv64gcb_o2_20m.json',
+            simpoints='/nfs-nvme/home/share/checkpoints_profiles/spec06_rv64gcb_o2_20m/json/simpoint_summary.json',
             prefix = '',
             stat_file='m5out/stats.txt',
             insts_file_fmt =

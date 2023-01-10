@@ -278,14 +278,14 @@ def xs_get_stats(stat_file: str, targets: list,
                     accumulate_table[k][1].append(to_num(m.group(1)))
                 else:
                     stats[k] = to_num(m.group(1))
-                # print(f"Matched {k} at line {ln}")
+                # print(f"Matched {k} at line {ln}: {m.group(0)}")
                 # print(m.group(0))
                 break
     # print(accumulate_table)
     for k in accumulate_table:
         stats[k] = sum(accumulate_table[k][1][-accumulate_table[k][0]:])
                     
-    # print(stats)
+    print(stats)
 
     if not ('commitInstr' in stats and 'clock_cycle' in stats):
         print("Warn: rob_commitInstr or totalCycle not exists")
