@@ -237,7 +237,7 @@ xs_branch_targets = {
     # '(loopWrong)',
 }
 
-xs_cache_targets = {
+xs_cache_targets_22_04_nanhu = {
     'l3_acc': (r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt: selfdir_A_req,\s+(\d+)", 4),
     'l3_hit': (r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt: selfdir_A_hit,\s+(\d+)", 4),
 
@@ -247,7 +247,7 @@ xs_cache_targets = {
     'dcache_ammp': (r"dcache.missQueue.entries_\d+: load_miss_penalty_to_use,\s+(\d+)", 16),
 }
 
-xs_cache_targets_nanhu_12 = {
+xs_cache_targets_nanhu = {
     'l3b0_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_0\.directory: selfdir_A_req,\s+(\d+)",
     'l3b1_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_1\.directory: selfdir_A_req,\s+(\d+)",
     'l3b2_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_2\.directory: selfdir_A_req,\s+(\d+)",

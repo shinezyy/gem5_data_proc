@@ -105,6 +105,9 @@ def main():
     parser.add_argument('--xiangshan', action='store_true',
                         help='handle XiangShan stats'
                        )
+    parser.add_argument('--old-xs', action='store_true',
+                        help='handle old xs stats'
+                       )
 
     parser.add_argument('--eval-stat', action='store',
             help='evaled stats',
@@ -121,14 +124,16 @@ def main():
 
     matrix = {}
 
+    require_flag = False
+    xs_stat_fmt = opt.xiangshan or opt.old_xs
     for workload, path in paths:
         if opt.filter_bmk and not workload.startswith(opt.filter_bmk):
             continue
-        if opt.xiangshan:
+        if xs_stat_fmt:
             flag_file = osp.join(osp.dirname(path), 'completed')
         else:
             flag_file = osp.join(osp.dirname(osp.dirname(path)), 'completed')
-        if not osp.isfile(flag_file):
+        if require_flag and not osp.isfile(flag_file):
             print('Skip unfinished job:', workload, path, flag_file)
             continue
         
@@ -136,17 +141,22 @@ def main():
         # print(workload, path)
         # print(workload)
         if opt.ipc_only:
-            if opt.xiangshan:
+            if xs_stat_fmt:
                 d = c.xs_get_stats(path, xs_ipc_target, re_targets=True)
             else:
                 d = c.gem5_get_stats(path, ipc_target, re_targets=True)
         else:
-            if opt.xiangshan:
+            if xs_stat_fmt:
                 targets = xs_ipc_target
                 if opt.branch:
                     targets = {**xs_branch_targets, **targets}
                 if opt.cache:
-                    targets = {**xs_cache_targets, **targets}
+                    if opt.xiangshan:
+                        targets = {**xs_cache_targets_nanhu, **targets}
+                    elif opt.old_xs:
+                        targets = {**xs_cache_targets_22_04_nanhu, **targets}
+                    else:
+                        raise Exception('Unknown xs stat format')
 
                 d = c.xs_get_stats(path, targets, re_targets=True)
             else:
@@ -186,7 +196,7 @@ def main():
                     else:
                         targets += eval(stat_target)
 
-        if opt.xiangshan:
+        if xs_stat_fmt:
             prefix = 'xs_'
         else:
             prefix = ''

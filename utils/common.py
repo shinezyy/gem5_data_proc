@@ -248,6 +248,22 @@ def xs_get_time(line):
     return int(time_pattern.match(line).group(1))
 
 
+def xs_get_l3_mshr_latency(line: str):
+    pattern = re.compile(r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_\d+\.mshrAlloc: mshr_latency_(?P<mshr_id>\d+)_(?P<lat_low>\d+)_(?P<lat_high>\d+),\s+(?P<count>\d+)")
+    m = pattern.match(line)
+    if m is None:
+        return False, None
+    mshr_id = int(m.group('mshr_id'))
+    lat_low = int(m.group('lat_low'))
+    lat_high = int(m.group('lat_high'))
+    count = int(m.group('count'))
+    lat_avg = (lat_high + lat_low) / 2.0
+    total_latency = lat_avg * count
+
+    print(f'mshr id: {mshr_id}, {lat_low}-{lat_high}: {total_latency} cycles')
+
+
+
 def xs_get_stats(stat_file: str, targets: list,
               insts: int=200*(10**6), re_targets=False) -> dict:
     if not os.path.isfile(expu(stat_file)):
@@ -270,10 +286,11 @@ def xs_get_stats(stat_file: str, targets: list,
     stats = {}
 
     for ln, line in enumerate(lines):
-        # print(line)
+        matched_re_pattern = False
         for k in patterns:
             m = patterns[k].search(line)
             if not m is None:
+                matched_re_pattern = True
                 if k in accumulate_table:
                     accumulate_table[k][1].append(to_num(m.group(1)))
                 else:
@@ -281,6 +298,8 @@ def xs_get_stats(stat_file: str, targets: list,
                 # print(f"Matched {k} at line {ln}: {m.group(0)}")
                 # print(m.group(0))
                 break
+        # if not matched_re_pattern:
+        #     matched, latency = xs_get_l3_mshr_latency(line)
     # print(accumulate_table)
     for k in accumulate_table:
         stats[k] = sum(accumulate_table[k][1][-accumulate_table[k][0]:])
@@ -457,19 +476,22 @@ def add_cache_mpki(d: dict) -> None:
         d['L1I_MPKI'] = 0.0
 
 def xs_add_cache_mpki(d: dict) -> None:
-    for cache in ['l2', 'l3']:
-        # d[f'{cache}_acc'] = 0
-        # d[f'{cache}_hit'] = 0
-        # for i in range(4):
-        #     d[f'{cache}_acc'] += d[f'{cache}b{i}_acc']
-        #     d.pop(f'{cache}b{i}_acc')
-        #     d[f'{cache}_hit'] += d[f'{cache}b{i}_hit']
-        #     d.pop(f'{cache}b{i}_hit')
-        d[f'{cache}_miss'] = d[f'{cache}_acc'] - d[f'{cache}_hit']
-        d[cache.upper() + 'MPKI'] = d[f'{cache}_miss'] / d['commitInstr'] * 1000
-        d[f'{cache}_miss_rate'] = d[f'{cache}_miss'] / (d[f'{cache}_acc'] + 1)
-        d.pop(f'{cache}_hit')
-        # d.pop(f'{cache}_acc')
+    if 'l2_acc' in d:
+        for cache in ['l2', 'l3']:
+            d[f'{cache}_miss'] = d[f'{cache}_acc'] - d[f'{cache}_hit']
+            d[cache.upper() + 'MPKI'] = d[f'{cache}_miss'] / d['commitInstr'] * 1000
+            d[f'{cache}_miss_rate'] = d[f'{cache}_miss'] / (d[f'{cache}_acc'] + 1)
+            d.pop(f'{cache}_hit')
+            # d.pop(f'{cache}_acc')
+    else:
+        for cache in ['l2', 'l3']:
+            d[f'{cache}_acc'] = 0
+            d[f'{cache}_hit'] = 0
+            for i in range(4):
+                d[f'{cache}_acc'] += d[f'{cache}b{i}_acc']
+                d.pop(f'{cache}b{i}_acc')
+                d[f'{cache}_hit'] += d[f'{cache}b{i}_hit']
+                d.pop(f'{cache}b{i}_hit')
 
 def add_warmup_mpki(d: dict) -> None:
     d['L2MPKI'] = float(d.get('l2.demandMisses', 0)) / float(d['Insts']) * 1000
