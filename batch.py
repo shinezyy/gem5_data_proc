@@ -59,7 +59,7 @@ def main():
                         help='file that filt pairs'
                        )
     parser.add_argument('-f', '--stat-file', action='store',
-                        help='name of stats file', default='m5out/stats.txt'
+                        help='name of stats file',
                        )
     parser.add_argument('-l', '--fanout', action='store_true',
                         help='print fanout'
@@ -115,9 +115,14 @@ def main():
 
     opt = parser.parse_args()
 
-    paths = u.glob_stats_l2(opt.stat_dir, opt.stat_file)
-    if len(paths) == 0:
-        paths = u.glob_stats(opt.stat_dir, opt.stat_file)
+    stat_file = opt.stat_file
+    if opt.stat_file is None:
+        if not opt.xiangshan:
+            stat_file = 'stats.txt'
+        else:
+            stat_file = 'err.txt'
+
+    paths = u.glob_stats(opt.stat_dir, fname=stat_file)
 
     print(paths)
     assert len(paths) > 0
@@ -218,7 +223,7 @@ def main():
 
     df = pd.DataFrame.from_dict(matrix, orient='index')
     df = df.sort_index()
-    # df = df.sort_index(1)
+    df = df.reindex(sorted(df.columns), axis=1)
     # df = df.sort_values(['ipc'])
     # for x in df.index:
     #     print(x)

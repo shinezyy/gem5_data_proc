@@ -248,19 +248,35 @@ def xs_get_time(line):
     return int(time_pattern.match(line).group(1))
 
 
-def xs_get_l3_mshr_latency(line: str):
-    pattern = re.compile(r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_\d+\.mshrAlloc: mshr_latency_(?P<mshr_id>\d+)_(?P<lat_low>\d+)_(?P<lat_high>\d+),\s+(?P<count>\d+)")
+def xs_get_mshr_latency(line: str, lv: str):
+    # TOP.SimTop.l_soc.core_with_l2.l2cache.
+    
+    if lv == 'l2':
+        pattern = re.compile(r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_(?P<bank>\d+)\.mshrAlloc: mshr_latency_(?P<mshr_id>\d+)_(?P<lat_low>\d+)_(?P<lat_high>\d+),\s+(?P<count>\d+)")
+    elif lv == 'l3':
+        pattern = re.compile(r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_(?P<bank>\d+)\.mshrAlloc: mshr_latency_(?P<mshr_id>\d+)_(?P<lat_low>\d+)_(?P<lat_high>\d+),\s+(?P<count>\d+)")
+    elif lv == 'l1d':
+        pattern = re.compile(r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.memBlock\.dcache\.dcache\.missQueue\.entries_(?P<mshr_id>\d+): load_miss_penalty_to_use_(?P<lat_low>\d+)_(?P<lat_high>\d+),\s+(?P<count>\d+)")
+    else:
+        raise Exception("Unhandle cache levl")
+
     m = pattern.match(line)
     if m is None:
-        return False, None
+        return False, None, None, None, None
     mshr_id = int(m.group('mshr_id'))
+    if 'bank' in m.groupdict(): 
+        bank = int(m.group('bank'))
+    else:
+        bank = 0
     lat_low = int(m.group('lat_low'))
     lat_high = int(m.group('lat_high'))
     count = int(m.group('count'))
     lat_avg = (lat_high + lat_low) / 2.0
     total_latency = lat_avg * count
 
-    print(f'mshr id: {mshr_id}, {lat_low}-{lat_high}: {total_latency} cycles')
+    if lv == 'l1d':
+        print(f'{lv} mshr id: {mshr_id}, {lat_low}-{lat_high}: {total_latency} cycles')
+    return True, int(bank), int(mshr_id), f'{lat_low}-{lat_high}', count
 
 
 
@@ -285,6 +301,15 @@ def xs_get_stats(stat_file: str, targets: list,
             accumulate_table[k] = (p[1], [])
     stats = {}
 
+    mshr_latency_l2 = {}
+    mshr_latency_l3 = {}
+    mshr_latency_l1d = {}
+    total_access = 0
+    total_match = 0
+    keep_last = True
+    # caches = ['l2', 'l3', 'l1d']
+    caches = ['l2', 'l3']
+    # caches = ['l1d']
     for ln, line in enumerate(lines):
         matched_re_pattern = False
         for k in patterns:
@@ -293,18 +318,67 @@ def xs_get_stats(stat_file: str, targets: list,
                 matched_re_pattern = True
                 if k in accumulate_table:
                     accumulate_table[k][1].append(to_num(m.group(1)))
+                    print(accumulate_table)
+                    # print(f"Matched {k} at line {ln}: {m.group(0)}")
+                    # raise
                 else:
                     stats[k] = to_num(m.group(1))
                 # print(f"Matched {k} at line {ln}: {m.group(0)}")
                 # print(m.group(0))
                 break
-        # if not matched_re_pattern:
-        #     matched, latency = xs_get_l3_mshr_latency(line)
-    # print(accumulate_table)
+        if not matched_re_pattern:
+            for lv in caches:
+                mshr_latency = eval(f'mshr_latency_{lv}')
+                matched, bank, mshr_id, bucket, count = xs_get_mshr_latency(line, lv)
+                if matched:
+                    total_match += 1
+                    mshr_latency[bank] = mshr_latency.get(bank, {})
+                    mshr_latency[bank][bucket] = mshr_latency[bank].get(bucket, {})
+                    if mshr_id in mshr_latency[bank][bucket] and count != 0:
+                        total_access += count
+                    if keep_last:
+                        mshr_latency[bank][bucket][mshr_id] = count
+                    else:
+                        if mshr_id not in mshr_latency[bank][bucket]:
+                            mshr_latency[bank][bucket][mshr_id] = count
+    print(accumulate_table)
     for k in accumulate_table:
         stats[k] = sum(accumulate_table[k][1][-accumulate_table[k][0]:])
-                    
-    print(stats)
+
+    # print(mshr_latency.keys())
+    tdf = None
+    for lv in caches:
+        bucket_sum = {}
+        mshr_latency = eval(f'mshr_latency_{lv}')
+        for bank in range(4):
+            if bank not in mshr_latency:
+                continue
+            for bucket in mshr_latency[bank]:
+                # print(mshr_latency[bank][bucket])
+                s = sum(mshr_latency[bank][bucket].values())
+                bucket_sum[bucket] = bucket_sum.get(bucket, 0) + s
+        check_count = 0
+        
+        print(bucket_sum)
+        if tdf is None:
+            tdf = pd.DataFrame.from_dict(bucket_sum, orient='index', columns=[lv])
+        else:
+            tdf[lv] = pd.DataFrame.from_dict(bucket_sum, orient='index', columns=[lv])
+
+        for k, v in bucket_sum.items():
+            check_count += v
+        print(f'total access: {total_access}, check count: {check_count}, total match: {total_match}')
+    
+
+    for lv in caches:
+        # for i in tdf.index[:3]:
+        #     tdf.at[i, lv] = 0
+        tdf[f'{lv}_cum_sum'] = tdf[lv].cumsum()
+        tdf[f'{lv}_cum_pct'] = 100*tdf[f'{lv}_cum_sum']/tdf[lv].sum()
+        tdf.drop([f'{lv}_cum_sum'], axis=1, inplace=True)
+
+    print(tdf)
+    # print(stats)
 
     if not ('commitInstr' in stats and 'clock_cycle' in stats):
         print("Warn: rob_commitInstr or totalCycle not exists")
@@ -467,31 +541,42 @@ def xs_add_branch_mispred(d: dict) -> None:
     # d['return MPKI'] = float(d['RASIncorrect']) / float(d['Insts']) * 1000
 
 def add_cache_mpki(d: dict) -> None:
-    d['L2MPKI'] = float(d.get('l2.demandMisses', 0.0)) / float(d['Insts']) * 1000
-    d['L3MPKI'] = float(d.get('l3.demandMisses', 0.0)) / float(d['Insts']) * 1000
     # d['L2/L1 acc'] = float(d['l2.overallAccesses']) / float(d['dcache.overallAccesses'])
-    if 'icache.demandMisses' in d:
-        d['L1I_MPKI'] = float(d['icache.demandMisses']) / float(d['Insts']) * 1000
-    else:
-        d['L1I_MPKI'] = 0.0
+    d['l3.NonPrefAcc'] = float(d.get('l3.demandAcc', 0.0) - d.get('Accesses::l2.pref', 0.0))
+    d['l3.NonPrefMiss'] = float(d.get('l3.demandMis', 0.0) - d.get('Misses::l2.pref', 0.0))
+
+    d['L2MPKI'] = float(d.get('l2.demandMis', 0.0)) / float(d['Insts']) * 1000
+    d['L3MPKI'] = float(d.get('l3.NonPrefMiss', 0.0)) / float(d['Insts']) * 1000
+
+    # if 'icache.demandMisses' in d:
+    #     d['L1I_MPKI'] = float(d['icache.demandMisses']) / float(d['Insts']) * 1000
+    # else:
+    #     d['L1I_MPKI'] = 0.0
 
 def xs_add_cache_mpki(d: dict) -> None:
-    if 'l2_acc' in d:
-        for cache in ['l2', 'l3']:
-            d[f'{cache}_miss'] = d[f'{cache}_acc'] - d[f'{cache}_hit']
-            d[cache.upper() + 'MPKI'] = d[f'{cache}_miss'] / d['commitInstr'] * 1000
-            d[f'{cache}_miss_rate'] = d[f'{cache}_miss'] / (d[f'{cache}_acc'] + 1)
-            d.pop(f'{cache}_hit')
-            # d.pop(f'{cache}_acc')
-    else:
+    if 'l2_acc' not in d:
+        print('Using latest xs')
+        print(d)
         for cache in ['l2', 'l3']:
             d[f'{cache}_acc'] = 0
             d[f'{cache}_hit'] = 0
+            d[f'{cache}_recv_pref'] = 0
             for i in range(4):
                 d[f'{cache}_acc'] += d[f'{cache}b{i}_acc']
                 d.pop(f'{cache}b{i}_acc')
                 d[f'{cache}_hit'] += d[f'{cache}b{i}_hit']
                 d.pop(f'{cache}b{i}_hit')
+                d[f'{cache}_recv_pref'] += d[f'{cache}b{i}_recv_pref']
+                d.pop(f'{cache}b{i}_recv_pref')
+    else:
+        print('Using old xs')
+    for cache in ['l2', 'l3']:
+        d[f'{cache}_miss'] = d[f'{cache}_acc'] - d[f'{cache}_hit']
+        d[cache.upper() + 'MPKI'] = d[f'{cache}_miss'] / d['commitInstr'] * 1000
+        d[f'{cache}_miss_rate'] = d[f'{cache}_miss'] / (d[f'{cache}_acc'] + 1)
+        d.pop(f'{cache}_hit')
+    for cache in ['l2']:
+        d[f'{cache}_demand_acc'] = d[f'{cache}_acc'] - d[f'{cache}_recv_pref']
 
 def add_warmup_mpki(d: dict) -> None:
     d['L2MPKI'] = float(d.get('l2.demandMisses', 0)) / float(d['Insts']) * 1000

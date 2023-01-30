@@ -26,27 +26,39 @@ def single_stat_factory(targets, key, prefix=''):
             return None
     return get_single_stat
 
-def glob_stats_l2(path: str, fname = 'm5out/stats.txt'):
-    stats_files = []
-    for x in os.listdir(path):
-        x_path = osp.join(path, x)
-        if osp.isdir(x_path):
-            for codename, f in glob_stats(x_path, fname):
-                stats_files.append((f'{x}/{codename}', f))
-    return stats_files
+# def glob_stats_l2(path: str, fname = 'm5out/stats.txt'):
+#     stats_files = []
+#     for x in os.listdir(path):
+#         x_path = osp.join(path, x)
+#         if osp.isdir(x_path):
+#             for codename, f in glob_stats(x_path, fname):
+#                 stats_files.append((f'{x}/{codename}', f))
+#     return stats_files
 
-def glob_stats(path: str, fname = 'm5out/stats.txt'):
-    stat_files = []
-    for x in os.listdir(path):
-        stat_path = osp.join(path, x, fname)
-        if osp.isfile(stat_path) and osp.getsize(stat_path) > 10 * 1024:  # > 10K
-            stat_files.append((x, stat_path))
-    return stat_files
+# def glob_stats(path: str, fname = 'm5out/stats.txt'):
+#     stat_files = []
+#     for x in os.listdir(path):
+#         stat_path = osp.join(path, x, fname)
+#         if osp.isfile(stat_path) and osp.getsize(stat_path) > 10 * 1024:  # > 10K
+#             stat_files.append((x, stat_path))
+#     return stat_files
 
+def glob_stats(path: str, fname = 'x'):
+    files = []
+    for x in os.listdir(path):
+        stat_path = find_file_in_maze(osp.join(path, x), fname)
+        if stat_path is not None:
+            files.append((x, stat_path))
+    return files
 
 def find_file_in_maze(path: str, stat_file='stats.txt'):
-    if osp.isfile(osp.join(path, stat_file)):
-        return osp.join(path, stat_file)
+    file_path = osp.join(path, stat_file)
+    if osp.isfile(file_path) or osp.islink(file_path):
+        return file_path
+    else:
+        print(f'No stat file found in {file_path}')
+        if not osp.isdir(path):
+            return None
     for l2_dir in os.listdir(path):
         l2_path = osp.join(path, l2_dir)
         if not osp.isdir(l2_path):
@@ -76,8 +88,10 @@ def glob_weighted_stats(path: str, get_func, filtered=True,
             point = point_path.split('-0')[0]
         elif '_0.' in point_path:
             point = point_path.split('_0.')[0]
-        print('Extracting', point_path, point)
+        else:
+            point = point_path
         workload = '_'.join(point.split('_')[:-1])
+        print('Extracting', point_path, point, workload)
         point = int(point.split('_')[-1])
         bmk = workload.split('_')[0]
         if dir_layout == 'flatten':

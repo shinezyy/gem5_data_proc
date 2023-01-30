@@ -29,17 +29,22 @@ icache_targets = [
 
 cache_targets = [
     # '(l3\.demandMissRate)::total',
-    '(l3\.demandMisses)::total',
-    '(l3\.overallMisses)::total',
+    'l3\.demand(Accesses::l2\.pref)etcher',
+    '(l3\.demandAcc)esses::total',
+    'l3\.demand(Misses::l2\.pref)etcher',
+    '(l3\.demandMis)ses::total',
+    # '(l3\.overallAcc)esses::total',
+    # '(l3\.overallMis)ses::total',
     # '(l2\.demandMissRate)::total',
-    '(l2\.demandMisses)::total',
-    '(l2\.overallMisses)::total',
+    '(l2\.demandMis)ses::total',
+    '(l2\.overallMis)ses::total',
+    '(l2\.overallAcc)esses::total',
+    '(l2\.demandAcc)esses::total',
     # 'cpu\.(dcache\.demandAvgMissLatency)::\.cpu\.data',
     # 'cpu\.(dcache\.demandMisses)::\.cpu\.data',
     # 'cpu\.(dcache.demandMissRate)::\.cpu\.data',
-    'cpu\.(dcache\.overallAccesses)::cpu\.data',
-    '(l2\.overallAccesses)::total',
-    'cpu\.(icache\.demandMisses)::total',
+    'cpu\.(dcache\.overallAcc)esses::cpu\.data',
+    # 'cpu\.(icache\.demandMisses)::total',
     # 'cpu\.iew\.iew(ExecLoadInsts)',
 ]
 
@@ -248,24 +253,33 @@ xs_cache_targets_22_04_nanhu = {
 }
 
 xs_cache_targets_nanhu = {
-    'l3b0_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_0\.directory: selfdir_A_req,\s+(\d+)",
-    'l3b1_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_1\.directory: selfdir_A_req,\s+(\d+)",
-    'l3b2_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_2\.directory: selfdir_A_req,\s+(\d+)",
-    'l3b3_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_3\.directory: selfdir_A_req,\s+(\d+)",
-    'l3b0_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_0\.directory: selfdir_A_hit,\s+(\d+)",
-    'l3b1_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_1\.directory: selfdir_A_hit,\s+(\d+)",
-    'l3b2_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_2\.directory: selfdir_A_hit,\s+(\d+)",
-    'l3b3_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_3\.directory: selfdir_A_hit,\s+(\d+)",
-
-    'l2b0_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_0\.directory: selfdir_A_req,\s+(\d+)",
-    'l2b1_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_1\.directory: selfdir_A_req,\s+(\d+)",
-    'l2b2_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_2\.directory: selfdir_A_req,\s+(\d+)",
-    'l2b3_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_3\.directory: selfdir_A_req,\s+(\d+)",
-    'l2b0_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_0\.directory: selfdir_A_hit,\s+(\d+)",
-    'l2b1_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_1\.directory: selfdir_A_hit,\s+(\d+)",
-    'l2b2_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_2\.directory: selfdir_A_hit,\s+(\d+)",
-    'l2b3_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_3\.directory: selfdir_A_hit,\s+(\d+)",
 }
+
+for bank in range(4):
+    xs_cache_targets_nanhu['l3b{}_acc'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_{}.directory: selfdir_A_req,\s+(\d+)".format(bank)
+    xs_cache_targets_nanhu['l3b{}_hit'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_{}.directory: selfdir_A_hit,\s+(\d+)".format(bank)
+    xs_cache_targets_nanhu['l3b{}_recv_pref'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_{}\.a_req_buffer: recv_prefetch,\s+(\d+)".format(bank)
+
+    xs_cache_targets_nanhu['l2b{}_acc'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}.directory: selfdir_A_req,\s+(\d+)".format(bank)
+    xs_cache_targets_nanhu['l2b{}_hit'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}.directory: selfdir_A_hit,\s+(\d+)".format(bank)
+    xs_cache_targets_nanhu['l2b{}_recv_pref'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}\.a_req_buffer: recv_prefetch,\s+(\d+)".format(bank)
+    # 'l3b0_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_0\.directory: selfdir_A_req,\s+(\d+)",
+    # 'l3b1_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_1\.directory: selfdir_A_req,\s+(\d+)",
+    # 'l3b2_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_2\.directory: selfdir_A_req,\s+(\d+)",
+    # 'l3b3_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_3\.directory: selfdir_A_req,\s+(\d+)",
+    # 'l3b0_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_0\.directory: selfdir_A_hit,\s+(\d+)",
+    # 'l3b1_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_1\.directory: selfdir_A_hit,\s+(\d+)",
+    # 'l3b2_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_2\.directory: selfdir_A_hit,\s+(\d+)",
+    # 'l3b3_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_3\.directory: selfdir_A_hit,\s+(\d+)",
+
+    # 'l2b0_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_0\.directory: selfdir_A_req,\s+(\d+)",
+    # 'l2b1_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_1\.directory: selfdir_A_req,\s+(\d+)",
+    # 'l2b2_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_2\.directory: selfdir_A_req,\s+(\d+)",
+    # 'l2b3_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_3\.directory: selfdir_A_req,\s+(\d+)",
+    # 'l2b0_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_0\.directory: selfdir_A_hit,\s+(\d+)",
+    # 'l2b1_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_1\.directory: selfdir_A_hit,\s+(\d+)",
+    # 'l2b2_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_2\.directory: selfdir_A_hit,\s+(\d+)",
+    # 'l2b3_hit': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_3\.directory: selfdir_A_hit,\s+(\d+)",
 
 xgroup_targets = [
     'cpus?\.num(Load)Insts',

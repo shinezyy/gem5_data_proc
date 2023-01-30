@@ -119,7 +119,7 @@ def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, st
             bmk_stat[conf] = df
             excluded = df[df['Coverage'] <= min_coverage]
             df = df[df['Coverage'] > min_coverage]
-            df.to_csv(output_csv)
+            df.to_csv(osp.join('results', output_csv))
             print(df)
             print('Estimated score @ 2GHz:', geometric_mean(df['score']))
             print('Estimated score per GHz:', geometric_mean(df['score'])/(clock_rate/(10**9)))
