@@ -526,6 +526,7 @@ def add_branch_mispred(d: dict) -> None:
     mispred = float(d.get('branchMispredicts', 0.0))
     ind_mispred = float(d.get('indirectMispred', 0.0))
     d['mispredict rate'] = mispred / branches
+    print('Commit instr', d['Insts'], mispred)
     d['total branch MPKI'] = mispred / float(d['Insts']) * 1000
     d['indirect branch MPKI'] = ind_mispred / float(d['Insts']) * 1000
     d['direct branch MPKI'] = d['total branch MPKI'] - d['indirect branch MPKI']
@@ -545,8 +546,8 @@ def add_cache_mpki(d: dict) -> None:
     d['l3.NonPrefAcc'] = float(d.get('l3.demandAcc', 0.0) - d.get('Accesses::l2.pref', 0.0))
     d['l3.NonPrefMiss'] = float(d.get('l3.demandMis', 0.0) - d.get('Misses::l2.pref', 0.0))
 
-    d['L2MPKI'] = float(d.get('l2.demandMis', 0.0)) / float(d['Insts']) * 1000
-    d['L3MPKI'] = float(d.get('l3.NonPrefMiss', 0.0)) / float(d['Insts']) * 1000
+    d['L2.demand.MPKI'] = float(d.get('l2.demandMis', 0.0)) / float(d['Insts']) * 1000
+    d['L3.NonPref.MPKI'] = float(d.get('l3.NonPrefMiss', 0.0)) / float(d['Insts']) * 1000
 
     # if 'icache.demandMisses' in d:
     #     d['L1I_MPKI'] = float(d['icache.demandMisses']) / float(d['Insts']) * 1000
@@ -572,11 +573,12 @@ def xs_add_cache_mpki(d: dict) -> None:
         print('Using old xs')
     for cache in ['l2', 'l3']:
         d[f'{cache}_miss'] = d[f'{cache}_acc'] - d[f'{cache}_hit']
-        d[cache.upper() + 'MPKI'] = d[f'{cache}_miss'] / d['commitInstr'] * 1000
+        # d[cache.upper() + 'MPKI'] = d[f'{cache}_miss'] / d['commitInstr'] * 1000
         d[f'{cache}_miss_rate'] = d[f'{cache}_miss'] / (d[f'{cache}_acc'] + 1)
         d.pop(f'{cache}_hit')
     for cache in ['l2']:
         d[f'{cache}_demand_acc'] = d[f'{cache}_acc'] - d[f'{cache}_recv_pref']
+        # d[f'{cache}_demand_mpki'] = d[f'{cache}_demand_acc'] / d['commitInstr'] * 1000
 
 def add_warmup_mpki(d: dict) -> None:
     d['L2MPKI'] = float(d.get('l2.demandMisses', 0)) / float(d['Insts']) * 1000
