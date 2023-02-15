@@ -543,11 +543,15 @@ def xs_add_branch_mispred(d: dict) -> None:
 
 def add_cache_mpki(d: dict) -> None:
     # d['L2/L1 acc'] = float(d['l2.overallAccesses']) / float(d['dcache.overallAccesses'])
-    d['l3.NonPrefAcc'] = float(d.get('l3.demandAcc', 0.0) - d.get('Accesses::l2.pref', 0.0))
-    d['l3.NonPrefMiss'] = float(d.get('l3.demandMis', 0.0) - d.get('Misses::l2.pref', 0.0))
+    d['L3.NonPrefAcc'] = float(d.get('l3.demandAcc', 0.0) - d.get('l3.demandAccesses::l2.pref', 0.0))
+    d['L3.NonPrefMiss'] = float(d.get('l3.demandMiss', 0.0) - d.get('l3.demandMisses::l2.pref', 0.0))
+    d.pop('l3.demandAccesses::l2.pref', None)
+    d.pop('l3.demandMisses::l2.pref', None)
 
-    d['L2.demand.MPKI'] = float(d.get('l2.demandMis', 0.0)) / float(d['Insts']) * 1000
-    d['L3.NonPref.MPKI'] = float(d.get('l3.NonPrefMiss', 0.0)) / float(d['Insts']) * 1000
+    d['L2.MPKI'] = float(d.get('l2.demandMiss', 0.0)) / float(d['Insts']) * 1000
+    d['L3.NonPref.MPKI'] = float(d.get('L3.NonPrefMiss', 0.0)) / float(d['Insts']) * 1000
+
+    d['l1D.MPKI'] = float(d.get('dcache.demandMiss', 0.0)) / float(d['Insts']) * 1000
 
     # if 'icache.demandMisses' in d:
     #     d['L1I_MPKI'] = float(d['icache.demandMisses']) / float(d['Insts']) * 1000
@@ -555,6 +559,7 @@ def add_cache_mpki(d: dict) -> None:
     #     d['L1I_MPKI'] = 0.0
 
 def xs_add_cache_mpki(d: dict) -> None:
+    # L2/L3
     if 'l2_acc' not in d:
         print('Using latest xs')
         print(d)
@@ -562,7 +567,7 @@ def xs_add_cache_mpki(d: dict) -> None:
             d[f'{cache}_acc'] = 0
             d[f'{cache}_hit'] = 0
             d[f'{cache}_recv_pref'] = 0
-            for i in range(4):
+            for i in range(4):  # TODO remove hardcode
                 d[f'{cache}_acc'] += d[f'{cache}b{i}_acc']
                 d.pop(f'{cache}b{i}_acc')
                 d[f'{cache}_hit'] += d[f'{cache}b{i}_hit']
@@ -572,13 +577,23 @@ def xs_add_cache_mpki(d: dict) -> None:
     else:
         print('Using old xs')
     for cache in ['l2', 'l3']:
-        d[f'{cache}_miss'] = d[f'{cache}_acc'] - d[f'{cache}_hit']
-        # d[cache.upper() + 'MPKI'] = d[f'{cache}_miss'] / d['commitInstr'] * 1000
-        d[f'{cache}_miss_rate'] = d[f'{cache}_miss'] / (d[f'{cache}_acc'] + 1)
+        d[f'{cache.upper()}.overallMiss'] = d[f'{cache}_acc'] - d[f'{cache}_hit']
+        # d[f'{cache.upper()}_overall_miss_rate'] = d[f'{cache.upper()}_overall_miss'] / (d[f'{cache}_acc'] + 1)
+        d[f'{cache.upper()}.overallMPKI'] = d[f'{cache.upper()}.overallMiss'] / (d[f'{cache}_acc'] + 1)
         d.pop(f'{cache}_hit')
     for cache in ['l2']:
-        d[f'{cache}_demand_acc'] = d[f'{cache}_acc'] - d[f'{cache}_recv_pref']
+        d[f'{cache}.NonPrefAcc'] = d[f'{cache}_acc'] - d[f'{cache}_recv_pref']
         # d[f'{cache}_demand_mpki'] = d[f'{cache}_demand_acc'] / d['commitInstr'] * 1000
+
+    # L1D
+    d[f'L1D.miss'] = 0
+    d[f'L1D.acc'] = 0
+    for load_pipeline in range(2):  # TODO remove hardcode
+        d[f'L1D.miss'] += d[f'l1d_{load_pipeline}_miss']
+        d.pop(f'l1d_{load_pipeline}_miss')
+        d[f'L1D.acc'] += d[f'l1d_{load_pipeline}_acc']
+        d.pop(f'l1d_{load_pipeline}_acc')
+    d[f'L1D.MPKI'] = d[f'L1D.miss'] / d['commitInstr'] * 1000
 
 def add_warmup_mpki(d: dict) -> None:
     d['L2MPKI'] = float(d.get('l2.demandMisses', 0)) / float(d['Insts']) * 1000

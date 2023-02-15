@@ -102,7 +102,7 @@ def main():
                         help='Only print select benchmark'
                        )
 
-    parser.add_argument('--xiangshan', action='store_true',
+    parser.add_argument('-X', '--xiangshan', action='store_true',
                         help='handle XiangShan stats'
                        )
     parser.add_argument('--old-xs', action='store_true',
@@ -120,7 +120,7 @@ def main():
         if not opt.xiangshan:
             stat_file = 'stats.txt'
         else:
-            stat_file = 'err.txt'
+            stat_file = 'simulator_err.txt'
 
     paths = u.glob_stats(opt.stat_dir, fname=stat_file)
 
