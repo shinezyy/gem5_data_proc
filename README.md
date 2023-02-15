@@ -3,8 +3,15 @@ This is a tool to extract GEM5 & XS performance counter from the output of GEM5 
 
 We use `batch.py` to extract the performance counter for each checkpoint.
 
+Get full option list of `batch.py` with
+``` shell
+batch.py -h
+```
+
 To use `batch.py` anywhere, you can add `gem5_data_proc` to you PATH:
-`export PATH='/path/to/gem5_data_proc':$PATH`
+``` shell
+export PATH='/path/to/gem5_data_proc':$PATH
+```
 
 Use `batch.py` to extract GEM5's cache performance counters:
 ``` shell
