@@ -29,9 +29,9 @@ icache_targets = [
 
 cache_targets = [
     # '(l3\.demandMissRate)::total',
-    'l3\.demand(Accesses::l2\.pref)etcher',
+    '(l3\.demandAccesses::l2\.pref)etcher',
     '(l3\.demandAcc)esses::total',
-    'l3\.demand(Misses::l2\.pref)etcher',
+    '(l3\.demandMisses::l2\.pref)etcher',
     '(l3\.demandMis)ses::total',
     # '(l3\.overallAcc)esses::total',
     # '(l3\.overallMis)ses::total',
