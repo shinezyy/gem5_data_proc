@@ -102,6 +102,9 @@ def main():
                         help='Only print select benchmark'
                        )
 
+    parser.add_argument('-t', '--topdown', action='store_true',
+                        help='handle topdown stats'
+                       )
     parser.add_argument('-X', '--xiangshan', action='store_true',
                         help='handle XiangShan stats'
                        )
@@ -190,6 +193,8 @@ def main():
                     targets += cache_targets
                 if opt.warmup:
                     targets += warmup_targets
+                if opt.topdown:
+                    targets += topdown_targets
 
                 d = c.gem5_get_stats(path, targets, re_targets=True)
 

@@ -49,6 +49,41 @@ cache_targets = [
     # 'cpu\.iew\.iew(ExecLoadInsts)',
 ]
 
+topdown_targets = [
+]
+
+def add_topdown_targets():
+    stalls = [
+        'Nostall',
+        'IcacheStall',
+        'ITlbStall',
+        'DTlbStall',
+        'BpStall',
+        'IntStall',
+        'TrapStall',
+        'FragStall',
+        'SquashStall',
+        'FetchBufferInvalid',
+        'InstMisPred',
+        'InstSquashed',
+        'SerializeStall',
+        'LongExecute',
+        'InstNotReady',
+        'LoadL1Stall',
+        'LoadL2Stall',
+        'LoadL3Stall',
+        'StoreL1Stall',
+        'StoreL2Stall',
+        'StoreL3Stall',
+        'ResumeUnblock',
+        'CommitSquash',
+    ]
+    for stall in stalls:
+        topdown_targets.append(r'system\.cpu\.iew\.dispatchStallReason::({})'.format(stall))
+
+add_topdown_targets()
+
+
 warmup_targets = [
     '(?:cpus?|switch_cpus_1)\.(?:diewc|commit)\.(branchMispredicts)',
     '(?:cpus?|switch_cpus_1)\.(?:diewc|commit)\.(branches)',
