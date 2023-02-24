@@ -211,6 +211,12 @@ def main():
         else:
             prefix = ''
         if len(d):
+            segments = workload.split('_')
+            if len(segments):
+                d['point'] = segments[-1]
+                d['workload'] = '_'.join(segments[:-1])
+                d['bmk'] = segments[0]
+
             if opt.smt:
                 matrix[workload] = further_proc(workload, d, opt.verbose)
             else:
@@ -232,8 +238,6 @@ def main():
     # df = df.sort_values(['ipc'])
     # for x in df.index:
     #     print(x)
-    if len(df):
-        df.loc['mean'] = df.mean()
 
     df = df.fillna(0)
 

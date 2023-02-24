@@ -32,18 +32,6 @@ def gen_coverage():
         json.dump(d, f, indent=4)
 
 
-def get_insts(fname: str):
-    print(fname)
-    assert osp.isfile(fname)
-    p = re.compile('total guest instructions = (\d+)')
-    with open(fname) as f:
-        for line in f:
-            m = p.search(line)
-            if m is not None:
-                return m.group(1)
-    return None
-
-
 def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, stat_file,
                          clock_rate, min_coverage=0.0, blacklist=[], whitelist=[],
                          merge_benckmark=False, output_csv='default.csv', dir_layout='maze'):
