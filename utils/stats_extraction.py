@@ -26,29 +26,44 @@ def single_stat_factory(targets, key, prefix=''):
             return None
     return get_single_stat
 
-# def glob_stats_l2(path: str, fname = 'm5out/stats.txt'):
-#     stats_files = []
-#     for x in os.listdir(path):
-#         x_path = osp.join(path, x)
-#         if osp.isdir(x_path):
-#             for codename, f in glob_stats(x_path, fname):
-#                 stats_files.append((f'{x}/{codename}', f))
-#     return stats_files
-
-# def glob_stats(path: str, fname = 'm5out/stats.txt'):
-#     stat_files = []
-#     for x in os.listdir(path):
-#         stat_path = osp.join(path, x, fname)
-#         if osp.isfile(stat_path) and osp.getsize(stat_path) > 10 * 1024:  # > 10K
-#             stat_files.append((x, stat_path))
-#     return stat_files
 
 def glob_stats(path: str, fname = 'x'):
     files = []
-    for x in os.listdir(path):
-        stat_path = find_file_in_maze(osp.join(path, x), fname)
-        if stat_path is not None:
-            files.append((x, stat_path))
+    flatten_pat = re.compile(r'.*/(?P<workload_point>.*)/')
+    two_layer_pat = re.compile(r'.*/(?P<workload>.*)/(?P<point>\d+)/')
+
+    probe_stat_path = find_file_in_maze(path, fname)  # use it to probe the directory layout
+    probe_point_path = probe_stat_path.split('m5out')[0]
+    segments = probe_point_path.split('/')
+    # print(segments)
+    # print(len(segments))
+    for l2_dir in os.listdir(path):
+        l2_path = osp.join(path, l2_dir)
+        if len(segments) == 4:
+            # two layer directory
+            for l3_dir in os.listdir(l2_path):
+                l3_path = osp.join(l2_path, l3_dir)
+                if not osp.isdir(l3_path):
+                    continue
+                stat_path = find_file_in_maze(l3_path, fname)
+                if stat_path is not None:
+                    point_path = stat_path.split('m5out')[0]
+                    m = two_layer_pat.match(point_path)
+                    print(m.group('workload'), m.group('point'))
+                    point_identifier = m.group('workload') + '_' + m.group('point')
+                    files.append((point_identifier, stat_path))
+        else:
+            assert len(segments) == 3
+            stat_path = find_file_in_maze(l2_path, fname)
+            if stat_path is not None:
+                point_path = stat_path.split('m5out')[0]
+                if flatten_pat.match(point_path):
+                    m = flatten_pat.match(point_path)
+                    point_identifier = m.group('workload_point')
+                else:
+                    raise NotImplementedError
+                files.append((point_identifier, stat_path))
+
     return files
 
 def find_file_in_maze(path: str, stat_file='stats.txt'):
