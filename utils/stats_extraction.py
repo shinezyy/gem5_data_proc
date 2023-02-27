@@ -34,12 +34,17 @@ def glob_stats(path: str, fname = 'x'):
 
     probe_stat_path = find_file_in_maze(path, fname)  # use it to probe the directory layout
     probe_point_path = probe_stat_path.split('m5out')[0]
-    segments = probe_point_path.split('/')
-    # print(segments)
-    # print(len(segments))
+    segments = 0
+    if flatten_pat.match(probe_point_path) is not None:
+        segments = 1
+    elif two_layer_pat.match(probe_point_path) is not None:
+        segments = 2
+    else:
+        raise Exception('Invalid Path')
     for l2_dir in os.listdir(path):
         l2_path = osp.join(path, l2_dir)
-        if len(segments) == 4:
+        #workload/point
+        if segments == 2:
             # two layer directory
             for l3_dir in os.listdir(l2_path):
                 l3_path = osp.join(l2_path, l3_dir)
@@ -53,7 +58,7 @@ def glob_stats(path: str, fname = 'x'):
                     point_identifier = m.group('workload') + '_' + m.group('point')
                     files.append((point_identifier, stat_path))
         else:
-            assert len(segments) == 3
+            #workload_point/
             stat_path = find_file_in_maze(l2_path, fname)
             if stat_path is not None:
                 point_path = stat_path.split('m5out')[0]
