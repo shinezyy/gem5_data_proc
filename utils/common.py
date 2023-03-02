@@ -560,6 +560,7 @@ def add_cache_mpki(d: dict) -> None:
 
 def xs_add_cache_mpki(d: dict) -> None:
     # L2/L3
+    n_banks = 4
     if 'l2_acc' not in d:
         print('Using latest xs')
         print(d)
@@ -567,7 +568,7 @@ def xs_add_cache_mpki(d: dict) -> None:
             d[f'{cache}_acc'] = 0
             d[f'{cache}_hit'] = 0
             d[f'{cache}_recv_pref'] = 0
-            for i in range(4):  # TODO remove hardcode
+            for i in range(n_banks):  # TODO remove hardcode
                 d[f'{cache}_acc'] += d[f'{cache}b{i}_acc']
                 d.pop(f'{cache}b{i}_acc')
                 d[f'{cache}_hit'] += d[f'{cache}b{i}_hit']

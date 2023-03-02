@@ -7,6 +7,7 @@ import pandas as pd
 
 from utils import common as c
 from utils.target_stats import *
+from multiprocess import Process,Manager
 import utils as u
 
 show_lins = 62
@@ -51,9 +52,6 @@ def main():
     parser.add_argument('-i', '--ipc-only', action='store_true',
                         default=0.0,
                         help='Only extract ipc'
-                       )
-    parser.add_argument('--smt', action='store_true',
-                        help='processing SMT stats'
                        )
     parser.add_argument('--pair-filter', action='store', default='',
                         help='file that filt pairs'
@@ -130,20 +128,23 @@ def main():
     print(paths)
     assert len(paths) > 0
 
-    matrix = {}
+    manager = Manager()
+    all_bmk_dict = manager.dict()
 
     require_flag = False
     xs_stat_fmt = opt.xiangshan or opt.old_xs
-    for workload, path in paths:
+
+    # for workload, path in paths:
+    def extract_and_post_process(gloabl_dict, workload, path):
         if opt.filter_bmk and not workload.startswith(opt.filter_bmk):
-            continue
+            return
         if xs_stat_fmt:
             flag_file = osp.join(osp.dirname(path), 'completed')
         else:
             flag_file = osp.join(osp.dirname(osp.dirname(path)), 'completed')
         if require_flag and not osp.isfile(flag_file):
             print('Skip unfinished job:', workload, path, flag_file)
-            continue
+            return
         
         print('Process finished job:', workload)
         # print(workload, path)
@@ -154,6 +155,15 @@ def main():
             else:
                 d = c.gem5_get_stats(path, ipc_target, re_targets=True)
         else:
+            # TODO: reenable eval stats
+            # if opt.eval_stat:
+            #     stat_targets = opt.eval_stat.split('#')
+            #     for stat_target in stat_targets:
+            #         if opt.xiangshan:
+            #             targets += eval('xs_'+stat_target)
+            #         else:
+            #             targets += eval(stat_target)
+
             if xs_stat_fmt:
                 targets = xs_ipc_target
                 if opt.branch:
@@ -198,13 +208,6 @@ def main():
 
                 d = c.gem5_get_stats(path, targets, re_targets=True)
 
-            if opt.eval_stat:
-                stat_targets = opt.eval_stat.split('#')
-                for stat_target in stat_targets:
-                    if opt.xiangshan:
-                        targets += eval('xs_'+stat_target)
-                    else:
-                        targets += eval(stat_target)
 
         if xs_stat_fmt:
             prefix = 'xs_'
@@ -217,10 +220,6 @@ def main():
                 d['workload'] = '_'.join(segments[:-1])
                 d['bmk'] = segments[0]
 
-            if opt.smt:
-                matrix[workload] = further_proc(workload, d, opt.verbose)
-            else:
-                matrix[workload] = d
             if opt.branch:
                 eval(f"c.{prefix}add_branch_mispred(d)")
             if opt.cache:
@@ -231,8 +230,15 @@ def main():
                 c.add_warmup_mpki(d)
             # if opt.packet:
             #     c.add_packet(d)
+        gloabl_dict[workload] = d
+        return
 
-    df = pd.DataFrame.from_dict(matrix, orient='index')
+    jobs = [Process(target=extract_and_post_process, args=(all_bmk_dict, workload, path)) for workload, path in paths]
+    _ = [p.start() for p in jobs]
+    _ = [p.join() for p in jobs]
+    print(all_bmk_dict)
+
+    df = pd.DataFrame.from_dict(all_bmk_dict, orient='index')
     df = df.sort_index()
     df = df.reindex(sorted(df.columns), axis=1)
     # df = df.sort_values(['ipc'])
