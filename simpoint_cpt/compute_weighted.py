@@ -20,7 +20,8 @@ def proc_input(wl_df: pd.DataFrame, js: dict, workload: str):
     # we sort the matrix_perf by point
     assert type(wl_df['point'][0]) == np.int64
     wl_df = wl_df.sort_values(by=['point'])
-    wl_df['cpi'] = 1.0/wl_df['ipc']
+    if 'ipc' in wl_df.columns:
+        wl_df['cpi'] = 1.0/wl_df['ipc']
 
     # We also sort the vec_weight by point
     wl_js = dict(js[workload])
@@ -39,7 +40,12 @@ def proc_input(wl_df: pd.DataFrame, js: dict, workload: str):
     vec_weight = vec_weight / coverage
     
     # Drop these auxiliary fields
-    wl_df = wl_df.drop(['bmk', 'point', 'workload', 'ipc'], axis=1)
+
+    to_drop = {'bmk', 'point', 'workload', 'ipc'}
+    to_drop = to_drop.intersection(set(wl_df.columns.to_list()))
+    # print(set(wl_df.columns.to_list()))
+    print(to_drop)
+    wl_df = wl_df.drop(to_drop, axis=1)
 
     weight_metrics = np.matmul(vec_weight.values.reshape(1, -1), wl_df.values)
     weight_metrics_df = pd.DataFrame(weight_metrics, columns=wl_df.columns)
@@ -71,7 +77,7 @@ def proc_bmk(bmk_df: pd.DataFrame, js: dict, bmk: str):
     return weight_metric, metrics.columns
 
 
-def compute_weighted_metrics(csv_path: str, js_path: str):
+def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str):
     df = pd.read_csv(csv_path, index_col=0)
     bmks = df['bmk'].unique()
     with open(js_path, 'r') as f:
@@ -87,12 +93,22 @@ def compute_weighted_metrics(csv_path: str, js_path: str):
             metrics, cols = proc_bmk(df_bmk, js, bmk)
         weighted[bmk] = metrics[0]
     weighted = pd.DataFrame.from_dict(weighted, orient='index', columns=cols)
+    if 'cpi' in weighted.columns:
+        weighted = weighted.sort_values(by='cpi', ascending=False)
+    else:
+        weighted = weighted.sort_index()
     print(weighted)
+    if out_csv is not None:
+        if out_csv.startswith('/') or out_csv.startswith('.'):
+            weighted.to_csv(out_csv)
+        else:
+            weighted.to_csv(osp.join('results', 'weighted_cpi.csv'))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage='specify results top directory and json')
     parser.add_argument('-r', '--results', action='store', required=True, help='results generated from batch.py')
     parser.add_argument('-j', '--json', action='store', required=True, help='json file containing weight info')
+    parser.add_argument('-o', '--output', action='store', required=False, help='csv file to stall results')
     args = parser.parse_args()
-    compute_weighted_metrics(args.results, args.json)
+    compute_weighted_metrics(args.results, args.json, args.output)

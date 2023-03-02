@@ -176,6 +176,9 @@ def main():
                     else:
                         raise Exception('Unknown xs stat format')
 
+                if opt.topdown:
+                    targets = {**xs_topdown_targets, **targets}
+
                 d = c.xs_get_stats(path, targets, re_targets=True)
             else:
                 targets = brief_targets
@@ -214,20 +217,24 @@ def main():
         else:
             prefix = ''
         if len(d):
+            if opt.branch:
+                eval(f"c.{prefix}add_branch_mispred(d)")
+            if opt.cache:
+                eval(f"c.{prefix}add_cache_mpki(d)")
+            if opt.topdown:
+                eval(f"c.{prefix}add_topdown(d)")
+            if opt.fanout:
+                c.add_fanout(d)
+            if opt.warmup:
+                c.add_warmup_mpki(d)
+
+            # add bmk and point after topdown processing
             segments = workload.split('_')
             if len(segments):
                 d['point'] = segments[-1]
                 d['workload'] = '_'.join(segments[:-1])
                 d['bmk'] = segments[0]
 
-            if opt.branch:
-                eval(f"c.{prefix}add_branch_mispred(d)")
-            if opt.cache:
-                eval(f"c.{prefix}add_cache_mpki(d)")
-            if opt.fanout:
-                c.add_fanout(d)
-            if opt.warmup:
-                c.add_warmup_mpki(d)
             # if opt.packet:
             #     c.add_packet(d)
         gloabl_dict[workload] = d

@@ -8,6 +8,7 @@ import pandas as pd
 
 from local_configs import Env
 from paths import *
+from . import target_stats as t
 
 env = Env()
 
@@ -322,6 +323,7 @@ def xs_get_stats(stat_file: str, targets: list,
                     # print(f"Matched {k} at line {ln}: {m.group(0)}")
                     # raise
                 else:
+                    print(k, patterns[k])
                     stats[k] = to_num(m.group(1))
                 # print(f"Matched {k} at line {ln}: {m.group(0)}")
                 # print(m.group(0))
@@ -344,6 +346,12 @@ def xs_get_stats(stat_file: str, targets: list,
     print(accumulate_table)
     for k in accumulate_table:
         stats[k] = sum(accumulate_table[k][1][-accumulate_table[k][0]:])
+    
+    desired_keys = set(patterns.keys())
+    obtained_keys = set(stats.keys())
+    not_found_keys = desired_keys - obtained_keys
+    print(not_found_keys)
+    assert len(not_found_keys) == 0
 
     # print(mshr_latency.keys())
     tdf = None
@@ -380,11 +388,11 @@ def xs_get_stats(stat_file: str, targets: list,
     print(tdf)
     # print(stats)
 
-    if not ('commitInstr' in stats and 'clock_cycle' in stats):
+    if not ('commitInstr' in stats and 'total_cycles' in stats):
         print("Warn: rob_commitInstr or totalCycle not exists")
         stats['ipc'] = 0
     else:
-        stats['ipc'] = stats['commitInstr']/stats['clock_cycle']
+        stats['ipc'] = stats['commitInstr']/stats['total_cycles']
     return stats
 
 
@@ -595,6 +603,132 @@ def xs_add_cache_mpki(d: dict) -> None:
         d[f'L1D.acc'] += d[f'l1d_{load_pipeline}_acc']
         d.pop(f'l1d_{load_pipeline}_acc')
     d[f'L1D.MPKI'] = d[f'L1D.miss'] / d['commitInstr'] * 1000
+
+def add_topdown(d: dict) -> None:
+    print(d)
+    d['total_slots'] = d['Cycles'] * 6
+    d['layer1_frontend_bound'] = (d['IcacheStall'] + d['ITlbStall'] + d['FragStall'] + d['FetchBufferInvalid'] +
+                                  d['SerializeStall'] + d['OtherFetchStall']) / d['total_slots']
+    d['layer1_bad_speculation'] = (d['BpStall'] + d['SquashStall'] + d['InstMisPred'] +
+                                   d['InstSquashed'] + d['CommitSquash']) / d['total_slots']
+    d['layer1_retiring'] = d['NoStall'] / d['total_slots']
+
+    d['layer2_memory_bound'] = (d['DTlbStall'] + d['LoadL1Bound'] + d['LoadL2Bound'] + d['LoadL3Bound'] +
+                                d['LoadMemBound'] + d['StoreL1Bound'] + d['StoreL2Bound'] + d['StoreL3Bound'] +
+                                d['StoreMemBound']) / d['total_slots']
+    d['layer2_core_bound'] = (d['LongExecute'] + d['InstNotReady'] + d['OtherStall'] + d['ResumeUnblock']
+                                 ) / d['total_slots']
+    d['layer1_backend_bound'] = d['layer2_memory_bound'] + d['layer2_core_bound']
+    # for k in t.LievenStalls:
+    #     d.pop(k)
+    keys = list(d.keys())
+    for k in keys:
+        if not k.startswith('layer1'):
+            d.pop(k)
+
+
+def xs_add_topdown(d: dict) -> None:
+    d['total_slots'] = d['total_cycles'] * 6
+#     # top = layer 1
+#     frontend_bound = top.add_down("Frontend Bound", use('decode_bubbles') / use('total_slots'))
+#     bad_speculation = top.add_down("Bad Speculation", (use('slots_issued') - use('slots_retired') + use('recovery_bubbles')) / use('total_slots'))
+#     retiring = top.add_down("Retiring", use('slots_retired') / use('total_slots'))
+#     backend_bound = top.add_down("Backend Bound", top - frontend_bound - bad_speculation - retiring)
+    d['layer1_frontend_bound'] = d['decode_bubbles'] / d['total_slots']
+    d['layer1_bad_speculation'] = (d['slots_issued'] - d['slots_retired'] + d['recovery_bubbles']) / d['total_slots']
+    d['layer1_retiring'] = d['slots_retired'] / d['total_slots']
+    d['layer1_backend_bound'] = 1 - d['layer1_frontend_bound'] - d['layer1_bad_speculation'] - d['layer1_retiring']
+
+# #top->frontend_bound
+#     fetch_latency = frontend_bound.add_down("Fetch Latency", use('fetch_bubbles') / use('total_slots'))
+#     fetch_bandwidth = frontend_bound.add_down("Fetch Bandwidth", frontend_bound - fetch_latency)
+    d['layer2_fetch_latency'] = d['fetch_bubbles'] / d['total_slots']
+    d['layer2_fetch_bandwidth'] = d['layer1_frontend_bound'] - d['layer2_fetch_latency']
+
+# # top->frontend_bound->fetch_latency
+#     itlb_miss = fetch_latency.add_down("iTLB Miss", use('itlb_miss_cycles') / use('total_cycles'))
+#     icache_miss = fetch_latency.add_down("iCache Miss", use('icache_miss_cycles') / use('total_cycles'))
+#     stage2_redirect_cycles = fetch_latency.add_down("Stage2 Redirect", use('stage2_redirect_cycles') / use('total_cycles'))
+#     if2id_bandwidth = fetch_latency.add_down("IF2ID Bandwidth", use('ifu2id_hvButNotFull_slots') / use('total_slots'))
+#     fetch_latency_others = fetch_latency.add_down("Fetch Latency Others", fetch_latency - itlb_miss - icache_miss - stage2_redirect_cycles - if2id_bandwidth)
+#     csv_file['ifu2id_allNO_slots'] = use('ifu2id_allNO_cycle') * 6
+# csv_file['ifu2id_hvButNotFull_slots'] = use('fetch_bubbles') - use('ifu2id_allNO_slots')
+    d['ifu2id_allNO_slots'] = d['ifu2id_allNO_cycle'] * 6
+    d['ifu2id_hvButNotFull_slots'] = d['fetch_bubbles'] - d['ifu2id_allNO_slots']
+    d['layer3_itlb_miss'] = d['itlb_miss_cycles'] / d['total_cycles']
+    d['layer3_icache_miss'] = d['icache_miss_cycles'] / d['total_cycles']
+    d['layer3_stage2_redirect_cycles'] = d['stage2_redirect_cycles'] / d['total_cycles']
+    d['layer3_if2id_bandwidth'] = d['ifu2id_hvButNotFull_slots'] / d['total_slots']
+    d['layer3_fetch_latency_others'] = d['layer2_fetch_latency'] - d['layer3_itlb_miss'] - d['layer3_icache_miss'] - d['layer3_stage2_redirect_cycles'] - d['layer3_if2id_bandwidth']
+
+# # top->frontend_bound->fetch_latency->stage2_redirect_cycles
+#     branch_resteers = stage2_redirect_cycles.add_down("Branch Resteers", use('branch_resteers_cycles') / use('total_cycles'))
+#     robFlush_bubble = stage2_redirect_cycles.add_down("RobFlush Bubble", use('robFlush_bubble_cycles') / use('total_cycles'))
+#     ldReplay_bubble = stage2_redirect_cycles.add_down("LdReplay Bubble", use('ldReplay_bubble_cycles') / use('total_cycles'))
+    d['layer4_branch_resteers'] = d['branch_resteers_cycles'] / d['total_cycles']
+    d['layer4_robFlush_bubble'] = d['robFlush_bubble_cycles'] / d['total_cycles']
+    d['layer4_ldReplay_bubble'] = d['ldReplay_bubble_cycles'] / d['total_cycles']
+
+# # top->bad_speculation
+#     branch_mispredicts = bad_speculation.add_down("Branch Mispredicts", bad_speculation)
+
+# # top->backend_bound
+    # stall_cycles_core = use('stall_cycle_fp') + use('stall_cycle_int') + use('stall_cycle_rob') + use('stall_cycle_int_dq') + use('stall_cycle_fp_dq') + use('ls_dq_bound_cycles')
+#     memory_bound = backend_bound.add_down("Memory Bound", backend_bound * (use('store_bound_cycles') + use('load_bound_cycles')) / (
+#         stall_cycles_core + use('store_bound_cycles') + use('load_bound_cycles')))
+#     core_bound = backend_bound.add_down("Core Bound", backend_bound - memory_bound)
+    d['stall_cycles_core'] = d['stall_cycle_fp'] + d['stall_cycle_int'] + d['stall_cycle_rob'] + \
+        d['stall_cycle_int_dq'] + d['stall_cycle_fp_dq'] + d['ls_dq_bound_cycles']
+    d['layer2_memory_bound'] = d['layer1_backend_bound'] * (d['store_bound_cycles'] + d['load_bound_cycles']) / (
+        d['stall_cycles_core'] + d['store_bound_cycles'] + d['load_bound_cycles'])
+    d['layer2_core_bound'] = d['layer1_backend_bound'] - d['layer2_memory_bound']
+
+# # top->backend_bound->core_bound
+#     integer_dq = core_bound.add_down("Integer DQ", core_bound * use('stall_cycle_int_dq') / stall_cycles_core)
+#     floatpoint_dq = core_bound.add_down("Floatpoint DQ", core_bound * use('stall_cycle_fp_dq') / stall_cycles_core)
+#     rob = core_bound.add_down("ROB", core_bound * use('stall_cycle_rob') / stall_cycles_core)
+#     integer_prf = core_bound.add_down("Integer PRF", core_bound * use('stall_cycle_int') / stall_cycles_core)
+#     floatpoint_prf = core_bound.add_down("Floatpoint PRF", core_bound * use('stall_cycle_fp') / stall_cycles_core)
+#     lsu_ports = core_bound.add_down("LSU Ports", core_bound * use('ls_dq_bound_cycles') / stall_cycles_core)
+    d['layer3_integet_dq'] = d['stall_cycle_int_dq'] / d['stall_cycles_core']
+    d['layer3_floatpoint_dq'] = d['stall_cycle_fp_dq'] / d['stall_cycles_core']
+    d['layer3_rob'] = d['stall_cycle_rob'] / d['stall_cycles_core']
+    d['layer3_integet_prf'] = d['stall_cycle_int'] / d['stall_cycles_core']
+    d['layer3_floatpoint_prf'] = d['stall_cycle_fp'] / d['stall_cycles_core']
+    d['layer3_lsu_ports'] = d['ls_dq_bound_cycles'] / d['stall_cycles_core']
+
+# # top->backend_bound->memory_bound
+#     stores_bound = memory_bound.add_down("Stores Bound", use('store_bound_cycles') / use('total_cycles'))
+#     loads_bound = memory_bound.add_down("Loads Bound", use('load_bound_cycles') / use('total_cycles'))
+    d['layer2_stores_bound'] = d['store_bound_cycles'] / d['total_cycles']
+    d['layer2_loads_bound'] = d['load_bound_cycles'] / d['total_cycles']
+
+# # top->backend_bound->memory_bound->loads_bound
+#     l1d_loads_bound = loads_bound.add_down("L1D Loads", use('l1d_loads_bound_cycles') / use('total_cycles'))
+#     l2_loads_bound = loads_bound.add_down("L2 Loads", use('l2_loads_bound_cycles') / use('total_cycles'))
+#     l3_loads_bound = loads_bound.add_down("L3 Loads", use('l3_loads_bound_cycles') / use('total_cycles'))
+#     ddr_loads_bound = loads_bound.add_down("DDR Loads", use('ddr_loads_bound_cycles') / use('total_cycles'))
+    d['layer3_l1d_loads_bound'] = d['l1d_loads_bound_cycles'] / d['total_cycles']
+    d['layer3_l2_loads_bound'] = d['l2_loads_bound_cycles'] / d['total_cycles']
+    d['layer3_l3_loads_bound'] = d['l3_loads_bound_cycles'] / d['total_cycles']
+    d['layer3_ddr_loads_bound'] = d['ddr_loads_bound_cycles'] / d['total_cycles']
+
+# # top->backend_bound->memory_bound->loads_bound->l1d_loads_bound
+#     l1d_loads_mshr_bound = l1d_loads_bound.add_down("L1D Loads MSHR", use('l1d_loads_mshr_bound') / use('total_cycles'))
+#     l1d_loads_tlb_bound = l1d_loads_bound.add_down("L1D Loads TLB", use('l1d_loads_tlb_bound') / use('total_cycles'))
+#     l1d_loads_store_data_bound = l1d_loads_bound.add_down("L1D Loads sdata", use('l1d_loads_store_data_bound') / use('total_cycles'))
+#     l1d_loads_bank_conflict_bound = l1d_loads_bound.add_down("L1D Loads\nBank Conflict", use('l1d_loads_bank_conflict_bound') / use('total_cycles'))
+#     l1d_loads_vio_check_redo_bound = l1d_loads_bound.add_down("L1D Loads VioRedo", use('l1d_loads_vio_check_redo_bound') / use('total_cycles'))
+    d['layer4_l1d_loads_mshr_bound'] = d['l1d_loads_mshr_bound'] / d['total_cycles']
+    d['layer4_l1d_loads_tlb_bound'] = d['l1d_loads_tlb_bound'] / d['total_cycles']
+    d['layer4_l1d_loads_store_data_bound'] = d['l1d_loads_store_data_bound'] / d['total_cycles']
+    d['layer4_l1d_loads_bank_conflict_bound'] = d['l1d_loads_bank_conflict_bound'] / d['total_cycles']
+    d['layer4_l1d_loads_vio_check_redo_bound'] = d['l1d_loads_vio_check_redo_bound'] / d['total_cycles']
+
+    keys = list(d.keys())
+    for k in keys:
+        if not k.startswith('layer1'):
+            d.pop(k)
 
 def add_warmup_mpki(d: dict) -> None:
     d['L2MPKI'] = float(d.get('l2.demandMisses', 0)) / float(d['Insts']) * 1000

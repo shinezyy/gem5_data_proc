@@ -4,7 +4,7 @@ brief_targets = [
     '(?:cpus?|switch_cpus_1)\.committed(Insts)',
     # '(?:cpus?|switch_cpus_1)\.(lastCommitTick)',
     # 'host_(inst_rate)',
-    #'cpus\.num(Cycles)'
+    'cpus?\.num(Cycles)'
 ]
 ipc_target = [
     '(?:cpus?|switch_cpus_1)\.(ipc)',
@@ -52,9 +52,38 @@ cache_targets = [
 topdown_targets = [
 ]
 
-def add_topdown_targets():
-    stalls = [
-        'Nostall',
+LievenStalls = [
+        # NoStall,  // Base
+        # IcacheStall,  // F
+        # ITlbStall,  // F
+        # DTlbStall,  // B
+        # BpStall,  // BS, bad speculation: Frontend is squashed
+        # IntStall,  // F
+        # TrapStall,  // F
+        # FragStall,  // F
+        # SquashStall,  // BS
+        # FetchBufferInvalid,  // Never used
+        # InstMisPred,  // BS
+        # InstSquashed,  // BS
+        # SerializeStall,  // F
+        # LongExecute,  // B
+        # InstNotReady,  // B
+
+        # LoadL1Bound,
+        # LoadL2Bound,
+        # LoadL3Bound,
+        # LoadMemBound,
+        # StoreL1Bound,
+        # StoreL2Bound,
+        # StoreL3Bound,
+        # StoreMemBound,
+
+        # ResumeUnblock,  // B
+        # CommitSquash,  // BS
+        # OtherStall,  // B
+        # OtherFetchStall,  // F
+
+        'NoStall',
         'IcacheStall',
         'ITlbStall',
         'DTlbStall',
@@ -69,16 +98,23 @@ def add_topdown_targets():
         'SerializeStall',
         'LongExecute',
         'InstNotReady',
-        'LoadL1Stall',
-        'LoadL2Stall',
-        'LoadL3Stall',
-        'StoreL1Stall',
-        'StoreL2Stall',
-        'StoreL3Stall',
+        'LoadL1Bound',
+        'LoadL2Bound',
+        'LoadL3Bound',
+        'LoadMemBound',
+        'StoreL1Bound',
+        'StoreL2Bound',
+        'StoreL3Bound',
+        'StoreMemBound',
         'ResumeUnblock',
         'CommitSquash',
+        'OtherStall',
+        'OtherFetchStall',
     ]
-    for stall in stalls:
+
+
+def add_topdown_targets():
+    for stall in LievenStalls:
         topdown_targets.append(r'system\.cpu\.iew\.dispatchStallReason::({})'.format(stall))
 
 add_topdown_targets()
@@ -247,7 +283,48 @@ beta_targets = [
 
 xs_ipc_target = {
     "commitInstr": r"\[PERF \]\[time=\s+\d+\] TOP.SimTop.l_soc.core_with_l2.core.ctrlBlock.rob: commitInstr,\s+(\d+)",
-    "clock_cycle": r"\[PERF \]\[time=\s+\d+\] TOP.SimTop.l_soc.core_with_l2.core.ctrlBlock.rob: clock_cycle,\s+(\d+)",
+    "total_cycles": r"\[PERF \]\[time=\s+\d+\] TOP.SimTop.l_soc.core_with_l2.core.ctrlBlock.rob: clock_cycle,\s+(\d+)",
+}
+
+xs_l3_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt"
+xs_l2_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache"
+xs_core_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\."
+
+xs_topdown_targets = {
+    'fetch_bubbles':  fr"{xs_core_prefix}ctrlBlock.decode: fetch_bubbles,\s+(\d+)",
+    'decode_bubbles': fr"{xs_core_prefix}ctrlBlock.decode: decode_bubbles,\s+(\d+)",
+    "slots_issued":   fr"{xs_core_prefix}ctrlBlock.decode: slots_issued,\s+(\d+)",
+    "recovery_bubbles": fr"{xs_core_prefix}ctrlBlock.rename: recovery_bubbles,\s+(\d+)",
+    "slots_retired": fr"{xs_core_prefix}ctrlBlock.rob: commitUop,\s+(\d+)",
+    "br_mispred_retired": fr"{xs_core_prefix}frontend.ftq: mispredictRedirect,\s+(\d+)",
+    "icache_miss_cycles": fr"{xs_core_prefix}frontend.icache.mainPipe: icache_bubble_s2_miss,\s+(\d+)",
+    "itlb_miss_cycles": fr"{xs_core_prefix}frontend.icache.mainPipe: icache_bubble_s0_tlb_miss,\s+(\d+)",
+    "s2_redirect_cycles": fr"{xs_core_prefix}frontend.bpu: s2_redirect,\s+(\d+)",
+    "s3_redirect_cycles": fr"{xs_core_prefix}frontend.bpu: s3_redirect,\s+(\d+)",
+    "store_bound_cycles": fr"{xs_core_prefix}exuBlocks.scheduler: stall_stores_bound,\s+(\d+)",
+    "load_bound_cycles": fr"{xs_core_prefix}exuBlocks.scheduler: stall_loads_bound,\s+(\d+)",
+    "ls_dq_bound_cycles": fr"{xs_core_prefix}exuBlocks.scheduler: stall_ls_bandwidth_bound,\s+(\d+)",
+    "stall_cycle_rob": fr"{xs_core_prefix}ctrlBlock.dispatch: stall_cycle_rob,\s+(\d+)",
+    "stall_cycle_int_dq": fr"{xs_core_prefix}ctrlBlock.dispatch: stall_cycle_int_dq,\s+(\d+)",
+    "stall_cycle_fp_dq": fr"{xs_core_prefix}ctrlBlock.dispatch: stall_cycle_fp_dq,\s+(\d+)",
+    "stall_cycle_ls_dq": fr"{xs_core_prefix}ctrlBlock.dispatch: stall_cycle_ls_dq,\s+(\d+)",
+    "stall_cycle_fp": fr"{xs_core_prefix}ctrlBlock.rename: stall_cycle_fp,\s+(\d+)",
+    "stall_cycle_int": fr"{xs_core_prefix}ctrlBlock.rename: stall_cycle_int,\s+(\d+)",
+    "l1d_loads_bound_cycles": fr"{xs_core_prefix}memBlock.lsq.loadQueue: l1d_loads_bound,\s+(\d+)",
+    "l1d_loads_mshr_bound": fr"{xs_core_prefix}exuBlocks.scheduler.rs_3.loadRS_0: l1d_loads_mshr_bound,\s+(\d+)",
+    "l1d_loads_tlb_bound": fr"{xs_core_prefix}exuBlocks.scheduler.rs_3.loadRS_0: l1d_loads_tlb_bound,\s+(\d+)",
+    "l1d_loads_store_data_bound": fr"{xs_core_prefix}exuBlocks.scheduler.rs_3.loadRS_0: l1d_loads_store_data_bound,\s+(\d+)",
+    "l1d_loads_bank_conflict_bound": fr"{xs_core_prefix}exuBlocks.scheduler.rs_3.loadRS_0: l1d_loads_bank_conflict_bound,\s+(\d+)",
+    "l1d_loads_vio_check_redo_bound": fr"{xs_core_prefix}exuBlocks.scheduler.rs_3.loadRS_0: l1d_loads_vio_check_redo_bound,\s+(\d+)",
+    "l2_loads_bound_cycles": fr"{xs_l2_prefix}: l2_loads_bound,\s+(\d+)",
+    "l3_loads_bound_cycles": fr"{xs_l3_prefix}: l3_loads_bound,\s+(\d+)",
+    "ddr_loads_bound_cycles": fr"{xs_l3_prefix}: ddr_loads_bound,\s+(\d+)",
+
+    "stage2_redirect_cycles": fr"{xs_core_prefix}ctrlBlock: stage2_redirect_cycles,\s+(\d+)",
+    "branch_resteers_cycles": fr"{xs_core_prefix}ctrlBlock: branch_resteers_cycles,\s+(\d+)",
+    "robFlush_bubble_cycles": fr"{xs_core_prefix}ctrlBlock: robFlush_bubble_cycles,\s+(\d+)",
+    "ldReplay_bubble_cycles": fr"{xs_core_prefix}ctrlBlock: ldReplay_bubble_cycles,\s+(\d+)",
+    "ifu2id_allNO_cycle": fr"{xs_core_prefix}ctrlBlock.decode: ifu2id_allNO_cycle,\s+(\d+)",
 }
 
 xs_branch_targets = {
