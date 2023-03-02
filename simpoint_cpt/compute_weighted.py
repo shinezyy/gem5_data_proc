@@ -21,18 +21,31 @@ def proc_input(wl_df: pd.DataFrame, js: dict, workload: str):
     assert type(wl_df['point'][0]) == np.int64
     wl_df = wl_df.sort_values(by=['point'])
     wl_df['cpi'] = 1.0/wl_df['ipc']
-    wl_df = wl_df.drop(['bmk', 'point', 'workload', 'ipc'], axis=1)
 
     # We also sort the vec_weight by point
     wl_js = dict(js[workload])
     # print(wl_js['points'])
     vec_weight = pd.DataFrame.from_dict(wl_js['points'], orient='index')
+
+    # convert string index into int64
     vec_weight.index = vec_weight.index.astype(np.int64)
+    # select only existing points
+    vec_weight = vec_weight.loc[wl_df['point']]
+    # make their sum equals 1.0
     vec_weight.columns = ['weight']
+
     vec_weight['weight'] = vec_weight['weight'].astype(np.float64)
+    coverage = np.sum(vec_weight.values)
+    vec_weight = vec_weight / coverage
     
+    # Drop these auxiliary fields
+    wl_df = wl_df.drop(['bmk', 'point', 'workload', 'ipc'], axis=1)
+
     weight_metrics = np.matmul(vec_weight.values.reshape(1, -1), wl_df.values)
-    return weight_metrics, wl_df.columns
+    weight_metrics_df = pd.DataFrame(weight_metrics, columns=wl_df.columns)
+    # We have to process coverage here to avoid apply weight on top of weight
+    weight_metrics_df['coverage'] = coverage
+    return weight_metrics_df.values, weight_metrics_df.columns
 
 
 def proc_bmk(bmk_df: pd.DataFrame, js: dict, bmk: str):
@@ -52,6 +65,7 @@ def proc_bmk(bmk_df: pd.DataFrame, js: dict, bmk: str):
         if workload.startswith(workload):
             input_dict[workload] = int(js[workload]['insts'])
     input_insts = pd.DataFrame.from_dict(input_dict, orient='index', columns=['insts'])
+    # make their sum equals 1.0
     vec_weight = input_insts / np.sum(input_insts.values)
     weight_metric = np.matmul(vec_weight.values.reshape(1, -1), metrics.values)
     return weight_metric, metrics.columns
