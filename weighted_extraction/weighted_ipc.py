@@ -34,7 +34,8 @@ def gen_coverage():
 
 def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, stat_file,
                          clock_rate, min_coverage=0.0, blacklist=[], whitelist=[],
-                         merge_benckmark=False, output_csv='default.csv', dir_layout='maze'):
+                         merge_benckmark=False, output_csv='default.csv', dir_layout='maze',
+                         divide_intfp=False):
     target = eval(f't.{prefix}ipc_target')
     workload_dict = {}
     bmk_stat = {}
@@ -78,7 +79,7 @@ def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, st
                 # merge multiple sub-items of a benchmark
                 if merge_benckmark:
                     insts_file = insts_file_fmt.format(ver, workload)
-                    insts = int(get_insts(insts_file))
+                    insts = int(u.get_insts(insts_file))
                     workload_dict[conf][workload]['TotalInst'] = insts
                     workload_dict[conf][workload]['PredictedCycles'] = insts*cpi
                     seconds = insts*cpi / clock_rate
@@ -108,10 +109,22 @@ def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, st
             excluded = df[df['Coverage'] <= min_coverage]
             df = df[df['Coverage'] > min_coverage]
             df.to_csv(osp.join('results', output_csv))
-            print(df)
-            print('Estimated score @ 2GHz:', geometric_mean(df['score']))
-            print('Estimated score per GHz:', geometric_mean(df['score'])/(clock_rate/(10**9)))
-            print('Excluded because of low coverage:', list(excluded.index))
+            if divide_intfp:
+                intdf = df.loc[['perlbench','bzip2','gcc','mcf','gobmk','hmmer','sjeng','libquantum','h264ref','omnetpp','astar','xalancbmk']]
+                print('================ SPECint ================')
+                print(intdf)
+                print('Estimated score @ 2GHz:', geometric_mean(intdf['score']))
+                print('Estimated score per GHz:', geometric_mean(intdf['score'])/(clock_rate/(10**9)))
+                fpdf = df.loc[['bwaves','gamess','milc','zeusmp','gromacs','cactusADM','leslie3d','namd','dealII','soplex','povray','calculix','GemsFDTD','tonto','lbm','wrf','sphinx3']]
+                print('================ SPECfp =================')
+                print(fpdf)
+                print('Estimated score @ 2GHz:', geometric_mean(fpdf['score']))
+                print('Estimated score per GHz:', geometric_mean(fpdf['score'])/(clock_rate/(10**9)))
+            else:
+                print(df)
+                print('Estimated score @ 2GHz:', geometric_mean(df['score']))
+                print('Estimated score per GHz:', geometric_mean(df['score'])/(clock_rate/(10**9)))
+                print('Excluded because of low coverage:', list(excluded.index))
 
 
     tests = []
@@ -199,6 +212,7 @@ def gem5_spec2006_gcb_o2_example():
             min_coverage = 0.75,
             merge_benckmark=True,
             output_csv='xs-gem5-12-10-dramsim-me-FM_A-sqrt.csv',
+            divide_intfp=True
             )
 
 def xiangshan_spec2006():
