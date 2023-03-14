@@ -604,6 +604,31 @@ def xs_add_cache_mpki(d: dict) -> None:
         d.pop(f'l1d_{load_pipeline}_acc')
     d[f'L1D.MPKI'] = d[f'L1D.miss'] / d['commitInstr'] * 1000
 
+# d['layer3_integet_dq'] = d['stall_cycle_int_dq'] / d['stall_cycles_core']
+# d['layer3_floatpoint_dq'] = d['stall_cycle_fp_dq'] / d['stall_cycles_core']
+# d['layer3_rob'] = d['stall_cycle_rob'] / d['stall_cycles_core']
+# d['layer3_integet_prf'] = d['stall_cycle_int'] / d['stall_cycles_core']
+# d['layer3_floatpoint_prf'] = d['stall_cycle_fp'] / d['stall_cycles_core']
+# d['layer3_lsu_ports'] = d['ls_dq_bound_cycles'] / d['stall_cycles_core']
+
+topdown_filter = [
+    'layer1_frontend_bound',
+    'layer1_bad_speculation',
+    'layer1_retiring',
+    # 'layer2_memory_bound',
+    'layer2_core_bound',
+    # 'layer3_integet_dq',
+    # 'layer3_floatpoint_dq',
+    # 'layer3_rob',
+    # 'layer3_integet_prf',
+    # 'layer3_floatpoint_prf',
+    # 'layer3_lsu_ports',
+    'layer2_memory_bound-tlb',
+    'layer2_memory_bound-non_tlb',
+    # 'DTlbStall',
+    'ipc',
+]
+
 def add_topdown(d: dict) -> None:
     print(d)
     d['total_slots'] = d['Cycles'] * 6
@@ -613,6 +638,10 @@ def add_topdown(d: dict) -> None:
                                    d['InstSquashed'] + d['CommitSquash']) / d['total_slots']
     d['layer1_retiring'] = d['NoStall'] / d['total_slots']
 
+    d['layer2_memory_bound-tlb'] = d['DTlbStall'] / d['total_slots']
+    d['layer2_memory_bound-non_tlb'] = (d['LoadL1Bound'] + d['LoadL2Bound'] + d['LoadL3Bound'] +
+                                d['LoadMemBound'] + d['StoreL1Bound'] + d['StoreL2Bound'] + d['StoreL3Bound'] +
+                                d['StoreMemBound']) / d['total_slots']
     d['layer2_memory_bound'] = (d['DTlbStall'] + d['LoadL1Bound'] + d['LoadL2Bound'] + d['LoadL3Bound'] +
                                 d['LoadMemBound'] + d['StoreL1Bound'] + d['StoreL2Bound'] + d['StoreL3Bound'] +
                                 d['StoreMemBound']) / d['total_slots']
@@ -623,7 +652,7 @@ def add_topdown(d: dict) -> None:
     #     d.pop(k)
     keys = list(d.keys())
     for k in keys:
-        if not k.startswith('layer1'):
+        if k not in topdown_filter:
             d.pop(k)
 
 
@@ -679,8 +708,10 @@ def xs_add_topdown(d: dict) -> None:
 #     core_bound = backend_bound.add_down("Core Bound", backend_bound - memory_bound)
     d['stall_cycles_core'] = d['stall_cycle_fp'] + d['stall_cycle_int'] + d['stall_cycle_rob'] + \
         d['stall_cycle_int_dq'] + d['stall_cycle_fp_dq'] + d['ls_dq_bound_cycles']
+
     d['layer2_memory_bound'] = d['layer1_backend_bound'] * (d['store_bound_cycles'] + d['load_bound_cycles']) / (
         d['stall_cycles_core'] + d['store_bound_cycles'] + d['load_bound_cycles'])
+
     d['layer2_core_bound'] = d['layer1_backend_bound'] - d['layer2_memory_bound']
 
 # # top->backend_bound->core_bound
@@ -727,7 +758,7 @@ def xs_add_topdown(d: dict) -> None:
 
     keys = list(d.keys())
     for k in keys:
-        if not k.startswith('layer1'):
+        if k not in topdown_filter:
             d.pop(k)
 
 def add_warmup_mpki(d: dict) -> None:
