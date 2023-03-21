@@ -110,7 +110,7 @@ def compute_weighted_cpi(ver, confs, base, simpoints, prefix, insts_file_fmt, st
             df = df[df['Coverage'] > min_coverage]
             df.to_csv(osp.join('results', output_csv))
             if divide_intfp:
-                intdf = df.loc[['perlbench','bzip2','gcc','mcf','gobmk','hmmer','sjeng','libquantum','h264ref','omnetpp','astar','xalancbmk']]
+                intdf = df.loc[u.spec_bmks['06']['int']]
                 print('================ SPECint ================')
                 print(intdf)
                 print('Estimated score @ 2GHz:', geometric_mean(intdf['score']))
