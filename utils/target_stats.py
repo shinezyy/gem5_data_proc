@@ -387,6 +387,12 @@ def add_nanhu_l2_l3_targets():
 add_nanhu_l1_dcache_targets()
 add_nanhu_l2_l3_targets()
 
+def add_nanhu_multicore_ipc_targets(n):
+    #add instr and clocks for other cores
+    for core in range(1, n):
+        xs_ipc_target[f'commitInstr{core}'] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{}.core\.ctrlBlock\.rob: commitInstr,\s+(\d+)".format(core)
+        xs_ipc_target[f'total_cycles{core}'] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{}.core\.ctrlBlock\.rob: clock_cycle,\s+(\d+)".format(core)
+
 xgroup_targets = [
     'cpus?\.num(Load)Insts',
     'cpus?\.(inter)_num',

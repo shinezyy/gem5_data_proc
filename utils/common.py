@@ -283,6 +283,10 @@ def xs_get_mshr_latency(line: str, lv: str):
 
 def xs_get_stats(stat_file: str, targets: list,
               insts: int=200*(10**6), re_targets=False) -> dict:
+    
+    target_keys = list(targets.keys())
+    num_cores = len(list(filter(lambda x: x.startswith('commitInstr'), target_keys)))
+
     if not os.path.isfile(expu(stat_file)):
         print(stat_file)
     assert(os.path.isfile(expu(stat_file)))
@@ -393,6 +397,8 @@ def xs_get_stats(stat_file: str, targets: list,
         stats['ipc'] = 0
     else:
         stats['ipc'] = stats['commitInstr']/stats['total_cycles']
+        for c in range(1, num_cores):
+            stats[f'ipc{c}'] = stats[f'commitInstr{c}']/stats['total_cycles']
     return stats
 
 

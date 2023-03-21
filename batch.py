@@ -93,6 +93,9 @@ def main():
     parser.add_argument('--cache', action='store_true',
                         help='print cache stats'
                        )
+    parser.add_argument('--num-cores', type= int, default= 1,
+                        help='set multicore numbers'
+                       )
     parser.add_argument('-w', '--warmup', action='store_true',
                         help='print warmup stats'
                        )
@@ -118,6 +121,8 @@ def main():
             )
 
     opt = parser.parse_args()
+
+    add_nanhu_multicore_ipc_targets(opt.num_cores)
 
     stat_file = opt.stat_file
     if opt.stat_file is None:
