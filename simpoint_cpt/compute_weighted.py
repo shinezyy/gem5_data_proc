@@ -77,13 +77,17 @@ def proc_bmk(bmk_df: pd.DataFrame, js: dict, bmk: str):
     return weight_metric, metrics.columns
 
 
-def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str):
+def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
     df = pd.read_csv(csv_path, index_col=0)
     bmks = df['bmk'].unique()
     with open(js_path, 'r') as f:
         js = json.load(f)
     weighted = {}
     for bmk in bmks:
+        if bmk not in u.spec_bmks['06']['int'] and args.int_only:
+            continue
+        if bmk not in u.spec_bmks['06']['float'] and args.fp_only:
+            continue
         df_bmk = df[df['bmk'] == bmk]
         workloads = df_bmk['workload'].unique()
         n_wl = len(workloads)
@@ -110,5 +114,7 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--results', action='store', required=True, help='results generated from batch.py')
     parser.add_argument('-j', '--json', action='store', required=True, help='json file containing weight info')
     parser.add_argument('-o', '--output', action='store', required=False, help='csv file to stall results')
+    parser.add_argument('-I', '--int-only', action='store_true', required=False, help='only process int')
+    parser.add_argument('-F', '--fp-only', action='store_true', required=False, help='only process fp')
     args = parser.parse_args()
-    compute_weighted_metrics(args.results, args.json, args.output)
+    compute_weighted_metrics(args.results, args.json, args.output, args)
