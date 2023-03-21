@@ -103,6 +103,9 @@ def main():
     parser.add_argument('-t', '--topdown', action='store_true',
                         help='handle topdown stats'
                        )
+    parser.add_argument('--topdown-raw', action='store_true',
+                        help='handle topdown stats but dont post process'
+                       )
     parser.add_argument('-X', '--xiangshan', action='store_true',
                         help='handle XiangShan stats'
                        )
@@ -221,8 +224,8 @@ def main():
                 eval(f"c.{prefix}add_branch_mispred(d)")
             if opt.cache:
                 eval(f"c.{prefix}add_cache_mpki(d)")
-            if opt.topdown:
-                eval(f"c.{prefix}add_topdown(d)")
+            if opt.topdown and not opt.topdown_raw:
+                eval(f"c.{prefix}topdown_post_process(d)")
             if opt.fanout:
                 c.add_fanout(d)
             if opt.warmup:

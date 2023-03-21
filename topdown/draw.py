@@ -9,9 +9,16 @@ def draw():
     results = {
         # "gem5-larger": "/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/topdown/temp_results/gem5-larger-weighted.csv",
         # "gem5-larger-sq84": "/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/topdown/temp_results/gem5-larger-sq84-weighted.csv",
-        # "gem5-normal": "/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/topdown/temp_results/gem5-normal-weighted.csv",
-        # "gem5-huge": "/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/topdown/temp_results/gem5-huge-weighted.csv",
-        # "gem5-huge-multipref": "/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/topdown/temp_results/gem5-huge-multipref-weighted.csv",
+
+        # "GEM5-Default": "/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/topdown/temp_results/gem5-normal-weighted.csv",
+        # "GEM5-ROB400": "/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/topdown/temp_results/gem5-huge-weighted.csv",
+
+        "GEM5-base": osp.expandvars("$n/gem5-results/base-topdown-raw-weighted.csv"),
+        "GEM5-base2": osp.expandvars("$n/gem5-results/base-topdown-raw-weighted.csv"),
+
+        # with multi pref
+        # "GEM5-normal": "/nfs-nvme/home/zhouyaoyang/gem5-results/normal-multi-pref-weighted.csv",
+        # "GEM5-ROB400": "/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/topdown/temp_results/gem5-huge-multipref-weighted.csv",
 
         # top2 weighted:
         # "xs": "/nfs-nvme/home/zhouyaoyang/gem5-results/xs-topdown-l1.csv",
@@ -20,16 +27,16 @@ def draw():
         # "gem5": "temp_results/gem5-topdown-cpts.csv",
 
         # GemsFDTD
-        "GemsFDTD修复前": "/nfs-nvme/home/zhouyaoyang/gem5-results/GemsFDTD-buggy.csv",
-        "GemsFDTD修复后": "/nfs-nvme/home/zhouyaoyang/gem5-results/GemsFDTD-fixed.csv",
+        # "GemsFDTD修复前": "/nfs-nvme/home/zhouyaoyang/gem5-results/GemsFDTD-buggy.csv",
+        # "GemsFDTD修复后": "/nfs-nvme/home/zhouyaoyang/gem5-results/GemsFDTD-fixed.csv",
     }
 
     configs = list(results.keys())
 
     # colors = ['#83639F', '#EA7827', '#C22F2F', '#449945', '#1F70A9']
     # edge_colors = ['#63437F', '#CA5807', '#A20F0F', '#247925', '#005099']
-    cmap = plt.get_cmap('tab10')
-    color_index = np.arange(0, 1, 1.0/10)
+    cmap = plt.get_cmap('tab20')
+    color_index = np.arange(0, 1, 1.0/20)
     colors = [cmap(c) for c in color_index]
     edge_colors = colors
     # print(colors)
@@ -70,22 +77,34 @@ def draw():
     # mpl.rcParams['font.style'] = 'normal'
 
     fig, ax = plt.subplots()
-    fig.set_size_inches(5.77, 3.56)
+    # fig.set_size_inches(5.77, 3.56)
+    # fig.set_size_inches(5.77, 3.0)
+    fig.set_size_inches(5.77, 5.0)
 
     x = None
     have_set_label = False
     for simulators in results:
         df = pd.read_csv(results[simulators], index_col=0)
+
+        # if 'layer2_memory_bound-non_tlb' in df.columns:
+        #     df['layer2_memory_bound'] = df['layer2_memory_bound-non_tlb'] + df['layer2_memory_bound-tlb']
+        #     df.drop(columns=['layer2_memory_bound-non_tlb', 'layer2_memory_bound-tlb'], inplace=True)
+
         # drop non-numerical columns
-        df = df.drop(columns=[col for col in df.columns if not col.startswith(
-            'layer') and not col.startswith('ipc') and not col.startswith('cpi')])
+        # df = df.drop(columns=[col for col in df.columns if not col.startswith(
+        #     'layer') and not col.startswith('ipc') and not col.startswith('cpi')])
+
         if 'ipc' in df.columns:
             df_cpi = 1.0/df['ipc']
             df = df.mul(df_cpi, axis=0)
         elif 'cpi' in df.columns:
             df_cpi = df['cpi']
-            df = df.mul(df_cpi, axis=0)
-        df = df.drop(columns=[col for col in df.columns if not col.startswith('layer')])
+            # df = df.mul(df_cpi, axis=0)
+            df = df.div(df_cpi, axis=0)
+
+        # df = df.drop(columns=[col for col in df.columns if not col.startswith('layer')])
+        df = df.drop(columns=['Cycles', 'Insts'])
+
         # draw stacked bar chart
         bottom = np.zeros(len(df))
         if x is None:
@@ -101,15 +120,17 @@ def draw():
         x += width
         have_set_label = True
     # replace x tick labels with df.index with rotation
-    # ax.set_xticks(x - width * len(results) / 2)
-    # ax.set_xticklabels(df.index, rotation=90)
+    ax.set_xticks(x - width * len(results) / 2)
+    ax.set_xticklabels(df.index, rotation=90)
 
     # # set the transparency of frame of legend
-    ax.legend(fancybox=True, framealpha=0.3, loc='upper left')
+    ax.legend(fancybox=True, framealpha=0.3, loc='best', ncol=2)
     # ax.set_title('GEM5 <-- Left, Right --> XS master')
     ax.set_title(f'{configs[0]} <-- 左, 右 --> {configs[1]}')
+    ax.set_ylim(0, 3.0e8)
 
-    fig.savefig(osp.join('results', 'GemsFDTD.pdf'), bbox_inches='tight', pad_inches=0.05)
+    fig.savefig(osp.join('results', 'int-raw-topdown.pdf'), bbox_inches='tight', pad_inches=0.05)
+    # fig.savefig(osp.join('results', 'GemsFDTD.pdf'), bbox_inches='tight', pad_inches=0.05)
     # plt.show()
     
 

@@ -629,7 +629,7 @@ topdown_filter = [
     'ipc',
 ]
 
-def add_topdown(d: dict) -> None:
+def topdown_post_process(d: dict) -> None:
     print(d)
     d['total_slots'] = d['Cycles'] * 6
     d['layer1_frontend_bound'] = (d['IcacheStall'] + d['ITlbStall'] + d['FragStall'] + d['FetchBufferInvalid'] +
@@ -656,7 +656,7 @@ def add_topdown(d: dict) -> None:
             d.pop(k)
 
 
-def xs_add_topdown(d: dict) -> None:
+def xs_topdown_post_process(d: dict) -> None:
     d['total_slots'] = d['total_cycles'] * 6
 #     # top = layer 1
 #     frontend_bound = top.add_down("Frontend Bound", use('decode_bubbles') / use('total_slots'))
