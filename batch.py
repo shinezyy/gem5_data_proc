@@ -7,7 +7,7 @@ import pandas as pd
 
 from utils import common as c
 from utils.target_stats import *
-from multiprocess import Process,Manager
+from multiprocessing import Process,Manager
 import utils as u
 
 show_lins = 62

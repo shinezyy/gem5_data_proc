@@ -26,21 +26,37 @@ def single_stat_factory(targets, key, prefix=''):
             return None
     return get_single_stat
 
+#input may be: work_load_point/ ; workload_point/ ; work_load/point/ ; workload/point/ 
+def workload_point_frompath(path):
+    split_path = path.split('/')[0].split('_')
+    second_layer = path.split('/')[1]
+    level = 1
+    if second_layer.isdigit() and len(second_layer) > 1:# workload/point/ ; work_load/point/ 
+        workload = path.split('/')[0]
+        point = second_layer
+        level = 2
+    elif split_path[1].isdigit() and len(split_path[1]) > 5:# workload_point_xxx/
+        workload = split_path[0]
+        point = split_path[1]
+    elif split_path[2].isdigit():#work_load_point_xxx/
+        workload = split_path[0] + '_' + split_path[1]
+        point = split_path[2]
+    else:
+        print(path)
+        raise Exception('Invalid Path')
+    return workload,point,level
+
 
 def glob_stats(path: str, fname = 'x'):
     files = []
+    #check for checkpoints conflict
+    files_map = {}
     flatten_pat = re.compile(r'.*/(?P<workload_point>.*)/')
     two_layer_pat = re.compile(r'.*/(?P<workload>.*)/(?P<point>\d+)/')
 
     probe_stat_path = find_file_in_maze(path, fname)  # use it to probe the directory layout
-    probe_point_path = probe_stat_path.split('m5out')[0]
-    segments = 0
-    if flatten_pat.match(probe_point_path) is not None:
-        segments = 1
-    elif two_layer_pat.match(probe_point_path) is not None:
-        segments = 2
-    else:
-        raise Exception('Invalid Path')
+    probe_point_path = probe_stat_path.split(path)[-1]
+    workload,point,segments = workload_point_frompath(probe_point_path)
     for l2_dir in os.listdir(path):
         l2_path = osp.join(path, l2_dir)
         #workload/point
@@ -52,23 +68,18 @@ def glob_stats(path: str, fname = 'x'):
                     continue
                 stat_path = find_file_in_maze(l3_path, fname)
                 if stat_path is not None:
-                    point_path = stat_path.split('m5out')[0]
-                    m = two_layer_pat.match(point_path)
-                    print(m.group('workload'), m.group('point'))
-                    point_identifier = m.group('workload') + '_' + m.group('point')
+                    workload,point,_ = workload_point_frompath(stat_path.split(path)[-1])
+                    point_identifier = workload + '_' + point
+                    files_map.update({point_identifier:stat_path})
                     files.append((point_identifier, stat_path))
         else:
-            #workload_point/
+            #workload_point_xx/
             stat_path = find_file_in_maze(l2_path, fname)
             if stat_path is not None:
-                point_path = stat_path.split('m5out')[0]
-                if flatten_pat.match(point_path):
-                    m = flatten_pat.match(point_path)
-                    point_identifier = m.group('workload_point')
-                else:
-                    raise NotImplementedError
+                workload,point,_ = workload_point_frompath(stat_path.split(path)[-1])
+                point_identifier = workload + '_' + point
+                files_map.update({point_identifier:stat_path})
                 files.append((point_identifier, stat_path))
-
     return files
 
 def find_file_in_maze(path: str, stat_file='stats.txt'):
@@ -76,7 +87,7 @@ def find_file_in_maze(path: str, stat_file='stats.txt'):
     if osp.isfile(file_path) or osp.islink(file_path):
         return file_path
     else:
-        print(f'No stat file found in {file_path}')
+        #print(f'No stat file found in {file_path}')
         if not osp.isdir(path):
             return None
     for l2_dir in os.listdir(path):
