@@ -20,7 +20,7 @@ spec_bmks = {
             'float':[
                 'bwaves', 'gamess', 'milc', 'zeusmp', 'gromacs',
                 'cactusADM', 'leslie3d', 'namd', 'dealII', 'soplex',
-                'povray', 'Calculix', 'GemsFDTD', 'tonto', 'lbm',
+                'povray', 'calculix', 'GemsFDTD', 'tonto', 'lbm',
                 'wrf', 'sphinx3',
                 ],
             'high_squash': ['astar', 'bzip2', 'gobmk', 'sjeng'],

@@ -10,7 +10,13 @@ from scipy.stats import gmean
 from statistics import geometric_mean
 import argparse
 import re
+import os
+import warnings
 
+args = []
+spec_v = '06'
+clock_rate = 2 * 10**9
+reftime_js = {}
 
 def proc_input(wl_df: pd.DataFrame, js: dict, workload: str):
     # we implement the weighted metrics computation with the following formula:
@@ -20,11 +26,12 @@ def proc_input(wl_df: pd.DataFrame, js: dict, workload: str):
     # we sort the matrix_perf by point
     assert type(wl_df['point'][0]) == np.int64
     wl_df = wl_df.sort_values(by=['point'])
-    if 'ipc' in wl_df.columns:
-        wl_df['cpi'] = 1.0/wl_df['ipc']
-
     # We also sort the vec_weight by point
     wl_js = dict(js[workload])
+    if 'ipc' in wl_df.columns:
+        wl_df['cpi'] = 1.0/wl_df['ipc']
+    if args.score:
+        wl_df['time'] = int(wl_js['insts']) * wl_df['cpi'] / clock_rate
     # print(wl_js['points'])
     vec_weight = pd.DataFrame.from_dict(wl_js['points'], orient='index')
 
@@ -44,7 +51,7 @@ def proc_input(wl_df: pd.DataFrame, js: dict, workload: str):
     to_drop = {'bmk', 'point', 'workload', 'ipc'}
     to_drop = to_drop.intersection(set(wl_df.columns.to_list()))
     # print(set(wl_df.columns.to_list()))
-    print(to_drop)
+    # print(to_drop)
     wl_df = wl_df.drop(to_drop, axis=1)
 
     weight_metrics = np.matmul(vec_weight.values.reshape(1, -1), wl_df.values)
@@ -59,8 +66,11 @@ def proc_bmk(bmk_df: pd.DataFrame, js: dict, bmk: str):
     # and compute weighted metrics with matrix multiplication
     workloads = bmk_df['workload'].unique()
     metric_list = [] 
+    time = 0
     for wl in workloads:
         metrics, cols = proc_input(bmk_df[bmk_df['workload'] == wl], js, wl)
+        if args.score:
+            time += metrics[0][np.where(cols.values == 'time')[0][0]]
         metric_list.append(metrics)
         print(f'{bmk} {wl} {metrics} {cols}')
     metrics = np.concatenate(metric_list, axis=0)
@@ -74,114 +84,10 @@ def proc_bmk(bmk_df: pd.DataFrame, js: dict, bmk: str):
     # make their sum equals 1.0
     vec_weight = input_insts / np.sum(input_insts.values)
     weight_metric = np.matmul(vec_weight.values.reshape(1, -1), metrics.values)
+    if args.score:
+        weight_metric[0][np.where(cols.values == 'time')[0][0]] = time
     return weight_metric, metrics.columns
 
-def glob_weighted_stats_from_csv(batch_csv,simpoints):
-    batch_df = pd.read_csv(batch_csv, index_col=0)
-    weight_dict = json.load(open(simpoints))
-    stat_tree = {}
-    for index,row in batch_df.iterrows() :
-        bmk = row['bmk']
-        workload = row['workload']
-        point = row['point']
-        stat = row['ipc']
-        weight = float(weight_dict[workload]['points'][str(point)])
-        if bmk not in stat_tree:
-            stat_tree[bmk] = {}
-        if workload not in stat_tree[bmk]:
-            stat_tree[bmk][workload] = {}
-        if stat is not None:
-            # print(bmk, workload, point)
-            # print(weight, stat)
-            assert int(point) not in stat_tree[bmk][workload]
-            stat_tree[bmk][workload][int(point)] = (weight, stat)
-    for bmk in stat_tree:
-        for workload in stat_tree[bmk]:
-            if len(stat_tree[bmk][workload]):
-                df = pd.DataFrame.from_dict(stat_tree[bmk][workload], orient='index')
-                df.columns = ['weight', 'ipc']
-                stat_tree[bmk][workload] = df
-            else:
-                stat_tree[bmk].pop(workload)
-                if not len(stat_tree[bmk]):
-                    stat_tree.pop(bmk)
-    return stat_tree
-
-
-def compute_weighted_cpi(batch_csv,simpoints,var='06',
-                         clock_rate=2 * 10**9, min_coverage=0.0, blacklist=[], whitelist=[],
-                         merge_benckmark=True, output_csv='default.csv',
-                         divide_intfp=False):
-    workload_dict = {}
-    bmk_stat = {}
-    tree = glob_weighted_stats_from_csv(batch_csv,simpoints)
-    with open(simpoints) as jf:
-        js = json.load(jf)
-        #print(js.keys())
-    times = {}
-    for bmk in tree:
-        if bmk in blacklist:
-            continue
-        if len(whitelist) and bmk not in whitelist:
-            continue
-        cpis = []
-        weights = []
-        time = 0
-        coverage = 0
-        count = 0
-        for workload, df in tree[bmk].items():
-            selected = dict(js[workload])
-            keys = [int(x) for x in selected['points']]
-            keys = [x for x in keys if x in df.index]
-            df = df.loc[keys]
-            cpi, weight = u.weighted_cpi(df)
-            weights.append(weight)
-            workload_dict[workload] = {}
-            workload_dict[workload]['CPI'] = cpi
-            workload_dict[workload]['IPC'] = 1.0/cpi
-            workload_dict[workload]['Coverage'] = weight
-            # merge multiple sub-items of a benchmark
-            if merge_benckmark:
-                insts = int(js[workload]['insts'])
-                workload_dict[workload]['TotalInst'] = insts
-                workload_dict[workload]['PredictedCycles'] = insts*cpi
-                seconds = insts*cpi / clock_rate
-                workload_dict[workload]['PredictedSeconds'] = seconds
-                time += seconds
-                coverage += weight
-                count += 1
-        if merge_benckmark:
-            bmk_stat[bmk] = {}
-            bmk_stat[bmk]['time'] = time
-            ref_time = c.get_spec_ref_time(bmk, var)
-            assert ref_time is not None
-            bmk_stat[bmk]['ref_time'] = ref_time
-            bmk_stat[bmk]['score'] = ref_time / time
-            bmk_stat[bmk]['Coverage'] = coverage/count
-    df = pd.DataFrame.from_dict(workload_dict, orient='index')
-    workload_dict = df
-    if merge_benckmark:
-        df = pd.DataFrame.from_dict(bmk_stat, orient='index')
-        bmk_stat = df
-        excluded = df[df['Coverage'] <= min_coverage]
-        df = df[df['Coverage'] > min_coverage]
-        df.to_csv(osp.join('results', output_csv))
-        if divide_intfp:
-            intdf = df.loc[u.spec_bmks['06']['int']]
-            print('================ SPECint ================')
-            print(intdf)
-            print('Estimated score @ 2GHz:', geometric_mean(intdf['score']))
-            print('Estimated score per GHz:', geometric_mean(intdf['score'])/(clock_rate/(10**9)))
-            fpdf = df.loc[['bwaves','gamess','milc','zeusmp','gromacs','cactusADM','leslie3d','namd','dealII','soplex','povray','calculix','GemsFDTD','tonto','lbm','wrf','sphinx3']]
-            print('================ SPECfp =================')
-            print(fpdf)
-            print('Estimated score @ 2GHz:', geometric_mean(fpdf['score']))
-            print('Estimated score per GHz:', geometric_mean(fpdf['score'])/(clock_rate/(10**9)))
-        else:
-            print(df)
-            print('Estimated score @ 2GHz:', geometric_mean(df['score']))
-            print('Estimated score per GHz:', geometric_mean(df['score'])/(clock_rate/(10**9)))
-            print('Excluded because of low coverage:', list(excluded.index))
 
 def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
     df = pd.read_csv(csv_path, index_col=0)
@@ -202,17 +108,56 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
         else:
             metrics, cols = proc_bmk(df_bmk, js, bmk)
         weighted[bmk] = metrics[0]
-    weighted = pd.DataFrame.from_dict(weighted, orient='index', columns=cols)
-    if 'cpi' in weighted.columns:
-        weighted = weighted.sort_values(by='cpi', ascending=False)
+    weighted_df = pd.DataFrame.from_dict(weighted, orient='index', columns=cols)
+    if 'cpi' in weighted_df.columns:
+        weighted_df = weighted_df.sort_values(by='cpi', ascending=False)
     else:
-        weighted = weighted.sort_index()
-    print(weighted)
+        weighted_df = weighted_df.sort_index()
+    print(weighted_df)
     if out_csv is not None:
         if out_csv.startswith('/') or out_csv.startswith('.'):
-            weighted.to_csv(out_csv)
+            weighted_df.to_csv(out_csv)
         else:
-            weighted.to_csv(osp.join('results', 'weighted_cpi.csv'))
+            weighted_df.to_csv(osp.join('results', 'weighted_cpi.csv'))
+    if args.score:
+        time_idx = np.where(cols.values == 'time')[0][0]
+        coverage_idx = np.where(cols.values == 'coverage')[0][0]
+        score = {}
+        for bmk in weighted.items():
+            if not score.get(bmk[0]) :
+                score[bmk[0]] = {}
+            score[bmk[0]]['time'] = float(bmk[1][time_idx])
+            score[bmk[0]]['ref_time'] = float(reftime_js[bmk[0]])
+            score[bmk[0]]['score'] = score[bmk[0]]['ref_time'] / score[bmk[0]]['time']
+            score[bmk[0]]['coverage'] = bmk[1][coverage_idx]
+        score['mean'] = {
+            'time':0,
+            'ref_time':0,
+            'score': geometric_mean([x[1]['score'] for x in score.items()]),
+            'coverage':0
+        }
+        score_col = ['time','ref_time','score','coverage']
+        score = pd.DataFrame.from_dict(score, orient='index', columns=score_col)
+        score = score.sort_values(by='score', ascending=False)
+        try:
+            if args.int_only:
+                intdf = score.loc[u.spec_bmks[spec_v]['int']]
+            elif args.fp_only:
+                fpdf = score.loc[u.spec_bmks[spec_v]['float']]
+            else:# defalut
+                intdf = score.loc[u.spec_bmks[spec_v]['int']]
+                fpdf = score.loc[u.spec_bmks[spec_v]['float']]
+            print(f'================ SPEC{spec_v} =================')
+            print(score)
+            print(f'Estimated score @ {clock_rate}GHz:', score.loc['mean','score'])
+            print('Estimated score per GHz:', score.loc['mean','score']/(clock_rate/(10**9)))
+        except:
+            warnings.warn('spec result incomplete, scoring stop')
+
+        if args.score.startswith('/') or args.score.startswith('.'):
+            score.to_csv(args.score)
+        else:
+            score.to_csv(osp.join('results', 'score.csv'))
 
 
 if __name__ == '__main__':
@@ -223,10 +168,13 @@ if __name__ == '__main__':
     parser.add_argument('-I', '--int-only', action='store_true', required=False, help='only process int')
     parser.add_argument('-F', '--fp-only', action='store_true', required=False, help='only process fp')
     parser.add_argument('-s', '--score', action='store', required=False, help='csv file to stall weighted score results')
+    parser.add_argument('-c', '--clock', action='store', required=False, default=2, help='simulation clock rate(GHz)')
     args = parser.parse_args()
-    compute_weighted_metrics(args.results, args.json, args.output, args)
+    clock_rate = float(args.clock) * 10**9
     if args.score:
-        compute_weighted_cpi(args.results,
-                             args.json,
-                             var='06',
-                             output_csv=args.score)
+        spec_v = args.json.split('/')[-1].split('_')[0][4:6]
+        path = os.path.abspath(os.path.dirname(sys.argv[0]))
+        with open(path + f'/resources/spec{spec_v}_reftime.json', 'r') as f:
+            reftime_js = json.load(f)
+    
+    compute_weighted_metrics(args.results, args.json, args.output, args)
