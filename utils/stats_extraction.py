@@ -28,7 +28,9 @@ def single_stat_factory(targets, key, prefix=''):
 
 #input may be: work_load_point/ ; workload_point/ ; work_load/point/ ; workload/point/ 
 def workload_point_frompath(path):
+    print(path)
     split_path = path.split('/')[0].split('_')
+    print(split_path)
     second_layer = path.split('/')[1]
     level = 1
     if second_layer.isdigit() and len(second_layer) > 1:# workload/point/ ; work_load/point/ 
@@ -36,6 +38,7 @@ def workload_point_frompath(path):
         point = second_layer
         level = 2
     elif split_path[1].isdigit() and len(split_path[1]) > 5:# workload_point_xxx/
+        print(split_path)
         workload = split_path[0]
         point = split_path[1]
     elif split_path[2].isdigit():#work_load_point_xxx/
@@ -47,6 +50,12 @@ def workload_point_frompath(path):
     return workload,point,level
 
 
+def strip_path(file_path: str, prefix_path: str):
+    x = prefix_path.join(file_path.split(prefix_path)[1:])
+    if prefix_path.startswith('.') and x.startswith('/'):
+        x = x[1:]
+    return x
+
 def glob_stats(path: str, fname = 'x'):
     files = []
     #check for checkpoints conflict
@@ -55,8 +64,8 @@ def glob_stats(path: str, fname = 'x'):
     two_layer_pat = re.compile(r'.*/(?P<workload>.*)/(?P<point>\d+)/')
 
     probe_stat_path = find_file_in_maze(path, fname)  # use it to probe the directory layout
-    probe_point_path = probe_stat_path.split(path)[-1]
-    workload,point,segments = workload_point_frompath(probe_point_path)
+    probe_point_path = strip_path(probe_stat_path, path)
+    workload, point, segments = workload_point_frompath(probe_point_path)
     for l2_dir in os.listdir(path):
         l2_path = osp.join(path, l2_dir)
         #workload/point
@@ -68,7 +77,7 @@ def glob_stats(path: str, fname = 'x'):
                     continue
                 stat_path = find_file_in_maze(l3_path, fname)
                 if stat_path is not None:
-                    workload,point,_ = workload_point_frompath(stat_path.split(path)[-1])
+                    workload,point,_ = workload_point_frompath(strip_path(stat_path, path))
                     point_identifier = workload + '_' + point
                     files_map.update({point_identifier:stat_path})
                     files.append((point_identifier, stat_path))
@@ -76,7 +85,7 @@ def glob_stats(path: str, fname = 'x'):
             #workload_point_xx/
             stat_path = find_file_in_maze(l2_path, fname)
             if stat_path is not None:
-                workload,point,_ = workload_point_frompath(stat_path.split(path)[-1])
+                workload, point, _ = workload_point_frompath(strip_path(stat_path, path))
                 point_identifier = workload + '_' + point
                 files_map.update({point_identifier:stat_path})
                 files.append((point_identifier, stat_path))
