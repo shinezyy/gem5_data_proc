@@ -32,6 +32,18 @@ def further_proc(pair: str, d: dict, verbose: bool) -> None:
     return d
 
 
+def add_eval_targets(opt, targets):
+    if opt.eval_stat:
+        assert not opt.xiangshan  # not supported yet
+        stat_targets = opt.eval_stat.split('#')
+        for stat_target in stat_targets:
+            if opt.xiangshan:
+                targets += eval('xs_'+stat_target)
+            else:
+                targets += eval(stat_target)
+        print(targets)
+
+
 def main():
     parser = argparse.ArgumentParser(usage='specify stat directory')
     parser.add_argument('-s', '--stat-dir', action='store', required=True,
@@ -163,15 +175,6 @@ def main():
             else:
                 d = c.gem5_get_stats(path, ipc_target, re_targets=True)
         else:
-            # TODO: reenable eval stats
-            # if opt.eval_stat:
-            #     stat_targets = opt.eval_stat.split('#')
-            #     for stat_target in stat_targets:
-            #         if opt.xiangshan:
-            #             targets += eval('xs_'+stat_target)
-            #         else:
-            #             targets += eval(stat_target)
-
             if xs_stat_fmt:
                 targets = xs_ipc_target
                 if opt.branch:
@@ -217,9 +220,11 @@ def main():
                 if opt.topdown:
                     targets += topdown_targets
 
+                add_eval_targets(opt, targets)
+
                 d = c.gem5_get_stats(path, targets, re_targets=True)
 
-
+            # TODO: test eval stats
         if xs_stat_fmt:
             prefix = 'xs_'
         else:

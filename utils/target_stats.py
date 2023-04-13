@@ -113,6 +113,11 @@ LievenStalls = [
     ]
 
 
+FragTargets = [
+    'system\.cpu\.iew\.(dispatchStallReason::FragStall)',
+    'system\.cpu\.iew\.(fetchStallReason::FragStall)',
+]
+
 def add_topdown_targets():
     for stall in LievenStalls:
         topdown_targets.append(r'system\.cpu\.iew\.dispatchStallReason::({})'.format(stall))
