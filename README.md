@@ -30,51 +30,30 @@ batch.py -s /path/to/results/top/directory --cache --branch --xiangshan -f simul
 
 # Compute weighted performance
 
-When the simulation results are gathered on SimPoint simulation points,
-the weighted performance can be computed with
-`weighted_extraction/weighted_ipc.py`.
-Before running the script, please follow these steps:
-First, set PYTHONPATH to the root of this project: ``export PYTHONPATH=`pwd` ``
-Then modify the example function `xiangshan_spec2006` in `weighted_extraction/weighted_ipc.py`.
+**Unified weighted metric computation with batch.py**
 
-Confs contains configurations of a GEM5 or XS batch task and the path:
-``` Python
-confs = {
-    "The-configuration-description": "/The/path/to/the/top/directory/of/the/batch/task",
-}
-```
-
-The parameters of `compute_weighted_cpi` should be set as follows:
-``` Python
-    compute_weighted_cpi(
-            ver=ver,  # version of SPEC CPU , '06' or '17'
-            confs=confs,  # confs above
-            base='XiangShan-Nanhu',  # sometime, we want to compute the relative performance, and we can pass a configuration as the base
-
-            simpoints=f'/nfs-nvme/home/zhouyaoyang/projects/BatchTaskTemplate/resources/simpoint_cpt_desc/spec{ver}_rv64gcb_o2_20m.json',
-            # simpoints contains the description of the SimPoint simulation points, including start instruction and weight in a json file
-
-            prefix = 'xs_',
-            # if extracting XS performance, the prefix should be 'xs_'; if extracting GEM5 performance, the prefix should be ''
-            # `prefix` will be used in eval(), such as `eval(f"c.{prefix}add_branch_mispred(d)")`
-
-            stat_file='simulator_err.txt',  # the file name of the output of GEM5 or XS; Usually, simulator_err.txt or err.txt for XS and stats.txt for GEM5
-
-            insts_file_fmt =
-            '/nfs-nvme/home/share/checkpoints_profiles/spec{}_rv64gcb_o2_20m/logs/profiling/{}.log',
-            # The format of the path of the instruction count file of each benchmark, generated from NEMU when taking checkpoints.
-
-
-            clock_rate = 2 * 10**9,  # simulation clock rate
-            min_coverage = 0.98,  # the minimum coverage of the SimPoint simulation points, 
-            merge_benckmark=True,  # merge multiple inputs for the same benchmark, like gcc_200 and gcc_166
-            output_csv='nanhu-11-12.csv',  # output file name
-            )
-```
-
-Then execute the script from the root of this project:
+Now we use `batch.py` to compute the performance for each checkpoint.
+Then we use simpoint_cpt/compute_weighted.py to compute **weighted metrics** and **scores**
+Example usage here:
 ``` shell
-python3 weighted_extraction/weighted_ipc.py
+export PYTHONPATH=`pwd`
+
+example_stats_dir=/nfs-nvme/home/share/zyy/gem5-results/example-outputs
+
+mkdir -p results
+
+python3 batch.py -s $example_stats_dir -t --topdown-raw -o results/example.csv  # The topdown results for each checkpoint
+
+python3 simpoint_cpt/compute_weighted.py \
+    -r results/example.csv \
+    -j simpoint_cpt/resources/spec06_rv64gcb_o2_20m.json \
+    -o results/example-weighted.csv  # The weighted topdown counters for each benchmark
+
+python3 simpoint_cpt/compute_weighted.py \
+    -r results/example.csv \
+    -j simpoint_cpt/resources/spec06_rv64gcb_o2_20m.json \
+    --score results/example-score.csv  # The SPEC score for each benchmark and overll score
+
 ```
 
 # How to add more interested stats

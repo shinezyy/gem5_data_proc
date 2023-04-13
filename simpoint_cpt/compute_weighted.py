@@ -115,10 +115,7 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
         weighted_df = weighted_df.sort_index()
     print(weighted_df)
     if out_csv is not None:
-        if out_csv.startswith('/') or out_csv.startswith('.'):
-            weighted_df.to_csv(out_csv)
-        else:
-            weighted_df.to_csv(osp.join('results', 'weighted_cpi.csv'))
+        weighted_df.to_csv(out_csv)
     if args.score:
         time_idx = np.where(cols.values == 'time')[0][0]
         coverage_idx = np.where(cols.values == 'coverage')[0][0]
