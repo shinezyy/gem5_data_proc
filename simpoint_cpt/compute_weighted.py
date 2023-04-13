@@ -115,10 +115,7 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
         weighted_df = weighted_df.sort_index()
     print(weighted_df)
     if out_csv is not None:
-        if out_csv.startswith('/') or out_csv.startswith('.'):
-            weighted_df.to_csv(out_csv)
-        else:
-            weighted_df.to_csv(osp.join('results', 'weighted_cpi.csv'))
+        weighted_df.to_csv(out_csv)
     if args.score:
         time_idx = np.where(cols.values == 'time')[0][0]
         coverage_idx = np.where(cols.values == 'coverage')[0][0]
@@ -148,9 +145,21 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
                 intdf = score.loc[u.spec_bmks[spec_v]['int']]
                 fpdf = score.loc[u.spec_bmks[spec_v]['float']]
             print(f'================ SPEC{spec_v} =================')
-            print(score)
-            print(f'Estimated score @ {clock_rate}GHz:', score.loc['mean','score'])
-            print('Estimated score per GHz:', score.loc['mean','score']/(clock_rate/(10**9)))
+            # print(score)
+            if not args.fp_only:
+                print(f'================ Int =================')
+                print(intdf)
+                print(f'Estimated Int score @ {clock_rate/(10**9)}GHz:', geometric_mean(intdf['score']))
+                print('Estimated Int score per GHz:', geometric_mean(intdf['score'])/(clock_rate/(10**9)))
+            if not args.int_only:
+                print(f'================ FP =================')
+                print(fpdf)
+                print(f'Estimated FP score @ {clock_rate/(10**9)}GHz:', geometric_mean(fpdf['score']))
+                print('Estimated FP score per GHz:', geometric_mean(fpdf['score'])/(clock_rate/(10**9)))
+            if not args.int_only and not args.fp_only:
+                print(f'================ Overall =================')
+                print(f'Estimated overall score @ {clock_rate/(10**9)}GHz:', score.loc['mean','score'])
+                print('Estimated overall score per GHz:', score.loc['mean','score']/(clock_rate/(10**9)))
         except:
             warnings.warn('spec result incomplete, scoring stop')
 
