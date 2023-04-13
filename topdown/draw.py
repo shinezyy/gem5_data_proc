@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import os
 import os.path as osp
+from svglib.svglib import svg2rlg
+from reportlab.graphics import renderPDF
 
 def draw():
     results = {
@@ -14,7 +16,10 @@ def draw():
         # "GEM5-ROB400": "/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/topdown/temp_results/gem5-huge-weighted.csv",
 
         "GEM5-base": osp.expandvars("$n/gem5-results/base-topdown-raw-weighted.csv"),
-        "GEM5-base2": osp.expandvars("$n/gem5-results/base-topdown-raw-weighted.csv"),
+        # "GEM5-base2": osp.expandvars("$n/gem5-results/base-topdown-raw-weighted.csv"),
+        "GEM5-redo": osp.expandvars("$n/gem5-results/base-redo-raw-weighted.csv"),
+        # "GEM5-wide-squash": osp.expandvars("$n/gem5-results/base-squash24-raw-weighted.csv"),
+        "GEM5-squash-1cycle": osp.expandvars("$n/gem5-results/base-squash-2c-weighted.csv"),
 
         # with multi pref
         # "GEM5-normal": "/nfs-nvme/home/zhouyaoyang/gem5-results/normal-multi-pref-weighted.csv",
@@ -35,15 +40,23 @@ def draw():
 
     # colors = ['#83639F', '#EA7827', '#C22F2F', '#449945', '#1F70A9']
     # edge_colors = ['#63437F', '#CA5807', '#A20F0F', '#247925', '#005099']
-    cmap = plt.get_cmap('tab20')
-    color_index = np.arange(0, 1, 1.0/20)
-    colors = [cmap(c) for c in color_index]
-    edge_colors = colors
+    color_types = 20
+    if color_types == 20:
+        cmap = plt.get_cmap('tab20')
+        color_index = np.arange(0, 1, 1.0/20)
+        colors = [cmap(c) for c in color_index]
+        hatches = [None] * 20
+    else:
+        cmap = plt.get_cmap('tab10')
+        color_index = np.arange(0, 1, 1.0/10)
+        colors = [cmap(c) for c in color_index] * 3
+        hatches = [None] * 10 + ['//']*10 + ['|']*10
+
     # print(colors)
 
+    n_conf = len(configs)
     # Draw stacked bar chart for each simulator
-    shift = 0.8
-    width = 0.3
+    width = 0.8/n_conf
     # set figure size:
 
     eng_font = 'TimesNewRoman2'
@@ -79,12 +92,82 @@ def draw():
     fig, ax = plt.subplots()
     # fig.set_size_inches(5.77, 3.56)
     # fig.set_size_inches(5.77, 3.0)
-    fig.set_size_inches(5.77, 5.0)
+    fig.set_size_inches(7.0, 5.0)
 
     x = None
     have_set_label = False
-    for simulators in results:
-        df = pd.read_csv(results[simulators], index_col=0)
+
+    rename_map= {
+        'NoStall': None,
+
+        # Core
+        'LongExecute': None,
+        'InstNotReady': None,
+
+        # Memory
+        'LoadL1Bound': None,
+        'LoadL2Bound': None,
+        'LoadL3Bound': None,
+        'LoadMemBound': None,
+        'StoreL1Bound': None,
+        'StoreL2Bound': None,
+        'StoreL3Bound': None,
+        'StoreMemBound': None,
+        'DTlbStall': None,
+
+        # Frontend
+        'IcacheStall': 'ICacheBubble',
+        'ITlbStall': 'ITlbBubble',
+        'FragStall': 'FragmentBubble',
+
+        # BP
+        'BpStall': 'MergeBadSpecBubble',
+        'SquashStall': 'MergeBadSpecBubble',
+        'InstMisPred': 'MergeBadSpecBubble',
+        'InstSquashed': 'BadSpecInst',
+
+        # BP + backend
+        'CommitSquash': 'BadSpecWalking',
+
+        # Unclassified:
+        'SerializeStall': None,
+        'TrapStall': None,
+        'IntStall': 'MergeMisc',
+        'ResumeUnblock': 'MergeMisc',
+        'FetchBufferInvalid': 'MergeMisc',
+        'OtherStall': 'MergeMisc',
+        'OtherFetchStall': 'MergeMisc',
+    }
+
+    dfs = [pd.read_csv(results[sim_conf], index_col=0) for sim_conf in results]
+    common_bmk = list(set.intersection(*[set(df.index) for df in dfs]))
+    common_bmk = ['bzip2', 'sjeng']
+    print(common_bmk)
+    dfs = [df.loc[common_bmk] for df in dfs]
+    sorted_cols = []
+    for sim_conf, df in zip(results, dfs):
+        # Merge df columns according to the rename map if value starting with 'Merge'
+        to_drop = []
+        for k in rename_map:
+            if rename_map[k] is not None:
+                if rename_map[k].startswith('Merge'):
+                    merged = rename_map[k][5:]
+                    if merged not in df.columns:
+                        df[merged] = df[k]
+                        sorted_cols.append(merged)
+                    else:
+                        df[merged] += df[k]
+                else:
+                    df[rename_map[k]] = df[k]
+                    sorted_cols.append(rename_map[k])
+
+                to_drop.append(k)
+            else:
+                sorted_cols.append(k)
+
+        df = df.drop(columns=to_drop)
+
+        # df = pd.read_csv(results[sim_conf], index_col=0)
 
         # if 'layer2_memory_bound-non_tlb' in df.columns:
         #     df['layer2_memory_bound'] = df['layer2_memory_bound-non_tlb'] + df['layer2_memory_bound-tlb']
@@ -94,44 +177,69 @@ def draw():
         # df = df.drop(columns=[col for col in df.columns if not col.startswith(
         #     'layer') and not col.startswith('ipc') and not col.startswith('cpi')])
 
-        if 'ipc' in df.columns:
-            df_cpi = 1.0/df['ipc']
-            df = df.mul(df_cpi, axis=0)
-        elif 'cpi' in df.columns:
-            df_cpi = df['cpi']
+        # if 'ipc' in df.columns:
+        #     df_cpi = 1.0/df['ipc']
+        #     df = df.mul(df_cpi, axis=0)
+        # elif 'cpi' in df.columns:
+        #     df_cpi = df['cpi']
             # df = df.mul(df_cpi, axis=0)
-            df = df.div(df_cpi, axis=0)
-
+            # df = df.div(df_cpi, axis=0)
+        df = df.div(df['Insts'], axis=0)
+        
         # df = df.drop(columns=[col for col in df.columns if not col.startswith('layer')])
-        df = df.drop(columns=['Cycles', 'Insts'])
+        df = df.drop(columns=['Cycles', 'Insts', 'cpi', 'coverage'])
+
+        # scale each row to make them sum to 1
+        # df = df.div(df.sum(axis=1), axis=0)
+
+        # add rows into one raw
+        # df.loc['int overall'] = df.sum(axis=0)
+        # df = df.loc[['int overall']]
+
+        # scale each row to make them sum to 1
+        # df = df.div(df.sum(axis=1), axis=0)
+
+        print('CPI stack sum', df.sum(axis=1))
+        # print(df)
 
         # draw stacked bar chart
         bottom = np.zeros(len(df))
+        highest = 0.0
         if x is None:
             x = np.arange(len(df), dtype=float)
-        for component, color, ec in zip(df.columns, colors[:len(df.columns)],
-                                        edge_colors[:len(df.columns)]):
+        for component, color, hatch in zip(sorted_cols, colors[:len(df.columns)], hatches[:len(df.columns)]):
             if have_set_label:
                 label = None
             else:
                 label = component
-            p = ax.bar(x, df[component], bottom=bottom, width=width, color=color, label=label, edgecolor=ec)
+            p = ax.bar(x, df[component], bottom=bottom,
+                       width=width, color=color, label=label, edgecolor='black', hatch=hatch)
+            highest = max(highest, max(bottom + df[component]))
             bottom += df[component]
         x += width
         have_set_label = True
     # replace x tick labels with df.index with rotation
-    ax.set_xticks(x - width * len(results) / 2)
-    ax.set_xticklabels(df.index, rotation=90)
+    ax.set_xticks(x - width * len(results) / n_conf - 0.25)
+    ax.set_xticklabels(df.index, rotation=0)
+    # ax.set_yticklabels([''])
 
     # # set the transparency of frame of legend
-    ax.legend(fancybox=True, framealpha=0.3, loc='best', ncol=2)
+    handles, labels = plt.gca().get_legend_handles_labels()
+    ax.legend(reversed(handles), reversed(labels), fancybox=True, framealpha=0.3, loc='best', ncol=3)
     # ax.set_title('GEM5 <-- Left, Right --> XS master')
-    ax.set_title(f'{configs[0]} <-- 左, 右 --> {configs[1]}')
-    ax.set_ylim(0, 3.0e8)
+    if n_conf == 2:
+        ax.set_title(f'{configs[0]} <-- 左, 右 --> {configs[1]}')
+    ax.set_ylim(0, highest * 2.2)
+    ax.set_xlim(-2.5, max(5.5, len(df)))
 
-    fig.savefig(osp.join('results', 'int-raw-topdown.pdf'), bbox_inches='tight', pad_inches=0.05)
-    # fig.savefig(osp.join('results', 'GemsFDTD.pdf'), bbox_inches='tight', pad_inches=0.05)
-    # plt.show()
+
+    tag = 'bzip2-sjeng-covered-stack'
+    fig.savefig(osp.join('results', f'{tag}.png'), bbox_inches='tight', pad_inches=0.05, dpi=200)
+    # fig.savefig(osp.join('results', 'int-raw-topdown.pdf'), bbox_inches='tight', pad_inches=0.05)
+    fig.savefig(osp.join('results', f'{tag}.svg'), bbox_inches='tight', pad_inches=0.05)
+
+    drawing = svg2rlg(osp.join('results', f'{tag}.svg'))
+    renderPDF.drawToFile(drawing, osp.join('results', f'{tag}.pdf'))
     
 
 if __name__ == '__main__':
