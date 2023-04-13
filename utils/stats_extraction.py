@@ -54,6 +54,8 @@ def strip_path(file_path: str, prefix_path: str):
     x = prefix_path.join(file_path.split(prefix_path)[1:])
     if prefix_path.startswith('.') and x.startswith('/'):
         x = x[1:]
+    if prefix_path.startswith('/') and x.startswith('/'):
+        x = x[1:]
     return x
 
 def glob_stats(path: str, fname = 'x'):
@@ -64,8 +66,7 @@ def glob_stats(path: str, fname = 'x'):
     two_layer_pat = re.compile(r'.*/(?P<workload>.*)/(?P<point>\d+)/')
 
     probe_stat_path = find_file_in_maze(path, fname)  # use it to probe the directory layout
-    probe_point_path = strip_path(probe_stat_path, path)
-    workload, point, segments = workload_point_frompath(probe_point_path)
+    workload, point, segments = workload_point_frompath(strip_path(probe_stat_path, path))
     for l2_dir in os.listdir(path):
         l2_path = osp.join(path, l2_dir)
         #workload/point
