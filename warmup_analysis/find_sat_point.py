@@ -80,12 +80,13 @@ def find_sat_points(df, tag):
     # raise
             
     new_df['max_demand'] = new_df[['br_dw', 'l3_dw']].max(axis=1)
-    new_df.sort_values(by='est_cycles', inplace=True, ascending=False)
+    # new_df.sort_values(by='est_cycles', inplace=True, ascending=False)
+    new_df = new_df.sort_index()
     print(new_df)
-    new_df.to_csv(osp.join('results', f'ada-warmup-cycles.csv'))
+    new_df.to_csv(osp.join('results', f'ada-warmup-cycles-{tag}-response.csv'))
 
     # new_df.to_csv(osp.join('results', f'{tag}-5M-warmup-demand.csv'))
-    with open(osp.join('results', f'ada-warmup.lst'), 'w') as f:
+    with open(osp.join('results', f'ada-warmup-{tag}-response.lst'), 'w') as f:
         for index, row in new_df.iterrows():
             dw = int(row['br_dw'])
             fw = 95 - dw
@@ -146,7 +147,8 @@ def gen_ada_warmup_conf():
         ],
     }
     dfs = []
-    for csv in warmup_results_list['gem5']:
+    source = 'xs'
+    for csv in warmup_results_list[source]:
         df = pd.read_csv(osp.join(top_dir, csv), index_col=0)
         df.drop(df.tail(1).index, inplace=True)
         dfs.append(df)
@@ -161,7 +163,57 @@ def gen_ada_warmup_conf():
         dws = [int(x.split('-')[3]) for x in confs]
         print(dws)
 
-    find_sat_points(dedup, 'gem5')
+    find_sat_points(dedup, source)
+
+
+def check_error_contribution():
+    top_dir = '/nfs-nvme/home/zhouyaoyang/gem5-results'
+    warmup_results_list = {
+        'gem5': [
+            'gem5-sat-point-95M.csv',
+            'gem5-sat-point-50M.csv',
+            'gem5-sat-point-25M.csv',
+            'gem5-sat-point-low.csv',
+        ],
+        'xs': [
+            'xs-vs-gem5-sat-point-95M.csv',
+            'xs-vs-gem5-sat-point-50M.csv',
+            'xs-vs-gem5-sat-point-25M.csv',
+            'xs-vs-gem5-sat-point-low.csv',
+        ],
+    }
+    dfs = []
+    source = 'xs'
+    for csv in warmup_results_list[source]:
+        df = pd.read_csv(osp.join(top_dir, csv), index_col=0)
+        df.drop(df.tail(1).index, inplace=True)
+        dfs.append(df)
+        print(csv, 'Shape:', df.shape)
+        # print(df)
+    merged = pd.concat(dfs, axis=0)
+    dedup = merged[~merged.index.duplicated(keep='first')]
+    index = list(dedup.index)
+    workloads = list(set([x.split('-')[0] for x in index]))
+    for workload in sorted(workloads):
+        confs = [x for x in index if x.startswith(workload)]
+        dws = [int(x.split('-')[3]) for x in confs]
+        # print(dws)
+
+    direction = 'gem5'
+    warmup_len_csv = osp.join('results', f'ada-warmup-{direction}-response.lst')
+    warmup_len_df = pd.read_csv(warmup_len_csv, index_col=0, header=None, sep=' ')
+    warmup_len_df.columns = ['wl', 'skip', 'fw', 'dw', 'sample']
+    print(warmup_len_df['dw'])
+    print(dedup)
+    with open(osp.join('results', f'{direction}-directed-brmpki.csv'), 'w') as f:
+        for wl in sorted(workloads):
+            no_point_wl = '_'.join(wl.split('_')[:-1])
+            pred_warmup_len = warmup_len_df.loc[no_point_wl, 'dw']
+            obtained_mpki = dedup.loc[f'{wl}-{95-pred_warmup_len}-{0}-{pred_warmup_len}-5', 'total branch MPKI']
+            full_dw_mpki = dedup.loc[f'{wl}-0-0-95-5', 'total branch MPKI']
+            print(f'{wl},{obtained_mpki}', file=f)
+
+
 
 
 def gen_sat_curve_csv():
@@ -357,6 +409,10 @@ def get_func_warmup_rank():
 
 
 if __name__ == '__main__':
-    gen_sat_curve_csv()
+    # gen_sat_curve_csv()
     # get_func_warmup_rank()
+
+    # Generate warmup guidance from XS profiling / GEM5 profiling
     # gen_ada_warmup_conf()
+
+    check_error_contribution()
