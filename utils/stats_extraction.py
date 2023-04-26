@@ -37,16 +37,18 @@ def workload_point_frompath(path):
         workload = path.split('/')[0]
         point = second_layer
         level = 2
-    elif split_path[1].isdigit() and len(split_path[1]) > 5:# workload_point_xxx/
+    elif len(split_path) > 1 and split_path[1].isdigit() and len(split_path[1]) > 5:# workload_point_xxx/
         print(split_path)
         workload = split_path[0]
         point = split_path[1]
-    elif split_path[2].isdigit():#work_load_point_xxx/
+    elif len(split_path) > 2 and split_path[2].isdigit():#work_load_point_xxx/
         workload = split_path[0] + '_' + split_path[1]
         point = split_path[2]
     else:
-        print(path)
-        raise Exception('Invalid Path')
+        workload = path.split('/')[0]
+        point = '0'
+        level = 1
+        
     return workload,point,level
 
 
