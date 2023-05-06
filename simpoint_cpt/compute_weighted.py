@@ -163,10 +163,8 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
         except:
             warnings.warn('spec result incomplete, scoring stop')
 
-        if args.score.startswith('/') or args.score.startswith('.'):
+        if args.score is not None:
             score.to_csv(args.score)
-        else:
-            score.to_csv(osp.join('results', 'score.csv'))
 
 
 if __name__ == '__main__':
