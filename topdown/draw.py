@@ -63,12 +63,12 @@ def draw():
         cmap = plt.get_cmap('tab10')
         color_index = np.arange(0, 1, 1.0/color_types)
         colors = [cmap(c) for c in color_index] * 3
-        hatches = [None] * color_types + ['//']*10 + ['|']*color_types
+        hatches = [None] * color_types + ['//']*color_types + ['|']*color_types
     else:
         cmap = plt.get_cmap('Paired')
         color_index = np.arange(0, 1, 1.0/color_types)
         colors = [cmap(c) for c in color_index] * 3
-        hatches = [None] * color_types + ['//']*10 + ['|']*color_types
+        hatches = [None] * color_types + ['//']*color_types + ['|']*color_types
 
     # print(colors)
 
@@ -124,15 +124,15 @@ def draw():
         'InstNotReady': 'MergeCore',
 
         # Memory
-        'LoadL1Bound': 'MergeMemLoad',
-        'LoadL2Bound': 'MergeMemLoad',
-        'LoadL3Bound': 'MergeMemLoad',
-        'LoadMemBound': 'MergeMemLoad',
-        'StoreL1Bound': 'MergeMemStore',
-        'StoreL2Bound': 'MergeMemStore',
-        'StoreL3Bound': 'MergeMemStore',
-        'StoreMemBound': 'MergeMemStore',
-        'DTlbStall': 'MergeMemLoad',
+        'LoadL1Bound': 'MergeLoad',
+        'LoadL2Bound': 'MergeLoad',
+        'LoadL3Bound': 'MergeLoad',
+        'LoadMemBound': 'MergeLoad',
+        'StoreL1Bound': 'MergeStore',
+        'StoreL2Bound': 'MergeStore',
+        'StoreL3Bound': 'MergeStore',
+        'StoreMemBound': 'MergeStore',
+        'DTlbStall': 'MergeLoad',
 
         # Frontend
         'IcacheStall': 'MergeFrontend',
@@ -143,7 +143,7 @@ def draw():
         'BpStall': 'MergeBadSpec',
         'SquashStall': 'MergeBadSpec',
         'InstMisPred': 'MergeBadSpec',
-        'InstSquashed': 'MergeBadSpec',
+        'InstSquashed': 'MergeBadSpecInst',
 
         # BP + backend
         'CommitSquash': 'MergeBadSpec',
@@ -174,27 +174,27 @@ def draw():
         'IntNotReadyStall': 'MergeCore',
         'FPNotReadyStall': 'MergeCore',
 
-        'MemNotReadyStall': 'MergeMemReady',
+        'MemNotReadyStall': 'MergeLoad',
 
-        'LoadTLBStall': 'MergeMemLoad',
-        'LoadL1Stall': 'MergeMemLoad',
-        'LoadL2Stall': 'MergeMemLoad',
-        'LoadL3Stall': 'MergeMemLoad',
-        'LoadMemStall': 'MergeMemLoad',
-        'StoreStall': 'MergeMemStore',
+        'LoadTLBStall': 'MergeLoad',
+        'LoadL1Stall': 'MergeLoad',
+        'LoadL2Stall': 'MergeLoad',
+        'LoadL3Stall': 'MergeLoad',
+        'LoadMemStall': 'MergeLoad',
+        'StoreStall': 'MergeStore',
 
         'AtomicStall': 'MergeMisc',
 
-        'FlushedInsts': 'MergeBadSpec',
+        'FlushedInsts': 'MergeBadSpecInst',
         'LoadVioReplayStall': 'MergeBadSpec',
 
-        'LoadMSHRReplayStall': 'MergeMemLoad',
+        'LoadMSHRReplayStall': 'MergeLoad',
 
         'ControlRecoveryStall': 'MergeBadSpec',
         'MemVioRecoveryStall': 'MergeBadSpec',
         'OtherRecoveryStall': 'MergeBadSpec',
         
-        'OtherCoreStall': 'MergeCore',
+        'OtherCoreStall': 'MergeCoreOther',
         'NoStall': 'MergeBase',
 
         'MemVioRedirectBubble': 'MergeBadSpec',
@@ -349,8 +349,17 @@ def draw():
                     rename_with_map(df, xs_coarse_rename_map)
         
                 icount = 20*10**6
-                df['BadSpecInst'] = df['Base'] - icount
+                print(results[sim_conf][1], f'Base count:\n{df["Base"]}')
+                if 'BadSpecInst' in df.columns:
+                    df['BadSpecInst'] += df['Base'] - icount
+                else:
+                    df['BadSpecInst'] = df['Base'] - icount
+                print(results[sim_conf][1], f'Bad inst count:\n{df["BadSpecInst"]}')
                 df['Base'] = icount
+
+                # df['BadSpec'] = df['BadSpecInst'] + df['BadSpec']
+                # df.drop(columns=['BadSpecInst'], inplace=True)
+
 
         df = df.astype(float)
         print(df.columns)
@@ -373,10 +382,22 @@ def draw():
 
         
 
+    put_to_front = ['Base', 'BadSpec']
+    # excluded = len(put_to_front)
+    # colors = colors[excluded:]
+
+    tmp_df = renamed_dfs[0].sort_values(by = 'cpi', ascending=False)
+    bmk_sort = tmp_df.index.tolist()
+    # bmk_sort = bmk_sort[len(bmk_sort)//2:]
+    # bmk_sort = bmk_sort[:len(bmk_sort)//2]
+
     for sim_conf, df in zip(results, renamed_dfs):
 
-        put_to_front = ['Base', 'BadSpecInst']
-        df = df[put_to_front  + [ col for col in df.columns if col not in put_to_front] ]
+        df = df.loc[bmk_sort]
+
+        # df = df[put_to_front  + [ col for col in df.columns if col not in put_to_front] ]
+        df = df[put_to_front + [ col for col in df.columns if col not in put_to_front]]
+
         # to_drop = ['bmk', 'point', 'workload']
         # df = df.drop(columns=to_drop)
         # drop non-numerical columns
@@ -390,8 +411,6 @@ def draw():
         #     df_cpi = df['cpi']
         #     df = df.mul(df_cpi, axis=0)
         
-        df = df.sort_values(by = 'cpi', ascending=False)
-
         df = df.drop(columns=['cpi'])
 
         # df = df.div(df['Insts'], axis=0)
@@ -431,17 +450,21 @@ def draw():
                 label = None
             else:
                 label = component
-            p = ax.bar(x, df[component], bottom=bottom,
-                       width=width, color=color, label=label, edgecolor='black', hatch=hatch)
-            highest = max(highest, max(bottom + df[component]))
-            bottom += df[component]
+            # print('Bottom of astar:', bottom[df.index == 'astar'])
+            # if component in ['Base', 'BadSpecInst', 'BadSpec']:
+            if True:
+                p = ax.bar(x, df[component], bottom=bottom,
+                        width=width, color=color, label=label, edgecolor='black', hatch=hatch)
+                highest = max(highest, max(bottom + df[component]))
+                bottom += df[component]
+            # print('New bottom of astar:', bottom[df.index == 'astar'])
         x += width
         have_set_label = True
     # replace x tick labels with df.index with rotation
     ax.set_xticks(x - width * len(results) / n_conf - 0.25)
-    ax.set_xticklabels(df.index, rotation=90)
+    ax.set_xticklabels(bmk_sort, rotation=90)
     ax.tick_params(left=False, bottom=False)
-    ax.set_ylabel('CPI')
+    ax.set_ylabel('Slots')
     ax.set_xlabel('SPECCPU 2006 子项')
 
     # # set the transparency of frame of legend
@@ -465,7 +488,7 @@ def draw():
     # tag = 'int-raw-topdown'
     fig.savefig(osp.join('results', f'{tag}.png'), bbox_inches='tight', pad_inches=0.05, dpi=200)
     # fig.savefig(osp.join('results', f'{tag}.svg'), bbox_inches='tight', pad_inches=0.05)
-    fig.savefig(osp.join('results', f'{tag}.pdf'), bbox_inches='tight', pad_inches=0.05)
+    # fig.savefig(osp.join('results', f'{tag}.pdf'), bbox_inches='tight', pad_inches=0.05)
 
     # drawing = svg2rlg(osp.join('results', f'{tag}.svg'))
     # renderPDF.drawToFile(drawing, osp.join('results', f'{tag}.pdf'))
