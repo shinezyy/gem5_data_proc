@@ -10,43 +10,10 @@ from reportlab.graphics import renderPDF
 
 def draw():
     results = {
-        # "gem5-larger": "/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/topdown/temp_results/gem5-larger-weighted.csv",
-        # "gem5-larger-sq84": "/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/topdown/temp_results/gem5-larger-sq84-weighted.csv",
-
-        # "GEM5-Default": "/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/topdown/temp_results/gem5-normal-weighted.csv",
-        # "GEM5-ROB400": "/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/topdown/temp_results/gem5-huge-weighted.csv",
-
-        # For int all and bzip2
-        # "GEM5-base": osp.expandvars("$n/gem5-results/base-topdown-raw-weighted.csv"),
-        # "GEM5-base2": osp.expandvars("$n/gem5-results/base-topdown-raw-weighted.csv"),
-
-        # For bzip2
-        # "GEM5-redo": osp.expandvars("$n/gem5-results/base-redo-raw-weighted.csv"),
-
-        # "GEM5-wide-squash": osp.expandvars("$n/gem5-results/base-squash24-raw-weighted.csv"),
-
-        # For bzip2
-        # "GEM5-squash-1cycle": osp.expandvars("$n/gem5-results/base-squash-2c-weighted.csv"),
-
-        # with multi pref
-        # "GEM5-normal": "/nfs-nvme/home/zhouyaoyang/gem5-results/normal-multi-pref-weighted.csv",
-        # "GEM5-ROB400": "/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/topdown/temp_results/gem5-huge-multipref-weighted.csv",
-
-        # with tlb prefetch
         "GEM5-0429":
-            ("/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/results/replay-and-tlb-pref-weighted.csv", "GEM5"),
+            ("results/gem5-topdown-example-weighted.csv", "GEM5"),
         "XS-0429": 
-            ("/nfs-nvme/home/zhouyaoyang/projects/gem5_data_proc/results/xs-topdown-weighted.csv", "XS"),
-
-        # top2 weighted:
-        # "xs": "/nfs-nvme/home/zhouyaoyang/gem5-results/xs-topdown-l1.csv",
-        # "gem5": "/nfs-nvme/home/zhouyaoyang/gem5-results/gem5-topdown-l1.csv",
-        # "xs": "temp_results/xs-topdown-cpts.csv",
-        # "gem5": "temp_results/gem5-topdown-cpts.csv",
-
-        # GemsFDTD
-        # "GemsFDTD修复前": "/nfs-nvme/home/zhouyaoyang/gem5-results/GemsFDTD-buggy.csv",
-        # "GemsFDTD修复后": "/nfs-nvme/home/zhouyaoyang/gem5-results/GemsFDTD-fixed.csv",
+            ("results/xs-topdown-example-weighted.csv", "XS"),
     }
 
     configs = list(results.keys())
@@ -76,36 +43,6 @@ def draw():
     # Draw stacked bar chart for each simulator
     width = 0.8/n_conf
     # set figure size:
-
-    eng_font = 'TimesNewRoman2'
-    chn_font = 'SimSun'
-
-    mpl.use('pgf') # stwich backend to pgf
-    plt.rcParams.update({
-    "text.usetex": True,# use default xelatex
-    "pgf.rcfonts": False,# turn off default matplotlib fonts properties
-    "pgf.preamble": [
-         r'\usepackage{fontspec}',
-         r'\setmainfont{TimesNewRoman2}',# EN fonts Romans
-         r'\usepackage{xeCJK}',# import xeCJK
-         r'\setCJKmainfont{SimSun}',# set CJK fonts as SimSun
-         r'\xeCJKsetup{CJKecglue=}',# turn off one space between CJK and EN fonts
-         ]
-    })
-
-    mpl.rcParams['font.family'] = [chn_font]
-
-    # mpl.rcParams['font.family'] = [eng_font]
-    # mpl.rcParams['font.sans-serif'] = [chn_font]
-
-    # config = {
-    #     'font.family': 'serif',
-    #     'mathtext.fontset': 'stix',
-    #     'font.serif': ['SimSun'],
-    # }
-    # mpl.rcParams.update(config)
-
-    # mpl.rcParams['font.style'] = 'normal'
 
     fig, ax = plt.subplots()
     # fig.set_size_inches(5.77, 3.56)
@@ -465,7 +402,7 @@ def draw():
     ax.set_xticklabels(bmk_sort, rotation=90)
     ax.tick_params(left=False, bottom=False)
     ax.set_ylabel('Slots')
-    ax.set_xlabel('SPECCPU 2006 子项')
+    ax.set_xlabel('SPECCPU 2006 Benchmarks')
 
     # # set the transparency of frame of legend
     handles, labels = plt.gca().get_legend_handles_labels()
@@ -478,7 +415,7 @@ def draw():
               )
     # ax.set_title('GEM5 <-- Left, Right --> XS master')
     if n_conf == 2:
-        ax.set_title(f'{configs[0]} <-- 左, 右 --> {configs[1]}')
+        ax.set_title(f'{configs[0]} <-- VS. --> {configs[1]}')
     # ax.set_ylim(0, 4.0)
     # ax.set_ylim(0, highest * 2.2)
     # ax.set_ylim(0, highest * 1.2)
