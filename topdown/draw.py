@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import os
 import os.path as osp
-from svglib.svglib import svg2rlg
-from reportlab.graphics import renderPDF
+# from svglib.svglib import svg2rlg
+# from reportlab.graphics import renderPDF
 
 def draw():
     results = {
