@@ -7,6 +7,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-j', '--weight-json', help='json file to sort')
 parser.add_argument('--csv1', help='csv file 1 to sort')
 parser.add_argument('--csv2', help='csv file 2 to sort')
+parser.add_argument('-b', '--bmk', help='csv file 2 to sort')
 
 args = parser.parse_args()
 
@@ -32,8 +33,8 @@ def add_weighted_cycles(points_df, js, wokload):
 weighted_cycles = []
 for i in range(2):
     add_cpi(points[i])
-    add_weighted_cycles(points[i], js, 'mcf')
-    df = get_related_points_on_wl('mcf', points[i])
+    add_weighted_cycles(points[i], js, args.bmk)
+    df = get_related_points_on_wl(args.bmk, points[i])
     print(df)
     weighted_cycles.append(df['weighted_cycles'])
 diff = weighted_cycles[0] - weighted_cycles[1]
