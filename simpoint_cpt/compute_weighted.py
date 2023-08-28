@@ -27,6 +27,7 @@ def proc_input(wl_df: pd.DataFrame, js: dict, workload: str):
     assert type(wl_df['point'][0]) == np.int64
     wl_df = wl_df.sort_values(by=['point'])
     # We also sort the vec_weight by point
+    print('Processing bmk input', workload)
     wl_js = dict(js[workload])
     if 'ipc' in wl_df.columns:
         wl_df['cpi'] = 1.0/wl_df['ipc']
@@ -38,7 +39,13 @@ def proc_input(wl_df: pd.DataFrame, js: dict, workload: str):
     # convert string index into int64
     vec_weight.index = vec_weight.index.astype(np.int64)
     # select only existing points
-    vec_weight = vec_weight.loc[wl_df['point']]
+    try: 
+        vec_weight = vec_weight.loc[wl_df['point']]
+    except KeyError:
+        print(f'KeyError: {workload}')
+        print(vec_weight)
+        print(wl_df['point'])
+        raise KeyError
     # make their sum equals 1.0
     vec_weight.columns = ['weight']
 
@@ -67,6 +74,7 @@ def proc_bmk(bmk_df: pd.DataFrame, js: dict, bmk: str):
     workloads = bmk_df['workload'].unique()
     metric_list = [] 
     time = 0
+    print('Processing bmk', bmk)
     for wl in workloads:
         metrics, cols = proc_input(bmk_df[bmk_df['workload'] == wl], js, wl)
         if args.score:
@@ -95,20 +103,39 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
     with open(js_path, 'r') as f:
         js = json.load(f)
     weighted = {}
+    dirty_bmk_pattern = re.compile(r'(?P<name>\w+)-(?P<dirty>\d)')
     for bmk in bmks:
-        if bmk not in u.spec_bmks['06']['int'] and args.int_only:
+        m = dirty_bmk_pattern.match(bmk)
+        pure_name = bmk
+        if m:
+            pure_name = m.group('name')
+        if pure_name not in u.spec_bmks['06']['int'] and args.int_only:
+            print(f'{bmk} not in int list')
             continue
-        if bmk not in u.spec_bmks['06']['float'] and args.fp_only:
+        if pure_name not in u.spec_bmks['06']['float'] and args.fp_only:
+            print(f'{bmk} not in fp list')
             continue
         df_bmk = df[df['bmk'] == bmk]
         workloads = df_bmk['workload'].unique()
         n_wl = len(workloads)
+        print(workloads)
         if n_wl == 1:
             metrics, cols = proc_input(df_bmk, js, workloads[0])
         else:
             metrics, cols = proc_bmk(df_bmk, js, bmk)
         weighted[bmk] = metrics[0]
     weighted_df = pd.DataFrame.from_dict(weighted, orient='index', columns=cols)
+
+    bmks_cleaned = []
+    for bmk in weighted_df.index:
+        m = dirty_bmk_pattern.match(bmk)
+        if m:
+            bmks_cleaned.append(m.group('name'))
+        else:
+            bmks_cleaned.append(bmk)
+    weighted_df.index = bmks_cleaned
+    print(bmks_cleaned)
+
     if 'cpi' in weighted_df.columns:
         weighted_df = weighted_df.sort_values(by='cpi', ascending=False)
     else:
@@ -117,16 +144,15 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
     if out_csv is not None:
         weighted_df.to_csv(out_csv)
     if args.score:
-        time_idx = np.where(cols.values == 'time')[0][0]
-        coverage_idx = np.where(cols.values == 'coverage')[0][0]
         score = {}
-        for bmk in weighted.items():
-            if not score.get(bmk[0]) :
-                score[bmk[0]] = {}
-            score[bmk[0]]['time'] = float(bmk[1][time_idx])
-            score[bmk[0]]['ref_time'] = float(reftime_js[bmk[0]])
-            score[bmk[0]]['score'] = score[bmk[0]]['ref_time'] / score[bmk[0]]['time']
-            score[bmk[0]]['coverage'] = bmk[1][coverage_idx]
+        for bmk in weighted_df.index:
+            if not score.get(bmk):
+                score[bmk] = {}
+            print(weighted_df.loc[bmk])
+            score[bmk]['time'] = float(weighted_df.loc[bmk, 'time'])
+            score[bmk]['ref_time'] = float(reftime_js[bmk])
+            score[bmk]['score'] = score[bmk]['ref_time'] / score[bmk]['time']
+            score[bmk]['coverage'] = weighted_df.loc[bmk, 'coverage']
         score['mean'] = {
             'time':0,
             'ref_time':0,
@@ -136,6 +162,7 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
         score_col = ['time','ref_time','score','coverage']
         score = pd.DataFrame.from_dict(score, orient='index', columns=score_col)
         score = score.sort_values(by='score', ascending=False)
+        print(score)
         try:
             if args.int_only:
                 intdf = score.loc[u.spec_bmks[spec_v]['int']]
@@ -144,6 +171,7 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
             else:# defalut
                 intdf = score.loc[u.spec_bmks[spec_v]['int']]
                 fpdf = score.loc[u.spec_bmks[spec_v]['float']]
+            print(args.score)
             print(f'================ SPEC{spec_v} =================')
             # print(score)
             if not args.fp_only:
@@ -160,11 +188,26 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
                 print(f'================ Overall =================')
                 print(f'Estimated overall score @ {clock_rate/(10**9)}GHz:', score.loc['mean','score'])
                 print('Estimated overall score per GHz:', score.loc['mean','score']/(clock_rate/(10**9)))
+            if args.score is not None:
+                score.to_csv(args.score)
         except:
-            warnings.warn('spec result incomplete, scoring stop')
+            warnings.warn('spec result incomplete, scoring stop, print partial items')
+            for bmk in u.spec_bmks[spec_v]['int'] + u.spec_bmks[spec_v]['float']:
+                print(bmk)
+                if bmk not in score.index:
+                    print(f'Int {bmk} missing')
+            int_list = [x for x in u.spec_bmks[spec_v]['int'] if x in score.index]
+            fp_list = [x for x in u.spec_bmks[spec_v]['float'] if x in score.index]
+            intdf = score.loc[int_list]
+            fpdf = score.loc[fp_list]
+            print(f'================ Int =================')
+            print(intdf)
+            print(f'================ FP =================')
+            print(fpdf)
 
-        if args.score is not None:
-            score.to_csv(args.score)
+
+                
+
 
 
 if __name__ == '__main__':
