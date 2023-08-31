@@ -253,7 +253,7 @@ def xs_get_mshr_latency(line: str, lv: str):
     # TOP.SimTop.l_soc.core_with_l2.l2cache.
     
     if lv == 'l2':
-        pattern = re.compile(r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_(?P<bank>\d+)\.mshrAlloc: mshr_latency_(?P<mshr_id>\d+)_(?P<lat_low>\d+)_(?P<lat_high>\d+),\s+(?P<count>\d+)")
+        pattern = re.compile(r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_(?P<bank>\d+)\.mshrCtl: mshr_latency_(?P<mshr_id>\d+)_(?P<lat_low>\d+)_(?P<lat_high>\d+),\s+(?P<count>\d+)")
     elif lv == 'l3':
         pattern = re.compile(r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_(?P<bank>\d+)\.mshrAlloc: mshr_latency_(?P<mshr_id>\d+)_(?P<lat_low>\d+)_(?P<lat_high>\d+),\s+(?P<count>\d+)")
     elif lv == 'l1d':
