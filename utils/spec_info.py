@@ -31,7 +31,7 @@ spec_bmks = {
 def get_insts(fname: str):
     print(fname)
     assert osp.isfile(fname)
-    p = re.compile('total guest instructions = (\d+)')
+    p = re.compile('total guest instructions = (\d+(?:,\d+)*)')
     with open(fname) as f:
         for line in f:
             m = p.search(line)
