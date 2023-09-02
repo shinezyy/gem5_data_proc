@@ -15,7 +15,7 @@ import warnings
 
 args = []
 spec_v = '06'
-clock_rate = 2 * 10**9
+clock_rate = 3 * 10**9
 reftime_js = {}
 
 def proc_input(wl_df: pd.DataFrame, js: dict, workload: str):
@@ -218,11 +218,13 @@ if __name__ == '__main__':
     parser.add_argument('-I', '--int-only', action='store_true', required=False, help='only process int')
     parser.add_argument('-F', '--fp-only', action='store_true', required=False, help='only process fp')
     parser.add_argument('-s', '--score', action='store', required=False, help='csv file to stall weighted score results')
-    parser.add_argument('-c', '--clock', action='store', required=False, default=2, help='simulation clock rate(GHz)')
+    parser.add_argument('-c', '--clock', action='store', required=False, default=3, help='simulation clock rate(GHz)')
+    parser.add_argument('-v', '--spec-version', action='store', required=False, default='06',
+                        help='spec version, default is 06')
     args = parser.parse_args()
     clock_rate = float(args.clock) * 10**9
     if args.score:
-        spec_v = args.json.split('/')[-1].split('_')[0][4:6]
+        spec_v = args.spec_version
         path = os.path.abspath(os.path.dirname(sys.argv[0]))
         with open(path + f'/resources/spec{spec_v}_reftime.json', 'r') as f:
             reftime_js = json.load(f)
