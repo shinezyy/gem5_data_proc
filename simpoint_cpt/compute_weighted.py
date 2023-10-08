@@ -162,6 +162,7 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
         score_col = ['time','ref_time','score','coverage']
         score = pd.DataFrame.from_dict(score, orient='index', columns=score_col)
         score = score.sort_values(by='score', ascending=False)
+        score['score'] = score['score']/(clock_rate/(10**9))
         print(score)
         try:
             if args.int_only:
@@ -177,17 +178,17 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
             if not args.fp_only:
                 print(f'================ Int =================')
                 print(intdf)
-                print(f'Estimated Int score @ {clock_rate/(10**9)}GHz:', geometric_mean(intdf['score']))
-                print('Estimated Int score per GHz:', geometric_mean(intdf['score'])/(clock_rate/(10**9)))
+                print('Estimated Int score per GHz:', geometric_mean(intdf['score']))
+                print(f'Estimated Int score @ {clock_rate/(10**9)}GHz:', geometric_mean(intdf['score'])*(clock_rate/(10**9)))
             if not args.int_only:
                 print(f'================ FP =================')
                 print(fpdf)
-                print(f'Estimated FP score @ {clock_rate/(10**9)}GHz:', geometric_mean(fpdf['score']))
-                print('Estimated FP score per GHz:', geometric_mean(fpdf['score'])/(clock_rate/(10**9)))
+                print('Estimated FP score per GHz:', geometric_mean(fpdf['score']))
+                print(f'Estimated FP score @ {clock_rate/(10**9)}GHz:', geometric_mean(fpdf['score'])*(clock_rate/(10**9)))
             if not args.int_only and not args.fp_only:
                 print(f'================ Overall =================')
-                print(f'Estimated overall score @ {clock_rate/(10**9)}GHz:', score.loc['mean','score'])
-                print('Estimated overall score per GHz:', score.loc['mean','score']/(clock_rate/(10**9)))
+                print('Estimated overall score per GHz:', score.loc['mean','score'])
+                print(f'Estimated overall score @ {clock_rate/(10**9)}GHz:', score.loc['mean','score']*(clock_rate/(10**9)))
             if args.score is not None:
                 score.to_csv(args.score)
         except:
