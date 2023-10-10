@@ -50,8 +50,10 @@ cache_targets = [
 ]
 
 mem_targets = [
-    'system.(l3\.overallMiss)es::total',
     'sim(Sec)onds',
+    'system.membus\.transDist::(WritebackDirty)',
+    'system.membus\.transDist::(ReadResp)',
+    'system.membus\.transDist::(ReadExResp)',
 ]
 
 topdown_targets = [
