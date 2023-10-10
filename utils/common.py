@@ -546,6 +546,10 @@ def add_branch_mispred(d: dict) -> None:
     d['direct branch MPKI'] = d['total branch MPKI'] - d['indirect branch MPKI']
     d['return MPKI'] = float(d['RASIncorrect']) / float(d['Insts']) * 1000
 
+def add_mem_bw(d: dict) -> None:
+    l3_miss_total = float(d['l3.overallMiss'])
+    d['BW_MB/s'] = l3_miss_total * 64 / float(d['Sec']) / 1024 / 1024
+
 def xs_add_branch_mispred(d: dict) -> None:
     mispred = float(d['BpBWrong']) + float(d['BpJWrong']) + float(d['BpIWrong'])
     branches = float(d['BpInstr'])

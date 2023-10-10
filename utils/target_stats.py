@@ -49,6 +49,11 @@ cache_targets = [
     # 'cpu\.iew\.iew(ExecLoadInsts)',
 ]
 
+mem_targets = [
+    'system.(l3\.overallMiss)es::total',
+    'sim(Sec)onds',
+]
+
 topdown_targets = [
 ]
 

@@ -241,6 +241,9 @@ def main():
             if opt.warmup:
                 c.add_warmup_mpki(d)
 
+            if opt.eval_stat is not None and 'mem_targets' in opt.eval_stat:
+                c.add_mem_bw(d)
+
             # add bmk and point after topdown processing
             segments = workload.split('_')
             if len(segments):
