@@ -1,5 +1,5 @@
 This is a tool to extract GEM5 & XS performance counter from the output of GEM5 & XS simulation.
-# Extract GEM5 & XS performance counter
+# Examples to extract GEM5 & XS performance counter
 
 We use `batch.py` to extract the performance counter for each checkpoint.
 
@@ -26,6 +26,11 @@ batch.py -s /path/to/results/top/directory  --cache -f stats.txt -F gromacs
 Use `batch.py` to extract XS's cache & branch performance counters:
 ``` shell
 batch.py -s /path/to/results/top/directory --cache --branch --xiangshan -f simulator_err.txt
+```
+
+Use `batch.py` to extract GEM5's memory bandwidth:
+``` shell
+batch.py -s /path/to/results/top/directory --eval-stat mem_targets
 ```
 
 # Compute weighted performance
