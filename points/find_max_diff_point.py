@@ -38,4 +38,5 @@ for i in range(2):
     print(df)
     weighted_cycles.append(df['weighted_cycles'])
 diff = weighted_cycles[0] - weighted_cycles[1]
+diff = diff.sort_values(ascending=True)
 print(diff)
