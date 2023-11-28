@@ -560,16 +560,24 @@ def xs_add_branch_mispred(d: dict) -> None:
     # d['return MPKI'] = float(d['RASIncorrect']) / float(d['Insts']) * 1000
 
 def add_cache_mpki(d: dict) -> None:
+    d['l1D.MPKI'] = float(d.get('dcache.demandMiss', 0.0)) / float(d['Insts']) * 1000
+
+    d['L2.MPKI'] = float(d.get('l2.demandMiss', 0.0)) / float(d['Insts']) * 1000
+    d['L2.NonPref.Miss'] = float(d.get('l2.demandMiss', 0.0) - d.get('l2.demandMisses::cpu.dcache.pref', 0.0))
+    d['L2.NonPref.MPKI'] = d['L2.NonPref.Miss'] / float(d['Insts']) * 1000
+
     # d['L2/L1 acc'] = float(d['l2.overallAccesses']) / float(d['dcache.overallAccesses'])
     d['L3.NonPrefAcc'] = float(d.get('l3.demandAcc', 0.0) - d.get('l3.demandAccesses::l2.pref', 0.0))
-    d['L3.NonPrefMiss'] = float(d.get('l3.demandMiss', 0.0) - d.get('l3.demandMisses::l2.pref', 0.0))
+    d['L3.NonPrefMiss'] = float(d.get('l3.demandMiss', 0.0) \
+            - d.get('l3.demandMisses::l2.pref', 0.0) - d.get('l3.demandMisses::cpu.dcache.pref', 0.0) )
+
+    d.pop('l2.demandMisses::cpu.dcache.pref')
+    d.pop('l3.demandMisses::cpu.dcache.pref')
     d.pop('l3.demandAccesses::l2.pref', None)
     d.pop('l3.demandMisses::l2.pref', None)
 
-    d['L2.MPKI'] = float(d.get('l2.demandMiss', 0.0)) / float(d['Insts']) * 1000
     d['L3.NonPref.MPKI'] = float(d.get('L3.NonPrefMiss', 0.0)) / float(d['Insts']) * 1000
 
-    d['l1D.MPKI'] = float(d.get('dcache.demandMiss', 0.0)) / float(d['Insts']) * 1000
 
     # if 'icache.demandMisses' in d:
     #     d['L1I_MPKI'] = float(d['icache.demandMisses']) / float(d['Insts']) * 1000
