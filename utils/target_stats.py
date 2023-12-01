@@ -58,6 +58,18 @@ mem_targets = [
     'system.membus\.transDist::(ReadExResp)',
 ]
 
+pf_targets = [
+    'system\.l2\.prefetcher\.(pfUnused_srcs::3)',
+    'system\.l2\.prefetcher\.(pfUseful_srcs::3)',
+]
+
+xs_l2_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache"
+
+xs_pf_targets = {
+    'sms_useful': f'{xs_l2_prefix}\.topDown: L2prefetchUsefulSMS,\s+(\d+)',
+    'sms_sent': f'{xs_l2_prefix}\.topDown: L2prefetchSentSMS,\s+(\d+)',
+}
+
 topdown_targets = [
 ]
 
@@ -301,7 +313,6 @@ xs_ipc_target = {
 }
 
 xs_l3_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt"
-xs_l2_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache"
 xs_core_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core"
 
 # align

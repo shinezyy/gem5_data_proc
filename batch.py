@@ -32,13 +32,12 @@ def further_proc(pair: str, d: dict, verbose: bool) -> None:
     return d
 
 
-def add_eval_targets(opt, targets):
+def add_eval_targets(opt, targets: dict):
     if opt.eval_stat:
-        assert not opt.xiangshan  # not supported yet
         stat_targets = opt.eval_stat.split('#')
         for stat_target in stat_targets:
             if opt.xiangshan:
-                targets += eval('xs_'+stat_target)
+                targets = targets.update(eval('xs_'+stat_target))
             else:
                 targets += eval(stat_target)
         print(targets)
@@ -190,6 +189,8 @@ def main():
                 if opt.topdown:
                     targets = {**xs_topdown_targets, **targets}
 
+                add_eval_targets(opt, targets)
+
                 d = c.xs_get_stats(path, targets, re_targets=True)
             else:
                 targets = brief_targets
@@ -241,8 +242,11 @@ def main():
             if opt.warmup:
                 c.add_warmup_mpki(d)
 
-            if opt.eval_stat is not None and 'mem_targets' in opt.eval_stat:
-                c.add_mem_bw(d)
+            if opt.eval_stat is not None:
+                if 'mem_targets' in opt.eval_stat:
+                    c.add_mem_bw(d)
+                if 'pf_targets' in opt.eval_stat:
+                    eval(f'c.{prefix}add_pf_accuracy(d)')
 
             # add bmk and point after topdown processing
             segments = workload.split('_')

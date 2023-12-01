@@ -550,6 +550,15 @@ def add_mem_bw(d: dict) -> None:
     to_mc_total = float(d.get('WritebackDirty', 0)) + float(d.get('ReadResp', 0)) + float(d.get('ReadExResp', 0))
     d['BW_MB/s'] = to_mc_total * 64 / float(d['Sec']) / 1024 / 1024
 
+def add_pf_accuracy(d: dict) -> None:
+    pht_l2_pf_total = float(d.get('pfUnused_srcs::3', 0)) + float(d.get('pfUseful_srcs::3', 0)) + 1
+    d['SMS L2 Useful ratio'] = d.get('pfUseful_srcs::3', 0) / pht_l2_pf_total
+
+def xs_add_pf_accuracy(d: dict) -> None:
+    assert 'sms_useful' in d
+    pht_l2_pf_total = float(d.get('sms_sent', 1))
+    d['SMS L2 Useful ratio'] = d.get('sms_useful', 0) / pht_l2_pf_total
+
 def xs_add_branch_mispred(d: dict) -> None:
     mispred = float(d['BpBWrong']) + float(d['BpJWrong']) + float(d['BpIWrong'])
     branches = float(d['BpInstr'])
