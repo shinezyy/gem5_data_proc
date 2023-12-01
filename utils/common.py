@@ -571,8 +571,8 @@ def add_cache_mpki(d: dict) -> None:
     d['L3.NonPrefMiss'] = float(d.get('l3.demandMiss', 0.0) \
             - d.get('l3.demandMisses::l2.pref', 0.0) - d.get('l3.demandMisses::cpu.dcache.pref', 0.0) )
 
-    d.pop('l2.demandMisses::cpu.dcache.pref')
-    d.pop('l3.demandMisses::cpu.dcache.pref')
+    d.pop('l2.demandMisses::cpu.dcache.pref', None)
+    d.pop('l3.demandMisses::cpu.dcache.pref', None)
     d.pop('l3.demandAccesses::l2.pref', None)
     d.pop('l3.demandMisses::l2.pref', None)
 
