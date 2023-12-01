@@ -548,6 +548,7 @@ def add_branch_mispred(d: dict) -> None:
 
 def add_mem_bw(d: dict) -> None:
     to_mc_total = float(d.get('WritebackDirty', 0)) + float(d.get('ReadResp', 0)) + float(d.get('ReadExResp', 0))
+    d['Mem_MB'] = to_mc_total * 64 / 1024 / 1024
     d['BW_MB/s'] = to_mc_total * 64 / float(d['Sec']) / 1024 / 1024
 
 def add_pf_accuracy(d: dict) -> None:
