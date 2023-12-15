@@ -11,6 +11,10 @@ ipc_target = [
     '(?:cpus?|switch_cpus_1)\.(cpi)',
 ]
 
+sim_targets = [
+    '(hostSeconds)',
+]
+
 flow_target = [
     'DQGroup\d\.(WKFlowUsage::\d+)',
     'DQGroup\d\.(WKFlowUsage::\w+)',
@@ -49,6 +53,29 @@ cache_targets = [
     # 'cpu\.(dcache\.demandAcc)esses::total',
     'cpu\.(dcache\.demandMiss)es::total',
     # 'cpu\.iew\.iew(ExecLoadInsts)',
+]
+
+compute_targets = [
+    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(IntAlu)',
+    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatDiv)',
+    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatMisc)',
+    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatSqrt)',
+    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatSqrt)',
+    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatAdd)',
+    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatCmp)',
+    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatMult)',
+    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatMult)',
+    '(?:cpus?|switch_cpus_1)?\.iew\.dispatchStallReason::(SerializeStall)',
+]
+
+si_targets = [
+    '(?:cpus?|switch_cpus_1)?\.iew\.dispatchStallReason::(SerializeStall)',
+]
+
+mem_dep_targets = [
+    '(?:cpus?|switch_cpus_1)?\.MemDepUnit__0.(dependentLoads)',
+    '(?:cpus?|switch_cpus_1)?\.MemDepUnit__0.(conflictingLoads)',
+    '(?:cpus?|switch_cpus_1)?\.MemDepUnit__0.(conflictingStores)',
 ]
 
 mem_targets = [

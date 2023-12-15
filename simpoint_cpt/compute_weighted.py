@@ -205,10 +205,8 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
             print(intdf)
             print(f'================ FP =================')
             print(fpdf)
-
-
-                
-
+            if args.score is not None:
+                score.to_csv(args.score)
 
 
 if __name__ == '__main__':
