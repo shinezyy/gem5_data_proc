@@ -1,94 +1,60 @@
-brief_targets = [
-    '(?:cpus?|switch_cpus_1)\.(ipc)',
-    # '(?:cpus?|switch_cpus_1)\.(cpi)',
-    '(?:cpus?|switch_cpus_1)\.committed(Insts)',
-    # '(?:cpus?|switch_cpus_1)\.(lastCommitTick)',
-    # 'host_(inst_rate)',
-    'cpus?\.num(Cycles)'
-]
-ipc_target = [
-    '(?:cpus?|switch_cpus_1)\.(ipc)',
-    '(?:cpus?|switch_cpus_1)\.(cpi)',
-]
+brief_targets = {
+    'ipc': '(?:cpus?|switch_cpus_1)\.ipc',
+    'Insts': '(?:cpus?|switch_cpus_1)\.committedInsts',
+    'Cycles': 'cpus?\.numCycles',
+}
 
-sim_targets = [
-    '(hostSeconds)',
-]
+ipc_target = {
+    'ipc': '(?:cpus?|switch_cpus_1)\.ipc',
+    'cpi': '(?:cpus?|switch_cpus_1)\.cpi',
+}
 
-flow_target = [
-    'DQGroup\d\.(WKFlowUsage::\d+)',
-    'DQGroup\d\.(WKFlowUsage::\w+)',
-        ]
+sim_targets = {
+    'sim_seconds': 'sim_seconds',
+}
 
-standard_targets = [
-    '(numCycles)',
-    '(?:cpus?|switch_cpus_1)?\.committed(Insts)',
-    '(?:cpus?|switch_cpus_1)?\.(ipc)',
-]
+icache_targets = {
+    'icache_miss': 'icache\.demandMisses::total',
+    'icache_acc': 'icache\.overallAccesses::total',
+}
 
-icache_targets = [
-        '(icache\.demandMisses)::total',
-        '(icache\.overallAccesses)::total',
-        ]
+cache_targets = {
+    'l3_acc_l2_pref': 'l3\.demandAccesses::l2\.prefetcher',
+    'l3_acc': 'l3\.demandAccesses::total',
+    'l3_miss_l1d_pref': 'l3\.demandMisses::cpu\.dcache\.prefetcher',
+    'l3_miss_l2_pref': 'l3\.demandMisses::l2\.prefetcher',
+    'l3_miss': 'l3\.demandMisses::total',
 
-cache_targets = [
-    # '(l3\.demandMissRate)::total',
-    '(l3\.demandAccesses::l2\.pref)etcher',
-    '(l3\.demandAcc)esses::total',
+    'l2_acc': 'l2\.demandAccesses::total',
+    'l2_miss': 'l2\.demandMisses::total',
+    'l2_miss_l1d_pref': 'l2\.demandMisses::cpu\.dcache\.prefetcher',
+    
+    'dcache_miss': 'cpu\.dcache\.demandMisses::total',
+}
 
-    '(l3\.demandMiss)es::total',
-    '(l3\.demandMisses::l2\.pref)etcher',
-    '(l3\.demandMisses::cpu\.dcache\.pref)etcher',
+si_targets = {
+    'SerialInsts': 'system\.cpu\.iew\.dispatchStallReason::SerializeStall',
+}
 
-    # '(l3\.overallAcc)esses::total',
-    # '(l3\.overallMis)ses::total',
-    # '(l2\.demandMissRate)::total',
-    '(l2\.demandMiss)es::total',
-    '(l2\.demandAcc)esses::total',
-    '(l2\.demandMisses::cpu\.dcache\.pref)etcher',
-    # 'cpu\.(dcache\.demandAvgMissLatency)::\.cpu\.data',
-    # 'cpu\.(dcache\.demandMisses)::\.cpu\.data',
-    # 'cpu\.(dcache.demandMissRate)::\.cpu\.data',
-    # 'cpu\.(dcache\.overallAcc)esses::cpu\.data',
-    # 'cpu\.(dcache\.demandAcc)esses::total',
-    'cpu\.(dcache\.demandMiss)es::total',
-    # 'cpu\.iew\.iew(ExecLoadInsts)',
-]
+mem_dep_targets = {
+    'depLoads': '(?:cpus?|switch_cpus_1)?\.MemDepUnit__0.dependentLoads',
+    'confLoads': '(?:cpus?|switch_cpus_1)?\.MemDepUnit__0.conflictingLoads',
+    'confStores': '(?:cpus?|switch_cpus_1)?\.MemDepUnit__0.conflictingStores',
+}
 
-compute_targets = [
-    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(IntAlu)',
-    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatDiv)',
-    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatMisc)',
-    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatSqrt)',
-    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatSqrt)',
-    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatAdd)',
-    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatCmp)',
-    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatMult)',
-    '(?:cpus?|switch_cpus_1)?\.commit\.committedInstType_0::(FloatMult)',
-    '(?:cpus?|switch_cpus_1)?\.iew\.dispatchStallReason::(SerializeStall)',
-]
+mem_targets = {
+    'Sec': 'simSeconds',
+    'WritebackDirty': 'system.membus\.transDist::WritebackDirty',
+    'ReadResp': 'system.membus\.transDist::ReadResp',
+    'ReadExResp': 'system.membus\.transDist::ReadExResp',
+}
 
-si_targets = [
-    '(?:cpus?|switch_cpus_1)?\.iew\.dispatchStallReason::(SerializeStall)',
-]
-
-mem_dep_targets = [
-    '(?:cpus?|switch_cpus_1)?\.MemDepUnit__0.(dependentLoads)',
-    '(?:cpus?|switch_cpus_1)?\.MemDepUnit__0.(conflictingLoads)',
-    '(?:cpus?|switch_cpus_1)?\.MemDepUnit__0.(conflictingStores)',
-]
-
-mem_targets = [
-    'sim(Sec)onds',
-    'system.membus\.transDist::(WritebackDirty)',
-    'system.membus\.transDist::(ReadResp)',
-    'system.membus\.transDist::(ReadExResp)',
-]
-
-pf_targets = [
-    'system\.l2\.prefetcher\.(pfUnused_srcs::3)',
-    'system\.l2\.prefetcher\.(pfUseful_srcs::3)',
-]
+pf_targets = {
+    'l1_pf_unused': 'system\.(?:cpus?|switch_cpus_1)?\.dcache\.prefetcher\.(pfUnused) ',
+    'l1_pf_useful': 'system\.(?:cpus?|switch_cpus_1)?\.dcache\.prefetcher\.(pfUseful) ',
+    'l2_pf_unused': 'system\.l2\.prefetcher\.(pfUnused) ',
+    'l2_pf_useful': 'system\.l2\.prefetcher\.(pfUseful) ',
+}
 
 xs_l2_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache"
 
@@ -97,8 +63,7 @@ xs_pf_targets = {
     'sms_sent': f'{xs_l2_prefix}\.topDown: L2prefetchSentSMS,\s+(\d+)',
 }
 
-topdown_targets = [
-]
+topdown_targets = {}
 
 LievenStalls = [
         # NoStall,  // Base
@@ -160,179 +125,26 @@ LievenStalls = [
         'OtherFetchStall',
     ]
 
-
-FragTargets = [
-    'system\.cpu\.iew\.(dispatchStallReason::FragStall)',
-    'system\.cpu\.iew\.(fetchStallReason::FragStall)',
-]
-
 def add_topdown_targets():
     for stall in LievenStalls:
-        topdown_targets.append(r'system\.cpu\.iew\.dispatchStallReason::({})'.format(stall))
+        topdown_targets[stall] = r'system\.cpu\.iew\.dispatchStallReason::{}'.format(stall)
 
 add_topdown_targets()
 
+warmup_targets = {
+    'branchMispredicts': '(?:cpus?|switch_cpus_1)\.commit\.branchMispredicts',
+    'branches': '(?:cpus?|switch_cpus_1)\.commit\.branches',
+    'l3_miss': 'l3\.demandMisses::total',
+    'l2_miss': 'l2\.demandMisses::total',
+    'numCycles': 'numCycles',
+    'Insts': '(?:cpus?|switch_cpus_1)?\.committedInsts',
+}
 
-warmup_targets = [
-    '(?:cpus?|switch_cpus_1)\.(?:diewc|commit)\.(branchMispredicts)',
-    '(?:cpus?|switch_cpus_1)\.(?:diewc|commit)\.(branches)',
-    '(l3\.demandMisses)::total',
-    '(l2\.demandMisses)::total',
-    '(numCycles)',
-    '(?:cpus?|switch_cpus_1)?\.committed(Insts)',
-]
-
-branch_targets = [
-    '(?:cpus?|switch_cpus_1)\.(?:diewxc|commit|iewx)\.(branchMispredicts)',
-    '(?:cpus?|switch_cpus_1)?\.(?:diewxc\.exec_|commit\.)(branches)',
-    '(?:cpus?|switch_cpus_1)?\.branchPred\.(indirectMispred)icted',
-    '(?:cpus?|switch_cpus_1)?\.branchPred\.(RASIncorrect)',
-    # 'cpu\.commit\.(branches)',
-    # 'cpu\.commit\.(branchMispredicts)',
-    # 'iew\.iewExec(LoadInsts)',
-    # 'iew\.exec_(stores)',
-    # 'thread(0\.squashedLoads)',
-    # 'thread(0\.squashedStores)',
-    # '(iqSquashedInstsIssued)',
-    # '(commitSquashedInsts)',
-]
-fanout_targets = [
-        'diewc\.(largeFanoutInsts)',
-        'diewc\.(falseNegativeLF)',
-        'diewc\.(falsePositiveLF)',
-        'diewc\.(forwarders)Committed',
-        #'diewc\.(firstLevelFw)',
-        #'diewc\.(secondaryLevelFw)',
-        #'diewc\.(gainFromReshape)',
-        'diewc\.(reshapeContrib)',
-        'diewc\.(nonCriticalForward)',
-        #'diewc\.(negativeContrib)',
-        'diewc\.(wkDelayedCycles)',
-
-        'cpus\.(squashedFUTime)',
-        'dataflow_queue\.(readyWaitTime)::total',
-        'dataflow_queue(oldWaitYoung)',
-        ]
-
-fetch_targets = [
-    'cpus?\.fetch\.(fetchFromLoopBuffer)',
-    'cpus?\.(fetch\.rate) ',
-]
-
-
-operand_targets = [
-        # 'arch_state\.(numBusyOperands::\d)',
-        'arch_state\.(numDispInsts::\d)',
-        'arch_state\.(meanBusyOp_\d)',
-
-        ]
-packet_targets = [
-        'DQGroup0\.(KeySrcP)acket',
-        'DQGroup0\.(SrcOpP)ackets',
-        'DQGroup0\.(DestOpP)ackets',
-        'DQGroup0\.(MemP)ackets',
-        'DQGroup0\.(OrderP)ackets',
-        'DQGroup0\.(MiscP)ackets',
-        'DQGroup0\.(TotalP)ackets',
-        ]
-breakdown_targets= [
-        'diewc\.(queueingDelay)',
-        'diewc\.(ssrDelay)',
-        'diewc\.(pendingDelay)',
-        # 'diewc\.FU(ContentionD)elay',
-        'diewc\.(readyExecDelayTicks)',
-        # 'dataflow_queue\.(HalfSquash)es',
-        ]
-
-model_targets = [
-    r'cpus\.(ipc)',
-    r'DQGroup(\d\.TotalPackets)',
-    r'cpus\.committed(Insts)',
-]
-
-ff_power_targets = [
-
-    r'arch_state\.(CombRename)',
-    r'arch_state\.(RegReadCommitSB)',
-    r'arch_state\.(RegWriteCommitSB)',
-    r'arch_state\.(RegReadSpecSB)',
-    r'arch_state\.(RegWriteSpecSB)',
-    r'arch_state\.(RegReadMap)',
-    r'arch_state\.(RegWriteMap)',
-    r'arch_state\.(RegReadRT)',
-    r'arch_state\.(RegWriteRT)',
-    r'arch_state\.(RegReadSpecRT)',
-    r'arch_state\.(RegWriteSpecRT)',
-    r'arch_state\.(SRAMWriteMap)',
-    r'arch_state\.(SRAMWriteSB)',
-    r'arch_state\.(SRAMWriteRT)',
-    r'arch_state\.(SRAMReadMap)',
-    r'arch_state\.(SRAMReadSB)',
-    r'arch_state\.(SRAMReadRT)',
-    r'arch_state\.(RegReadARF)',
-    r'arch_state\.(RegWriteARF)',
-    r'arch_state\.(RegReadSpecARF)',
-    r'arch_state\.(RegWriteSpecARF)',
-    r'DQTop\.(RegReadCenterInstBuf)',
-    r'DQTop\.(RegReadCenterPairBuf)',
-    r'DQTop\.(RegReadCenterWKBuf)',
-    r'DQTop\.(RegReadInterGroupWKBuf)',
-    r'DQTop\.(RegWriteCenterInstBuf)',
-    r'DQTop\.(RegWriteCenterPairBuf)',
-    r'DQTop\.(RegWriteCenterWKBuf)',
-    r'DQTop\.(RegWriteInterGroupWKBuf)',
-    r'DQGrou(p\d\.QueueWriteTxBuf)',
-    r'DQGrou(p\d\.QueueReadTxBuf)',
-    r'DQGrou(p\d\.QueueReadPairBuf)',
-    r'DQGrou(p\d\.QueueWritePairBuf)',
-    r'DQGrou(p\d\.CombWKNet)',
-    r'DQGrou(p\d\.CombFWNet)',
-    r'DQGrou(p\d\.CombSelNet)',
-    r'DQGrou(p\d\.SRAMWritePointer)',
-    r'DQGrou(p\d\.DQBank\d\.SRAMWriteInst)',
-    r'DQGrou(p\d\.DQBank\d\.SRAMReadInst)',
-    r'DQGrou(p\d\.DQBank\d\.SRAMReadPointer)',
-    r'DQGrou(p\d\.DQBank\d\.SRAMWriteValue)',
-    r'DQGrou(p\d\.DQBank\d\.SRAMReadValue)',
-    r'DQGrou(p\d\.DQBank\d\.RegWriteValid)',
-    r'DQGrou(p\d\.DQBank\d\.RegReadValid)',
-    r'DQGrou(p\d\.DQBank\d\.RegWriteNbusy)',
-    r'DQGrou(p\d\.DQBank\d\.RegReadNbusy)',
-    r'DQGrou(p\d\.DQBank\d\.RegWriteRxBuf)',
-    r'DQGrou(p\d\.DQBank\d\.RegReadRxBuf)',
-    r'DQGrou(p\d\.DQBank\d\.QueueReadReadyInstBuf)',
-    r'DQGrou(p\d\.DQBank\d\.QueueWriteReadyInstBuf)',
-    r'num(Cycles)',
-    r'(sim_seconds)',
-    r'cpus\.(int_regfile_reads)',
-    r'cpus\.(int_regfile_writes)',
-    r'cpus\.(fp_regfile_reads)',
-    r'cpus\.(fp_regfile_writes)',
-    r'cpus\.(misc_regfile_reads)',
-    r'cpus\.(misc_regfile_writes)',
-    r'cpus\.iq\.(int_inst_queue_reads)',
-    r'cpus\.iq\.(int_inst_queue_writes)',
-    r'cpus\.iq\.(int_inst_queue_wakeup_accesses)',
-    r'cpus\.iq\.(fp_inst_queue_reads)',
-    r'cpus\.iq\.(fp_inst_queue_writes)',
-    r'cpus\.iq\.(fp_inst_queue_wakeup_accesses)',
-]
-fu_targets= [
-        'system\.switch_cpus\.commit\.op_class_0::(IntDiv)',
-        'system\.switch_cpus\.commit\.op_class_0::(FloatDiv)',
-        #'system\.switch_cpus\.commit\.op_class_0::(IntMult)',
-        #'system\.switch_cpus\.commit\.op_class_0::(FloatMult)',
-        #'system\.switch_cpus\.commit\.op_class_0::(FloatMultAcc)',
-        ]
-
-beta_targets = [
-    'cpus?\.(ipc)',
-    'cpus?\.committed(Insts)',
-    '(l2\.demand_miss)es::total',
-    'branchPred\.(condIncorrect)',
-    'branchPred\.(indirectMispredicted)',
-    'cpus?\.(dcache\.demand_misses)::total',
-        ]
+branch_targets = {
+    'branchMispredicts': '(?:cpus?|switch_cpus_1)\.commit\.branchMispredicts',
+    'branches': '(?:cpus?|switch_cpus_1)\.commit\.branches',
+    'indirectMispred': '(?:cpus?|switch_cpus_1)\.branchPred\.ftb\.indirectPredCorrect',
+}
 
 xs_ipc_target = {
     "commitInstr": r"\[PERF \]\[time=\s+\d+\] TOP.SimTop.l_soc.core_with_l2.core.ctrlBlock.rob: commitInstr,\s+(\d+)",
@@ -484,10 +296,3 @@ def add_nanhu_multicore_ipc_targets(n):
     for core in range(1, n):
         xs_ipc_target[f'commitInstr{core}'] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{}.core\.ctrlBlock\.rob: commitInstr,\s+(\d+)".format(core)
         xs_ipc_target[f'total_cycles{core}'] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{}.core\.ctrlBlock\.rob: clock_cycle,\s+(\d+)".format(core)
-
-xgroup_targets = [
-    'cpus?\.num(Load)Insts',
-    'cpus?\.(inter)_num',
-    'cpus?\.(intra)_num',
-    ]
-

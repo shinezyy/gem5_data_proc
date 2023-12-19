@@ -39,7 +39,7 @@ def add_eval_targets(opt, targets: dict):
             if opt.xiangshan:
                 targets = targets.update(eval('xs_'+stat_target))
             else:
-                targets += eval(stat_target)
+                targets = targets.update(eval(stat_target))
         print(targets)
 
 
@@ -195,31 +195,13 @@ def main():
             else:
                 targets = brief_targets
                 if opt.branch:
-                    targets += branch_targets
-                if opt.fanout:
-                    targets += fanout_targets
-
-                if opt.fetch:
-                    targets += fetch_targets
-
-                if opt.breakdown:
-                    targets += breakdown_targets
-                if opt.op:
-                    targets += operand_targets
-                if opt.packet:
-                    targets += packet_targets
-                if opt.flow:
-                    targets += flow_target
-                if opt.fu:
-                    targets += fu_targets
-                if opt.beta:
-                    targets += beta_targets
+                    targets = {**branch_targets, **targets}
                 if opt.cache:
-                    targets += cache_targets
+                    targets = {**cache_targets, **targets}
                 if opt.warmup:
-                    targets += warmup_targets
+                    targets = {**warmup_targets, **targets}
                 if opt.topdown:
-                    targets += topdown_targets
+                    targets = {**topdown_targets, **targets}
 
                 add_eval_targets(opt, targets)
 

@@ -110,8 +110,6 @@ def time_filt(dirs):
     return list(filter(newer_than_gem5, dirs))
 
 
-# prints:
-
 def print_list(l):
     cur_line_len = 0
     for x in l:
@@ -280,7 +278,6 @@ def xs_get_mshr_latency(line: str, lv: str):
     return True, int(bank), int(mshr_id), f'{lat_low}-{lat_high}', count
 
 
-
 def xs_get_stats(stat_file: str, targets: list,
               insts: int=200*(10**6), re_targets=False) -> dict:
     
@@ -411,14 +408,9 @@ def gem5_get_stats(stat_file: str, targets: list,
 
     patterns = {}
 
-    if re_targets:
-        meta_pattern = re.compile('.*\((\w.+)\).*')
-        for t in targets:
-            meta = meta_pattern.search(t).group(1)
-            patterns[meta] = re.compile(t+'\s+(\d+\.?\d*)\s+')
-    else:
-        for t in targets:
-            patterns[t] = re.compile(t+'\s+(\d+\.?\d*)\s+')
+    assert re_targets
+    for meta, regex in targets.items():
+        patterns[meta] = re.compile(regex+'\s+(\d+\.?\d*)\s+')
 
     if not all_chunks:
         lines = get_raw_stats_around(stat_file, insts)
@@ -431,13 +423,7 @@ def gem5_get_stats(stat_file: str, targets: list,
             for k in patterns:
                 m = patterns[k].search(line)
                 if not m is None:
-                    if re_targets:
-                        # print(line)
-                        # print(m.group(1))
-                        # print(m.group(2))
-                        stats[m.group(1)] = to_num(m.group(2))
-                    else:
-                        stats[k] = to_num(m.group(1))
+                    stats[k] = to_num(m.group(1))
         return stats
     else:
         assert config_file is not None
@@ -544,7 +530,7 @@ def add_branch_mispred(d: dict) -> None:
     d['total branch MPKI'] = mispred / float(d['Insts']) * 1000
     d['indirect branch MPKI'] = ind_mispred / float(d['Insts']) * 1000
     d['direct branch MPKI'] = d['total branch MPKI'] - d['indirect branch MPKI']
-    d['return MPKI'] = float(d['RASIncorrect']) / float(d['Insts']) * 1000
+    # d['return MPKI'] = float(d['RASIncorrect']) / float(d['Insts']) * 1000
 
 def add_mem_bw(d: dict) -> None:
     to_mc_total = float(d.get('WritebackDirty', 0)) + float(d.get('ReadResp', 0)) + float(d.get('ReadExResp', 0))
@@ -570,29 +556,24 @@ def xs_add_branch_mispred(d: dict) -> None:
     # d['return MPKI'] = float(d['RASIncorrect']) / float(d['Insts']) * 1000
 
 def add_cache_mpki(d: dict) -> None:
-    d['l1D.MPKI'] = float(d.get('dcache.demandMiss', 0.0)) / float(d['Insts']) * 1000
+    d['l1d.MPKI'] = float(d.get('dcache_miss', 0.0)) / float(d['Insts']) * 1000
 
-    d['L2.MPKI'] = float(d.get('l2.demandMiss', 0.0)) / float(d['Insts']) * 1000
-    d['L2.NonPref.Miss'] = float(d.get('l2.demandMiss', 0.0) - d.get('l2.demandMisses::cpu.dcache.pref', 0.0))
+    d['L2.MPKI'] = float(d.get('l2_miss', 0.0)) / float(d['Insts']) * 1000
+    d['L2.NonPref.Miss'] = float(d.get('l2_miss', 0.0) - d.get('l2_miss_l1d_pref', 0.0))
     d['L2.NonPref.MPKI'] = d['L2.NonPref.Miss'] / float(d['Insts']) * 1000
 
-    # d['L2/L1 acc'] = float(d['l2.overallAccesses']) / float(d['dcache.overallAccesses'])
-    d['L3.NonPrefAcc'] = float(d.get('l3.demandAcc', 0.0) - d.get('l3.demandAccesses::l2.pref', 0.0))
-    d['L3.NonPrefMiss'] = float(d.get('l3.demandMiss', 0.0) \
-            - d.get('l3.demandMisses::l2.pref', 0.0) - d.get('l3.demandMisses::cpu.dcache.pref', 0.0) )
+    
+    d['L3.NonPrefAcc'] = float(d.get('l3_acc', 0.0) - d.get('l3_acc_l2_pref', 0.0))
+    d['L3.NonPrefMiss'] = float(d.get('l3_acc', 0.0) \
+            - d.get('l3_miss_l2_pref', 0.0) - d.get('l3_miss_l1d_pref', 0.0) )
 
-    d.pop('l2.demandMisses::cpu.dcache.pref', None)
-    d.pop('l3.demandMisses::cpu.dcache.pref', None)
-    d.pop('l3.demandAccesses::l2.pref', None)
-    d.pop('l3.demandMisses::l2.pref', None)
+    d.pop('l2_acc_l1d_pref', None)
+    d.pop('l3_miss_l1d_pref', None)
+    d.pop('l3_acc_l2_pref', None)
+    d.pop('l3_miss_l2_pref', None)
 
     d['L3.NonPref.MPKI'] = float(d.get('L3.NonPrefMiss', 0.0)) / float(d['Insts']) * 1000
 
-
-    # if 'icache.demandMisses' in d:
-    #     d['L1I_MPKI'] = float(d['icache.demandMisses']) / float(d['Insts']) * 1000
-    # else:
-    #     d['L1I_MPKI'] = 0.0
 
 def xs_add_cache_mpki(d: dict) -> None:
     # L2/L3
@@ -790,23 +771,13 @@ def xs_topdown_post_process(d: dict) -> None:
             d.pop(k)
 
 def add_warmup_mpki(d: dict) -> None:
-    d['L2MPKI'] = float(d.get('l2.demandMisses', 0)) / float(d['Insts']) * 1000
-    d['L3MPKI'] = float(d.get('l3.demandMisses', 0)) / float(d['Insts']) * 1000
+    d['L2MPKI'] = float(d.get('l2_miss', 0)) / float(d['Insts']) * 1000
+    d['L3MPKI'] = float(d.get('l3_miss', 0)) / float(d['Insts']) * 1000
     if 'branchMispredicts' in d:
         mispred = float(d['branchMispredicts'])
     else:
         mispred = 0.0
     d['total branch MPKI'] = mispred / float(d['Insts']) * 1000
-
-def add_fanout(d: dict) -> None:
-    large_fanout = float(d.get('largeFanoutInsts', 0)) + 1.0
-    d['LF_rate'] = large_fanout / float(d.get('Insts', 200 * 10**6))
-    # print(large_fanout)
-    d['FP_rate'] = float(d.get('falsePositiveLF', 0)) / large_fanout
-    d['FN_rate'] = float(d.get('falseNegativeLF', 0)) / large_fanout
-    del d['falsePositiveLF']
-    del d['falseNegativeLF']
-
 
 def get_spec2017_int():
     with open(os.path.expanduser(env.data('int.txt'))) as f:
@@ -826,12 +797,6 @@ def get_all_spec2017_simpoints():
             points.append(f'{b}_{i}')
     return points
 
-def add_packet(d: dict) -> None:
-    d['by_bw'] = d['Insts'] / (d['TotalP']/3.1)
-    d['by_chasing'] = d['Insts'] / (d['TotalP']/4.0)
-    d['by_crit_ptr'] = min(d['Insts'] / (d['KeySrcP']/4), 4.0, d['TotalP']/10.0)
-
-
 def find_stats_file(d: str) -> str:
     assert osp.isdir(d)
     stats = []
@@ -840,24 +805,6 @@ def find_stats_file(d: str) -> str:
             stats.append(pjoin(d, file))
     assert len(stats) == 1
     return stats[0]
-
-
-def get_df(path_dict: dict, arch: str, targets, filter_bmk=None):
-    path = path_dict[arch]
-    matrix = {}
-    print(path)
-    for d in os.listdir(path):
-        if filter_bmk is not None and not d.startswith(filter_bmk):
-            continue
-        stat_dir_path = osp.join(path, d)
-        if not osp.isdir(stat_dir_path):
-            continue
-        f = find_stats_file(stat_dir_path)
-        tup = get_stats(f, targets, re_targets=True)
-        gatrix[d] = tup
-    df = pd.DataFrame.from_dict(matrix, orient='index')
-    return df
-
 
 def scale_tick(df: pd.DataFrame):
     for col in df:
