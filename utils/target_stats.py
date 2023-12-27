@@ -146,48 +146,49 @@ branch_targets = {
     'indirectMispred': '(?:cpus?|switch_cpus_1)\.branchPred\.ftb\.indirectPredCorrect',
 }
 
-xs_ipc_target = {
-    "commitInstr": r"\[PERF \]\[time=\s+\d+\] TOP.SimTop.l_soc.core_with_l2.core.ctrlBlock.rob: commitInstr,\s+(\d+)",
-    "total_cycles": r"\[PERF \]\[time=\s+\d+\] TOP.SimTop.l_soc.core_with_l2.core.ctrlBlock.rob: clock_cycle,\s+(\d+)",
-}
 
 xs_l3_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt"
 xs_core_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core"
+xs_ctrl_block_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.(?:backend\.)?ctrlBlock"
 
+xs_ipc_target = {
+    "commitInstr": fr"{xs_ctrl_block_prefix}.rob: commitInstr,\s+(\d+)",
+    "total_cycles": fr"{xs_ctrl_block_prefix}.rob: clock_cycle,\s+(\d+)",
+}
 # align
 xs_topdown_targets = {
-    'NoStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: NoStall,\s+(\d+)',
-    'OverrideBubble': fr'{xs_core_prefix}.ctrlBlock\.dispatch: OverrideBubble,\s+(\d+)',
-    'FtqUpdateBubble': fr'{xs_core_prefix}.ctrlBlock\.dispatch: FtqUpdateBubble,\s+(\d+)',
-    'TAGEMissBubble': fr'{xs_core_prefix}.ctrlBlock\.dispatch: TAGEMissBubble,\s+(\d+)',
-    'SCMissBubble': fr'{xs_core_prefix}.ctrlBlock\.dispatch: SCMissBubble,\s+(\d+)',
-    'ITTAGEMissBubble': fr'{xs_core_prefix}.ctrlBlock\.dispatch: ITTAGEMissBubble,\s+(\d+)',
-    'RASMissBubble': fr'{xs_core_prefix}.ctrlBlock\.dispatch: RASMissBubble,\s+(\d+)',
-    'MemVioRedirectBubble': fr'{xs_core_prefix}.ctrlBlock\.dispatch: MemVioRedirectBubble,\s+(\d+)',
-    'OtherRedirectBubble': fr'{xs_core_prefix}.ctrlBlock\.dispatch: OtherRedirectBubble,\s+(\d+)',
-    'FtqFullStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: FtqFullStall,\s+(\d+)',
-    'ICacheMissBubble': fr'{xs_core_prefix}.ctrlBlock\.dispatch: ICacheMissBubble,\s+(\d+)',
-    'ITLBMissBubble': fr'{xs_core_prefix}.ctrlBlock\.dispatch: ITLBMissBubble,\s+(\d+)',
-    'BTBMissBubble': fr'{xs_core_prefix}.ctrlBlock\.dispatch: BTBMissBubble,\s+(\d+)',
-    'FetchFragBubble': fr'{xs_core_prefix}.ctrlBlock\.dispatch: FetchFragBubble,\s+(\d+)',
-    'DivStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: DivStall,\s+(\d+)',
-    'IntNotReadyStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: IntNotReadyStall,\s+(\d+)',
-    'FPNotReadyStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: FPNotReadyStall,\s+(\d+)',
-    'MemNotReadyStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: MemNotReadyStall,\s+(\d+)',
-    'LoadTLBStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: LoadTLBStall,\s+(\d+)',
-    'LoadL1Stall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: LoadL1Stall,\s+(\d+)',
-    'LoadL2Stall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: LoadL2Stall,\s+(\d+)',
-    'LoadL3Stall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: LoadL3Stall,\s+(\d+)',
-    'LoadMemStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: LoadMemStall,\s+(\d+)',
-    'StoreStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: StoreStall,\s+(\d+)',
-    'AtomicStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: AtomicStall,\s+(\d+)',
-    'LoadVioReplayStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: LoadVioReplayStall,\s+(\d+)',
-    'LoadMSHRReplayStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: LoadMSHRReplayStall,\s+(\d+)',
-    'ControlRecoveryStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: ControlRecoveryStall,\s+(\d+)',
-    'MemVioRecoveryStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: MemVioRecoveryStall,\s+(\d+)',
-    'OtherRecoveryStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: OtherRecoveryStall,\s+(\d+)',
-    'FlushedInsts': fr'{xs_core_prefix}.ctrlBlock\.dispatch: FlushedInsts,\s+(\d+)',
-    'OtherCoreStall': fr'{xs_core_prefix}.ctrlBlock\.dispatch: OtherCoreStall,\s+(\d+)',
+    'NoStall': fr'{xs_ctrl_block_prefix}\.dispatch: NoStall,\s+(\d+)',
+    'OverrideBubble': fr'{xs_ctrl_block_prefix}\.dispatch: OverrideBubble,\s+(\d+)',
+    'FtqUpdateBubble': fr'{xs_ctrl_block_prefix}\.dispatch: FtqUpdateBubble,\s+(\d+)',
+    'TAGEMissBubble': fr'{xs_ctrl_block_prefix}\.dispatch: TAGEMissBubble,\s+(\d+)',
+    'SCMissBubble': fr'{xs_ctrl_block_prefix}\.dispatch: SCMissBubble,\s+(\d+)',
+    'ITTAGEMissBubble': fr'{xs_ctrl_block_prefix}\.dispatch: ITTAGEMissBubble,\s+(\d+)',
+    'RASMissBubble': fr'{xs_ctrl_block_prefix}\.dispatch: RASMissBubble,\s+(\d+)',
+    'MemVioRedirectBubble': fr'{xs_ctrl_block_prefix}\.dispatch: MemVioRedirectBubble,\s+(\d+)',
+    'OtherRedirectBubble': fr'{xs_ctrl_block_prefix}\.dispatch: OtherRedirectBubble,\s+(\d+)',
+    'FtqFullStall': fr'{xs_ctrl_block_prefix}\.dispatch: FtqFullStall,\s+(\d+)',
+    'ICacheMissBubble': fr'{xs_ctrl_block_prefix}\.dispatch: ICacheMissBubble,\s+(\d+)',
+    'ITLBMissBubble': fr'{xs_ctrl_block_prefix}\.dispatch: ITLBMissBubble,\s+(\d+)',
+    'BTBMissBubble': fr'{xs_ctrl_block_prefix}\.dispatch: BTBMissBubble,\s+(\d+)',
+    'FetchFragBubble': fr'{xs_ctrl_block_prefix}\.dispatch: FetchFragBubble,\s+(\d+)',
+    'DivStall': fr'{xs_ctrl_block_prefix}\.dispatch: DivStall,\s+(\d+)',
+    'IntNotReadyStall': fr'{xs_ctrl_block_prefix}\.dispatch: IntNotReadyStall,\s+(\d+)',
+    'FPNotReadyStall': fr'{xs_ctrl_block_prefix}\.dispatch: FPNotReadyStall,\s+(\d+)',
+    'MemNotReadyStall': fr'{xs_ctrl_block_prefix}\.dispatch: MemNotReadyStall,\s+(\d+)',
+    'LoadTLBStall': fr'{xs_ctrl_block_prefix}\.dispatch: LoadTLBStall,\s+(\d+)',
+    'LoadL1Stall': fr'{xs_ctrl_block_prefix}\.dispatch: LoadL1Stall,\s+(\d+)',
+    'LoadL2Stall': fr'{xs_ctrl_block_prefix}\.dispatch: LoadL2Stall,\s+(\d+)',
+    'LoadL3Stall': fr'{xs_ctrl_block_prefix}\.dispatch: LoadL3Stall,\s+(\d+)',
+    'LoadMemStall': fr'{xs_ctrl_block_prefix}\.dispatch: LoadMemStall,\s+(\d+)',
+    'StoreStall': fr'{xs_ctrl_block_prefix}\.dispatch: StoreStall,\s+(\d+)',
+    'AtomicStall': fr'{xs_ctrl_block_prefix}\.dispatch: AtomicStall,\s+(\d+)',
+    'LoadVioReplayStall': fr'{xs_ctrl_block_prefix}\.dispatch: LoadVioReplayStall,\s+(\d+)',
+    'LoadMSHRReplayStall': fr'{xs_ctrl_block_prefix}\.dispatch: LoadMSHRReplayStall,\s+(\d+)',
+    'ControlRecoveryStall': fr'{xs_ctrl_block_prefix}\.dispatch: ControlRecoveryStall,\s+(\d+)',
+    'MemVioRecoveryStall': fr'{xs_ctrl_block_prefix}\.dispatch: MemVioRecoveryStall,\s+(\d+)',
+    'OtherRecoveryStall': fr'{xs_ctrl_block_prefix}\.dispatch: OtherRecoveryStall,\s+(\d+)',
+    'FlushedInsts': fr'{xs_ctrl_block_prefix}\.dispatch: FlushedInsts,\s+(\d+)',
+    'OtherCoreStall': fr'{xs_ctrl_block_prefix}\.dispatch: OtherCoreStall,\s+(\d+)',
 }
 
 # old
@@ -247,16 +248,6 @@ xs_branch_targets = {
     # 'BpRRight': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpRRight,\s+(\d+)",
     # 'BpRWrong': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpRWrong,\s+(\d+)",
 
-    # '(ubtbRight)',
-    # '(ubtbWrong)',
-    # '(btbRight)',
-    # '(btbWrong)',
-    # '(tageRight)',
-    # '(tageWrong)',
-    # '(rasRight)',
-    # '(rasWrong)',
-    # '(loopRight)',
-    # '(loopWrong)',
 }
 
 xs_cache_targets_22_04_nanhu = {
@@ -269,27 +260,39 @@ xs_cache_targets_22_04_nanhu = {
     'dcache_ammp': (r"dcache.missQueue.entries_\d+: load_miss_penalty_to_use,\s+(\d+)", 16),
 }
 
-xs_cache_targets_nanhu = {
+xs_cache_targets = {
 }
 
 def add_nanhu_l1_dcache_targets():
     for load_pipeline in range(2):
-        xs_cache_targets_nanhu['l1d_{}_miss'.format(load_pipeline)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.memBlock\.LoadUnit_{}.load_s2: dcache_miss_first_issue,\s+(\d+)".format(load_pipeline)
-        xs_cache_targets_nanhu['l1d_{}_acc'.format(load_pipeline)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.memBlock\.LoadUnit_{}.load_s2: in_fire_first_issue,\s+(\d+)".format(load_pipeline)
+        xs_cache_targets['l1d_{}_miss'.format(load_pipeline)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.memBlock\.LoadUnit_{}: s2_dcache_miss_first_issue,\s+(\d+)".format(load_pipeline)
+        xs_cache_targets['l1d_{}_acc'.format(load_pipeline)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.memBlock\.LoadUnit_{}: s2_in_fire_first_issue,\s+(\d+)".format(load_pipeline)
 
 
-def add_nanhu_l2_l3_targets():
+def add_nanhu_l2_targets():
     for bank in range(4):
-        xs_cache_targets_nanhu['l3b{}_acc'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_{}.directory: selfdir_A_req,\s+(\d+)".format(bank)
-        xs_cache_targets_nanhu['l3b{}_hit'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_{}.directory: selfdir_A_hit,\s+(\d+)".format(bank)
-        xs_cache_targets_nanhu['l3b{}_recv_pref'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_{}\.a_req_buffer: recv_prefetch,\s+(\d+)".format(bank)
+        xs_cache_targets['l2b{}_acc'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}.directory: selfdir_A_req,\s+(\d+)".format(bank)
+        xs_cache_targets['l2b{}_hit'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}.directory: selfdir_A_hit,\s+(\d+)".format(bank)
+        xs_cache_targets['l2b{}_recv_pref'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}\.a_req_buffer: recv_prefetch,\s+(\d+)".format(bank)
 
-        xs_cache_targets_nanhu['l2b{}_acc'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}.directory: selfdir_A_req,\s+(\d+)".format(bank)
-        xs_cache_targets_nanhu['l2b{}_hit'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}.directory: selfdir_A_hit,\s+(\d+)".format(bank)
-        xs_cache_targets_nanhu['l2b{}_recv_pref'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}\.a_req_buffer: recv_prefetch,\s+(\d+)".format(bank)
+
+def add_kmh_l2_targets():
+    xs_cache_targets.update({
+        'l2_load_acc': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.(?:l2top\.)?l2cache\.topDown: E2_L2AReqSource_CPULoadData_Total,\s+(\d+)",
+        'l2_load_miss': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.(?:l2top\.)?l2cache\.topDown: E2_L2AReqSource_CPULoadData_Miss,\s+(\d+)",
+    })
+    
+def add_xs_l3_targets():
+    for bank in range(4):
+        xs_cache_targets['l3b{}_acc'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_{}.directory: selfdir_A_req,\s+(\d+)".format(bank)
+        xs_cache_targets['l3b{}_hit'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_{}.directory: selfdir_A_hit,\s+(\d+)".format(bank)
+        xs_cache_targets['l3b{}_recv_pref'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt\.slices_{}\.a_req_buffer: recv_prefetch,\s+(\d+)".format(bank)
+
 
 add_nanhu_l1_dcache_targets()
-add_nanhu_l2_l3_targets()
+# add_nanhu_l2_targets()
+add_kmh_l2_targets()
+add_xs_l3_targets()
 
 def add_nanhu_multicore_ipc_targets(n):
     #add instr and clocks for other cores

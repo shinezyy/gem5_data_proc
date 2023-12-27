@@ -153,6 +153,10 @@ def main():
     require_flag = False
     xs_stat_fmt = opt.xiangshan or opt.old_xs
 
+    if xs_stat_fmt:
+        prefix = 'xs_'
+    else:
+        prefix = ''
     # for workload, path in paths:
     def extract_and_post_process(gloabl_dict, workload, path):
         if opt.filter_bmk and not workload.startswith(opt.filter_bmk):
@@ -180,7 +184,7 @@ def main():
                     targets = {**xs_branch_targets, **targets}
                 if opt.cache:
                     if opt.xiangshan:
-                        targets = {**xs_cache_targets_nanhu, **targets}
+                        targets = {**xs_cache_targets, **targets}
                     elif opt.old_xs:
                         targets = {**xs_cache_targets_22_04_nanhu, **targets}
                     else:
@@ -208,17 +212,11 @@ def main():
                 d = c.gem5_get_stats(path, targets, re_targets=True)
 
             # TODO: test eval stats
-        if xs_stat_fmt:
-            prefix = 'xs_'
-        else:
-            prefix = ''
         if len(d):
             if opt.branch:
                 eval(f"c.{prefix}add_branch_mispred(d)")
             if opt.cache:
                 eval(f"c.{prefix}add_cache_mpki(d)")
-            if opt.topdown and not opt.topdown_raw:
-                eval(f"c.{prefix}topdown_post_process(d)")
             if opt.fanout:
                 c.add_fanout(d)
             if opt.warmup:
@@ -248,6 +246,10 @@ def main():
     print(all_bmk_dict)
 
     df = pd.DataFrame.from_dict(all_bmk_dict, orient='index')
+
+    if opt.topdown and not opt.topdown_raw:
+        eval(f"c.{prefix}topdown_post_process(df)")
+
     df = df.sort_index()
     df = df.reindex(sorted(df.columns), axis=1)
     # df = df.sort_values(['ipc'])
