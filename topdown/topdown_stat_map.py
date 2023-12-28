@@ -80,7 +80,7 @@ xs_coarse_rename_map = {
     'OtherRecoveryStall': 'MergeBadSpec',
     
     'OtherCoreStall': 'MergeCore',
-    'commitInstr': 'MergeBase',
+    'NoStall': 'MergeBase',
 
     'MemVioRedirectBubble': 'MergeBadSpec',
     'OtherRedirectBubble': 'MergeMisc',

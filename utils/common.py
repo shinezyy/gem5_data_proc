@@ -548,7 +548,7 @@ def xs_add_branch_mispred(d: dict) -> None:
     # d['return MPKI'] = float(d['RASIncorrect']) / float(d['Insts']) * 1000
 
 def add_cache_mpki(d: dict) -> None:
-    d['l1d.MPKI'] = float(d.get('dcache_miss', 0.0)) / float(d['Insts']) * 1000
+    d['L1D.MPKI'] = float(d.get('dcache_miss', 0.0)) / float(d['Insts']) * 1000
 
     d['L2.MPKI'] = float(d.get('l2_miss', 0.0)) / float(d['Insts']) * 1000
     d['L2.NonPref.Miss'] = float(d.get('l2_miss', 0.0) - d.get('l2_miss_l1d_pref', 0.0))
@@ -610,7 +610,7 @@ def xs_add_cache_mpki(d: dict) -> None:
             d[f'{cache.upper()}.overallMPKI'] = d[f'{cache.upper()}.overallMiss'] / (d[f'{cache}_acc'] + 1)
             d.pop(f'{cache}_hit')
         for cache in ['l2']:
-            d[f'{cache}_load_mpki'] = d[f'{cache}_load_miss'] / d['commitInstr'] * 1000
+            d[f'{cache.upper()}_load_MPKI'] = d[f'{cache}_load_miss'] / d['commitInstr'] * 1000
     else:
         raise Exception(f'Not implemented for {version}')
 
@@ -648,7 +648,8 @@ def topdown_post_process(df: pd.DataFrame) -> None:
 
 def xs_topdown_post_process(df: pd.DataFrame) -> None:
     print('Merge topdown stats with XS coarse-grained stats')
-    tsm.rename_with_map(df, tsm.xs_mem_finegrain_rename_map)
+    # tsm.rename_with_map(df, tsm.xs_mem_finegrain_rename_map)
+    tsm.rename_with_map(df, tsm.xs_coarse_rename_map)
 
 def add_warmup_mpki(d: dict) -> None:
     d['L2MPKI'] = float(d.get('l2_miss', 0)) / float(d['Insts']) * 1000
