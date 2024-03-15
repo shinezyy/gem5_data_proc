@@ -24,7 +24,7 @@ def proc_input(wl_df: pd.DataFrame, js: dict, workload: str):
     # (N, 1) = (1, W) matmul (W, N)
     # To make sure the matrix_perf is in the same order as the vec_weight,
     # we sort the matrix_perf by point
-    assert type(wl_df['point'][0]) == np.int64
+    assert type(wl_df['point'].values[0]) == np.int64
     wl_df = wl_df.sort_values(by=['point'])
     # We also sort the vec_weight by point
     print('Processing bmk input', workload)
@@ -39,13 +39,20 @@ def proc_input(wl_df: pd.DataFrame, js: dict, workload: str):
     # convert string index into int64
     vec_weight.index = vec_weight.index.astype(np.int64)
     # select only existing points
-    try: 
+    try:
         vec_weight = vec_weight.loc[wl_df['point']]
     except KeyError:
-        print(f'KeyError: {workload}')
-        print(vec_weight)
-        print(wl_df['point'])
-        raise KeyError
+        print(wl_df)
+        if 0 in wl_df['point'].values:
+            print(f"Ignore checkpoint 0 for {workload}")
+            wl_df = wl_df[wl_df['point'] != 0]
+            vec_weight = vec_weight.loc[wl_df['point']]
+        else:
+            print(f'KeyError: {workload}')
+            print(vec_weight)
+            print(wl_df['point'])
+            raise KeyError
+    print(vec_weight.shape)
     # make their sum equals 1.0
     vec_weight.columns = ['weight']
 
@@ -55,13 +62,19 @@ def proc_input(wl_df: pd.DataFrame, js: dict, workload: str):
     
     # Drop these auxiliary fields
 
-    to_drop = {'bmk', 'point', 'workload', 'ipc'}
+    wl_df['weight'] = vec_weight.values
+    wl_df.to_csv(osp.join('results', f'{workload}_raw.csv'))
+    to_drop = {'bmk', 'point', 'workload', 'ipc', 'weight'}
     to_drop = to_drop.intersection(set(wl_df.columns.to_list()))
     # print(set(wl_df.columns.to_list()))
     # print(to_drop)
     wl_df = wl_df.drop(to_drop, axis=1)
 
     weight_metrics = np.matmul(vec_weight.values.reshape(1, -1), wl_df.values)
+    decomposed = pd.DataFrame(wl_df.values * vec_weight.values, columns=wl_df.columns, index=wl_df.index)
+    print(decomposed)  # decomposed
+    decomposed['weight'] = vec_weight.values
+    decomposed.to_csv(osp.join('results', f'{workload}_decomposed.csv'))
     weight_metrics_df = pd.DataFrame(weight_metrics, columns=wl_df.columns)
     # We have to process coverage here to avoid apply weight on top of weight
     weight_metrics_df['coverage'] = coverage
@@ -72,7 +85,7 @@ def proc_bmk(bmk_df: pd.DataFrame, js: dict, bmk: str):
     # Similar to per-input proc, we view the instruction count as the weight
     # and compute weighted metrics with matrix multiplication
     workloads = bmk_df['workload'].unique()
-    metric_list = [] 
+    metric_list = []
     time = 0
     print('Processing bmk', bmk)
     for wl in workloads:
@@ -134,6 +147,7 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
         else:
             bmks_cleaned.append(bmk)
     weighted_df.index = bmks_cleaned
+    pd.set_option("display.precision", 3)
     print(bmks_cleaned)
 
     if 'cpi' in weighted_df.columns:

@@ -10,17 +10,10 @@ example_stats_dir=/nfs/home/share/liyanqin/xs-perf/2403-perf-pf/SPEC06_EmuTasks_
 
 mkdir -p results
 
-tag="xs-fp-topdown"
+tag="xs-fp"
 
-python3 batch.py -s $example_stats_dir -t -o results/$tag.csv -X --topdown-raw
-
-python3 simpoint_cpt/compute_weighted.py \
+python3 batch.py -s $example_stats_dir -o results/$tag.csv -X
+python3 simpoint_cpt/compute_weighted.py --fp-only \
     -r results/$tag.csv \
     -j /nfs/home/share/jiaxiaoyu/simpoint_checkpoint_archive/spec06_rv64gcb_O3_20m_gcc12.2.0-intFpcOff-jeMalloc/checkpoint-0-0-0/cluster-0-0.json \
-    -o results/$tag-weighted.csv
-
-# python3 batch.py -s $example_stats_dir -o results/$tag.csv -X
-# python3 simpoint_cpt/compute_weighted.py --fp-only \
-#     -r results/$tag.csv \
-#     -j /nfs/home/share/jiaxiaoyu/simpoint_checkpoint_archive/spec06_rv64gcb_O3_20m_gcc12.2.0-intFpcOff-jeMalloc/checkpoint-0-0-0/cluster-0-0.json \
-#     --score results/$tag-score.csv
+    --score results/$tag-score.csv
