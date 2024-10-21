@@ -102,7 +102,7 @@ xs_mem_finegrain_rename_map.update({
 })
 
 gem5_fine_grain_rename_map = {
-    'NoStall': None,
+    'NoStall': 'MergeBase',
 
     # Core
     'ScalarLongExecute': None,
@@ -123,7 +123,8 @@ gem5_fine_grain_rename_map = {
     # Frontend
     'IcacheStall': 'ICacheBubble',
     'ITlbStall': 'ITlbBubble',
-    'FragStall': 'FragmentBubble',
+    'FetchFragStall': 'FragmentBubble',
+    'OtherFragStall': 'FragmentBubble',
 
     # BP
     'BpStall': 'MergeBadSpecBubble',
@@ -196,7 +197,7 @@ xs_fine_grain_rename_map = {
 def rename_with_map(df: pd.DataFrame, rename_map):
     to_drops = []
     sorted_cols = []
-    columns_to_keep = ['ipc', 'point', 'bmk', 'workload']  # 需要保留的列
+    columns_to_keep = ['cpi', 'point', 'bmk', 'workload']  # 需要保留的列
 
     print(df.columns)
     for col in df.columns:

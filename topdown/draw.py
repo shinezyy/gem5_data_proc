@@ -5,16 +5,16 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import os
 import os.path as osp
-from .topdown_stat_map import *
+from topdown_stat_map import *
 # from svglib.svglib import svg2rlg
 # from reportlab.graphics import renderPDF
 
 def draw():
     results = {
-        "GEM5-0429":
-            ("results/gem5-topdown-example-weighted.csv", "GEM5"),
-        "XS-0429": 
-            ("results/xs-topdown-example-weighted.csv", "XS"),
+        "GEM5-ref":
+            ("results/spec_all_8width-weighted.csv", "GEM5"),
+        "GEM5-ideal":
+            ("results/spec_all_frontend_ideal-weighted.csv", "GEM5"),
     }
 
     configs = list(results.keys())
@@ -86,14 +86,14 @@ def draw():
                     assert results[sim_conf][1] == 'XS'
                     rename_with_map(df, xs_coarse_rename_map)
         
-                icount = 20*10**6
-                print(results[sim_conf][1], f'Base count:\n{df["Base"]}')
-                if 'BadSpecInst' in df.columns:
-                    df['BadSpecInst'] += df['Base'] - icount
-                else:
-                    df['BadSpecInst'] = df['Base'] - icount
-                print(results[sim_conf][1], f'Bad inst count:\n{df["BadSpecInst"]}')
-                df['Base'] = icount
+            icount = 20*10**6
+            print(results[sim_conf][1], f'Base count:\n{df["Base"]}')
+            if 'BadSpecInst' in df.columns:
+                df['BadSpecInst'] += df['Base'] - icount
+            else:
+                df['BadSpecInst'] = df['Base'] - icount
+            print(results[sim_conf][1], f'Bad inst count:\n{df["BadSpecInst"]}')
+            df['Base'] = icount
 
                 # df['BadSpec'] = df['BadSpecInst'] + df['BadSpec']
                 # df.drop(columns=['BadSpecInst'], inplace=True)
@@ -120,7 +120,7 @@ def draw():
 
         
 
-    put_to_front = ['Base', 'BadSpec']
+    put_to_front = ['Base']
     # excluded = len(put_to_front)
     # colors = colors[excluded:]
 
