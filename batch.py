@@ -1,51 +1,8 @@
 #!/usr/bin/env python3
-
-from os.path import join as pjoin
-import os.path as osp
 import argparse
-import pandas as pd
+import os
 
-from utils import common as c
-from utils.target_stats import *
-from multiprocessing import Process,Manager
-import utils as u
-
-show_lins = 62
-pd.set_option('display.precision', 3)
-pd.set_option('display.max_rows', show_lins)
-pd.set_option('display.min_rows', show_lins)
-
-
-def further_proc(pair: str, d: dict, verbose: bool) -> None:
-    hpt, lpt = pair.split('_')
-    # c.add_st_ipc(hpt, d)
-    # c.add_overall_qos(hpt, lpt, d)
-    # c.add_ipc_pred(d)
-    # c.add_slot_sanity(d)
-    # c.add_qos(d)
-
-    if verbose:
-        c.print_line()
-        print(pair, ':')
-        c.print_dict(d)
-
-    return d
-
-
-def add_eval_targets(opt, targets: dict):
-    if opt.eval_stat:
-        stat_targets = opt.eval_stat.split('#')
-        for stat_target in stat_targets:
-            if opt.xiangshan:
-                print("Adding eval target: xs_", stat_target)
-                targets.update(eval('xs_'+stat_target))
-            else:
-                print("Adding eval target:", stat_target)
-                targets.update(eval(stat_target))
-        print(targets)
-
-
-def main():
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage='specify stat directory')
     parser.add_argument('-s', '--stat-dir', action='store', required=True,
                         help='gem5 output directory'
@@ -133,8 +90,60 @@ def main():
             help='evaled stats',
             )
 
+    parser.add_argument('--core', action='store', default=0,
+            help='core id, default 0',
+            )
+
     opt = parser.parse_args()
 
+    os.environ['TEMP_CORE_ID'] = str(opt.core)
+
+
+from os.path import join as pjoin
+import os.path as osp
+import pandas as pd
+
+from utils import common as c
+from utils.target_stats import *
+from multiprocessing import Process,Manager
+import utils as u
+
+show_lins = 62
+pd.set_option('display.precision', 3)
+pd.set_option('display.max_rows', show_lins)
+pd.set_option('display.min_rows', show_lins)
+
+
+def further_proc(pair: str, d: dict, verbose: bool) -> None:
+    hpt, lpt = pair.split('_')
+    # c.add_st_ipc(hpt, d)
+    # c.add_overall_qos(hpt, lpt, d)
+    # c.add_ipc_pred(d)
+    # c.add_slot_sanity(d)
+    # c.add_qos(d)
+
+    if verbose:
+        c.print_line()
+        print(pair, ':')
+        c.print_dict(d)
+
+    return d
+
+
+def add_eval_targets(opt, targets: dict):
+    if opt.eval_stat:
+        stat_targets = opt.eval_stat.split('#')
+        for stat_target in stat_targets:
+            if opt.xiangshan:
+                print("Adding eval target: xs_", stat_target)
+                targets.update(eval('xs_'+stat_target))
+            else:
+                print("Adding eval target:", stat_target)
+                targets.update(eval(stat_target))
+        print(targets)
+
+
+def main():
     add_nanhu_multicore_ipc_targets(opt.num_cores)
 
     stat_file = opt.stat_file
