@@ -76,6 +76,16 @@ python3 simpoint_cpt/compute_weighted.py \
 
 ```
 
+## Dual-core performance
+stats parser will obtain XS_CORE_ID from environment variables to choose which core to compute score:
+
+```
+export XS_CORE_ID
+python3 batch.py -s $example_stats_dir -o results/$tag-core$core.csv -X
+```
+
+Full scripts to obtain dual-core performance is in `example-scripts/xs-dual-core.sh`
+
 # How to add more interested stats
 
 ## Simple stats target group

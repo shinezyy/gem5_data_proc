@@ -1,3 +1,5 @@
+import os
+
 brief_targets = {
     'ipc': '(?:cpus?|switch_cpus_1)\.ipc',
     'Insts': '(?:cpus?|switch_cpus_1)\.committedInsts',
@@ -57,13 +59,6 @@ pf_targets = {
     'l1_pf_useful': 'system\.(?:cpus?|switch_cpus_1)?\.dcache\.prefetcher\.(pfUseful) ',
     'l2_pf_unused': 'system\.l2\.prefetcher\.(pfUnused) ',
     'l2_pf_useful': 'system\.l2\.prefetcher\.(pfUseful) ',
-}
-
-xs_l2_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache"
-
-xs_pf_targets = {
-    'sms_useful': f'{xs_l2_prefix}\.topDown: L2prefetchUsefulSMS,\s+(\d+)',
-    'sms_sent': f'{xs_l2_prefix}\.topDown: L2prefetchSentSMS,\s+(\d+)',
 }
 
 topdown_targets = {}
@@ -130,10 +125,22 @@ branch_targets = {
 }
 
 
-xs_l2_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2top\.inner_l2cache"
 xs_l3_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt"
-xs_core_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core"
-xs_ctrl_block_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.(?:backend\.)?inner_ctrlBlock"
+
+if 'XS_CORE_ID' not in os.environ or int(os.environ['XS_CORE_ID']) == 0:
+    xs_core_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core"
+    xs_ctrl_block_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.(?:backend\.)?inner_ctrlBlock"
+    xs_l2_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2top\.inner_l2cache"
+elif int(os.environ['XS_CORE_ID']) > 0:
+    cur_core_id = int(os.environ['XS_CORE_ID'])
+    xs_core_prefix = f"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{cur_core_id}\.core"
+    xs_ctrl_block_prefix = f"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{cur_core_id}\.core\.(?:backend\.)?inner_ctrlBlock"
+    xs_l2_prefix = f"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{cur_core_id}\.l2top\.inner_l2cache"
+
+xs_pf_targets = {
+    'sms_useful': f'{xs_l2_prefix}\.topDown: L2prefetchUsefulSMS,\s+(\d+)',
+    'sms_sent': f'{xs_l2_prefix}\.topDown: L2prefetchSentSMS,\s+(\d+)',
+}
 
 xs_ipc_target = {
     "commitInstr": fr"{xs_ctrl_block_prefix}.rob: commitInstr,\s+(\d+)",
