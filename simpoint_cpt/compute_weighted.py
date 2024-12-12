@@ -150,8 +150,14 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
     pd.set_option("display.precision", 3)
     print(bmks_cleaned)
 
+    # sort by int and fp benchmarks, not by cpi
+    int_benchmarks = u.spec_bmks[spec_v]['int']
+    fp_benchmarks = u.spec_bmks[spec_v]['float']
+    weighted_df = weighted_df.reindex(int_benchmarks + fp_benchmarks)
+
     if 'cpi' in weighted_df.columns:
-        weighted_df = weighted_df.sort_values(by='cpi', ascending=False)
+        # weighted_df = weighted_df.sort_values(by='cpi', ascending=False) 
+        pass
     else:
         weighted_df = weighted_df.sort_index()
     print(weighted_df)

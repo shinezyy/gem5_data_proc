@@ -345,7 +345,13 @@ def xs_get_stats(stat_file: str, targets: list,
     not_found_keys = desired_keys - obtained_keys
     print("Obtained:", obtained_keys)
     print("Not found:", not_found_keys)
-    assert len(not_found_keys) == 0
+    # assert len(not_found_keys) == 0
+    if len(not_found_keys) > 0:
+        print(f"warning: in {stat_file} not found the following stats:")
+        print(f"missing stats: {not_found_keys}")
+        print(f"obtained stats: {obtained_keys}")
+        # return None means this stat file is invalid
+        return None 
 
     # print(mshr_latency.keys())
     tdf = None

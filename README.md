@@ -76,6 +76,28 @@ python3 simpoint_cpt/compute_weighted.py \
 
 ```
 
+## Analysis topdown performance
+
+First, we need to get the topdown outputs for one tests
+```
+bash example-scripts/gem5-topdown-tag.sh spec_ideal_numBr6
+```
+
+Then, we can use `topdown/draw_new.py` to analyze the topdown performance, and draw pictures, save to `figure/`
+```
+python3 topdown/draw_new.py -f=1 -p  -t1=spec_ideal_numBr4 -t2=spec_ideal_numBr6
+# -f=1 means the highest level of detail
+# -p means print the level 1 percentage and diff two tags outputs
+# -t1=spec_ideal_numBr4 means the first tag
+# -t2=spec_ideal_numBr6 means the second tag
+```
+
+```
+python3 topdown/draw_new.py -f=3 -c=Frontend -t1=spec_ideal_numBr4 -t2=spec_ideal_numBr6
+# -f=3 means the most detailed level
+# -c=Frontend means the category, choises: Frontend, Backend, BadSpec
+```
+
 ## Dual-core performance
 stats parser will obtain XS_CORE_ID from environment variables to choose which core to compute score:
 

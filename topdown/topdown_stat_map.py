@@ -2,6 +2,26 @@ import pandas as pd
 from copy import deepcopy
 
 
+gem5_topdown_hierarchy = {
+    'NoStall': ['NoStall'],
+    'Frontend': ['IcacheStall', 'ITlbStall', 'FetchFragStall', 'FTQBubble', 'OtherFetchStall'],
+    'Backend': {
+        'Core': ['ScalarLongExecute', 'InstNotReady'],
+        'Memory': {
+            'Load': ['LoadL1Bound', 'LoadL2Bound', 'LoadL3Bound', 'LoadMemBound', 'DTlbStall'],
+            'Store': ['StoreL1Bound'],
+            'Other': ['MemNotReady', 'MemCommitRateLimit', 'OtherMemStall']
+        },
+        'Fragment': ['OtherFragStall'],
+        'Dispatch': ['MemDQBandwidth', 'IntDQBandwidth', 'FVDQBandwidth', 'ScalarReadyButNotIssued'],
+        'Misc': ['SerializeStall']
+    },
+    'BadSpec': {
+        'Inst': ['BadSpecInst'],
+        'Other': ['BpStall', 'SquashStall', 'InstSquashed', 'CommitSquash']
+    },
+}
+
 gem5_coarse_rename_map = {
     'NoStall': 'MergeBase',
 
@@ -20,19 +40,22 @@ gem5_coarse_rename_map = {
     'StoreL3Bound': 'MergeStore',
     'StoreMemBound': 'MergeStore',
     'DTlbStall': 'MergeLoad',
+    'MemNotReady': 'MergeMem',
+    'MemCommitRateLimit': 'MergeMem',
 
     # Frontend
     'IcacheStall': 'MergeFrontend',
     'ITlbStall': 'MergeFrontend',
     'FetchFragStall': 'MergeFrontend',
     'OtherFragStall': 'MergeFrontend',
-
+    'FetchBufferInvalid': 'MergeFrontend',
+    'OtherFetchStall': 'MergeFrontend',
+    
     # BP
     'BpStall': 'MergeBadSpec',
     'SquashStall': 'MergeBadSpec',
     'InstMisPred': 'MergeBadSpec',
     'InstSquashed': 'MergeBadSpec',
-    # BP + backend
     'CommitSquash': 'MergeBadSpec',
 
     # Unclassified:
@@ -40,9 +63,8 @@ gem5_coarse_rename_map = {
     'TrapStall': 'MergeMisc',
     'IntStall': 'MergeMisc',
     'ResumeUnblock': 'MergeMisc',
-    'FetchBufferInvalid': 'MergeFrontend',
     'OtherStall': 'MergeMisc',
-    'OtherFetchStall': 'MergeFrontend',
+    
 }
 xs_coarse_rename_map = {
     'OverrideBubble': 'MergeFrontend',
@@ -119,6 +141,9 @@ gem5_fine_grain_rename_map = {
     'StoreL3Bound': 'MergeStoreBound',
     'StoreMemBound': 'MergeStoreBound',
     'DTlbStall': None,
+    'MemSquashed': 'MergeMem',
+    'MemNotReady': 'MergeMem',
+    'MemCommitRateLimit': 'MergeMem',
 
     # Frontend
     'IcacheStall': 'ICacheBubble',
@@ -219,5 +244,60 @@ def rename_with_map(df: pd.DataFrame, rename_map):
                 to_drops.append(k)
         else:
             sorted_cols.append(k)
+    print(f'Dropping {to_drops}')
+    df.drop(columns=to_drops, inplace=True)
+    
+def create_rename_map(hierarchy, level=3, prefix=''):
+    rename_map = {}
+    for key, value in hierarchy.items():
+        new_prefix = f"{prefix}{key}_" if prefix else key
+        if isinstance(value, list):
+            if level == 1 or (level == 2 and not prefix):
+                rename_map.update({item: f'Merge{new_prefix}' for item in value})
+            else:
+                rename_map.update({item: None for item in value})
+        elif isinstance(value, dict):
+            if level == 1:
+                for sub_key, sub_value in value.items():
+                    if isinstance(sub_value, list):
+                        rename_map.update({item: f'Merge{new_prefix}' for item in sub_value})
+                    elif isinstance(sub_value, dict):
+                        for sub_sub_key, sub_sub_value in sub_value.items():
+                            rename_map.update({item: f'Merge{new_prefix}' for item in sub_sub_value})
+            else:
+                rename_map.update(create_rename_map(value, level-1, new_prefix))
+    return rename_map
+
+def mergeBadSpecInst(df):
+    icount = 20*10**6
+    df['BadSpecInst'] = df['NoStall'] - icount
+    df['NoStall'] = icount
+
+def rename_with_map(df: pd.DataFrame, hierarchy, level):
+    mergeBadSpecInst(df)
+    if level == 3:
+        # 当 level=3 时，我们不进行任何重命名或合并
+        return
+    rename_map = create_rename_map(hierarchy, level)
+    to_drops = []
+    columns_to_keep = ['cpi', 'point', 'bmk', 'workload']
+
+    for col in df.columns:
+        if col not in rename_map and col not in columns_to_keep:
+            to_drops.append(col)
+    
+    for k, v in rename_map.items():
+        if v is not None:
+            if v.startswith('Merge'):
+                merged = v[5:]
+                if merged not in df.columns:
+                    df[merged] = df[k]
+                else:
+                    df[merged] += df[k]
+            else:
+                df[v] = df[k]
+            if k not in columns_to_keep:
+                to_drops.append(k)
+    
     print(f'Dropping {to_drops}')
     df.drop(columns=to_drops, inplace=True)

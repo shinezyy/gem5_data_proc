@@ -26,8 +26,8 @@ spec_bmks = {
             'high_squash': ['astar', 'bzip2', 'gobmk', 'sjeng'],
             },
         '17': {
-            'int':  ['deepsjeng', 'exchange2', 'gcc', 'leela', 'mcf', 'omnetpp', 'perlbench', 'x264', 'xalancbmk', 'xz'],
-            'float': [ 'bwaves', 'cactusBSSN', 'namd', 'parest', 'povray', 'lbm', 'wrf', 'blender', 'cam4', 'imagick', 'nab', 'fotonik3d', 'roms'],
+            'int': ['perlbench', 'gcc', 'mcf', 'omnetpp', 'xalancbmk', 'x264', 'deepsjeng', 'leela', 'exchange2', 'xz'],
+            'float': ['bwaves', 'cactuBSSN', 'namd', 'parest', 'povray', 'lbm', 'wrf', 'blender', 'cam4', 'imagick', 'nab', 'fotonik3d', 'roms'],
             },
         }
 
