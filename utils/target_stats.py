@@ -130,17 +130,17 @@ branch_targets = {
 }
 
 
-xs_l3_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt"
+xs_l3_prefix = "\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.l3cacheOpt"
 
 if 'XS_CORE_ID' not in os.environ or int(os.environ['XS_CORE_ID']) == 0:
-    xs_core_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core"
-    xs_ctrl_block_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.(?:backend\.)?inner_ctrlBlock"
-    xs_l2_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2top\.inner_l2cache"
+    xs_core_prefix = "\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core"
+    xs_ctrl_block_prefix = "\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.(?:backend\.)?inner.ctrlBlock"
+    xs_l2_prefix = "\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.l2top\.inner.l2cache"
 elif int(os.environ['XS_CORE_ID']) > 0:
     cur_core_id = int(os.environ['XS_CORE_ID'])
-    xs_core_prefix = f"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{cur_core_id}\.core"
-    xs_ctrl_block_prefix = f"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{cur_core_id}\.core\.(?:backend\.)?inner_ctrlBlock"
-    xs_l2_prefix = f"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{cur_core_id}\.l2top\.inner_l2cache"
+    xs_core_prefix = f"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2_{cur_core_id}\.core"
+    xs_ctrl_block_prefix = f"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2_{cur_core_id}\.core\.(?:backend\.)?inner.ctrlBlock"
+    xs_l2_prefix = f"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2_{cur_core_id}\.l2top\.inner.l2cache"
 
 xs_pf_targets = {
     'sms_useful': f'{xs_l2_prefix}\.topDown: L2prefetchUsefulSMS,\s+(\d+)',
