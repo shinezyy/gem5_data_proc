@@ -125,6 +125,9 @@ def main():
     parser.add_argument('-X', '--xiangshan', action='store_true',
                         help='handle XiangShan stats'
                        )
+    parser.add_argument('--exclude-l3', action='store_true',
+                        help='handle XiangShan stats without L3, for simulation results for CHI (L3 is openLLC or commercial IP)'
+                       )
     parser.add_argument('--old-xs', action='store_true',
                         help='handle old xs stats'
                        )
@@ -186,7 +189,10 @@ def main():
                     targets = {**xs_branch_targets, **targets}
                 if opt.cache:
                     if opt.xiangshan:
-                        targets = {**xs_cache_targets, **targets}
+                        if opt.exclude_l3:
+                            targets = {**xs_cache_targets_no_l3, **targets}
+                        else:
+                            targets = {**xs_cache_targets, **targets}
                     elif opt.old_xs:
                         targets = {**xs_cache_targets_22_04_nanhu, **targets}
                     else:
@@ -218,7 +224,10 @@ def main():
             if opt.branch:
                 eval(f"c.{prefix}add_branch_mispred(d)")
             if opt.cache:
-                eval(f"c.{prefix}add_cache_mpki(d)")
+                if opt.xiangshan:
+                    c.xs_add_cache_mpki(d, opt.exclude_l3)
+                else:
+                    c.add_cache_mpki(d)
             if opt.fanout:
                 c.add_fanout(d)
             if opt.warmup:

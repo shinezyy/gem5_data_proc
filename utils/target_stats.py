@@ -1,4 +1,5 @@
 import os
+import copy
 
 brief_targets = {
     'ipc': '(?:cpus?|switch_cpus_1)\.ipc',
@@ -45,6 +46,12 @@ mem_dep_targets = {
     'depLoads': '(?:cpus?|switch_cpus_1)?\.MemDepUnit__0.dependentLoads',
     'confLoads': '(?:cpus?|switch_cpus_1)?\.MemDepUnit__0.conflictingLoads',
     'confStores': '(?:cpus?|switch_cpus_1)?\.MemDepUnit__0.conflictingStores',
+}
+
+bank_conf_targets = {
+    'bankConfs': '(?:cpus?|switch_cpus_1)?\.lsq0\.bankConflicts',
+    'bankConfMisPredRate': '(?:cpus?|switch_cpus_1)?\.lsq0\.bankConflictMisPredRate',
+    'bankConfMisPreds': '(?:cpus?|switch_cpus_1)?\.lsq0\.misPredictedBankConflicts',
 }
 
 mem_targets = {
@@ -130,17 +137,17 @@ branch_targets = {
 }
 
 
-xs_l3_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt"
+xs_l3_prefix = "\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.l3cacheOpt"
 
 if 'XS_CORE_ID' not in os.environ or int(os.environ['XS_CORE_ID']) == 0:
-    xs_core_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core"
-    xs_ctrl_block_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.(?:backend\.)?inner_ctrlBlock"
-    xs_l2_prefix = "\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2top\.inner_l2cache"
+    xs_core_prefix = "\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core"
+    xs_ctrl_block_prefix = "\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.(?:backend\.)?inner.ctrlBlock"
+    xs_l2_prefix = "\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.l2top\.inner.l2cache"
 elif int(os.environ['XS_CORE_ID']) > 0:
     cur_core_id = int(os.environ['XS_CORE_ID'])
-    xs_core_prefix = f"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{cur_core_id}\.core"
-    xs_ctrl_block_prefix = f"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{cur_core_id}\.core\.(?:backend\.)?inner_ctrlBlock"
-    xs_l2_prefix = f"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{cur_core_id}\.l2top\.inner_l2cache"
+    xs_core_prefix = f"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2_{cur_core_id}\.core"
+    xs_ctrl_block_prefix = f"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2_{cur_core_id}\.core\.(?:backend\.)?inner.ctrlBlock"
+    xs_l2_prefix = f"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2_{cur_core_id}\.l2top\.inner.l2cache"
 
 xs_pf_targets = {
     'sms_useful': f'{xs_l2_prefix}\.topDown: L2prefetchUsefulSMS,\s+(\d+)',
@@ -233,47 +240,50 @@ xs_topdown_targets_deprecated = {
 
 
 xs_branch_targets = {
-    'BpInstr':  r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpInstr,\s+(\d+)",
-    'BpBWrong': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpBWrong,\s+(\d+)",
-    'BpJWrong': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpJWrong,\s+(\d+)",
-    'BpIWrong': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpIWrong,\s+(\d+)",
-    # 'BpBInstr': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpBInstr,\s+(\d+)",
-    # 'BpRight':  r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpRight,\s+(\d+)",
-    # 'BpWrong':  r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpWrong,\s+(\d+)",
-    # 'BpBRight': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpBRight,\s+(\d+)",
-    # 'BpJRight': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpJRight,\s+(\d+)",
-    # 'BpIRight': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpIRight,\s+(\d+)",
-    # 'BpCRight': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpCRight,\s+(\d+)",
-    # 'BpCWrong': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpCWrong,\s+(\d+)",
-    # 'BpRRight': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpRRight,\s+(\d+)",
-    # 'BpRWrong': r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpRWrong,\s+(\d+)",
+    'BpInstr':  r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpInstr,\s+(\d+)",
+    'BpBWrong': r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpBWrong,\s+(\d+)",
+    'BpJWrong': r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpJWrong,\s+(\d+)",
+    'BpIWrong': r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpIWrong,\s+(\d+)",
+    # 'BpBInstr': r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpBInstr,\s+(\d+)",
+    # 'BpRight':  r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpRight,\s+(\d+)",
+    # 'BpWrong':  r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpWrong,\s+(\d+)",
+    # 'BpBRight': r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpBRight,\s+(\d+)",
+    # 'BpJRight': r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpJRight,\s+(\d+)",
+    # 'BpIRight': r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpIRight,\s+(\d+)",
+    # 'BpCRight': r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpCRight,\s+(\d+)",
+    # 'BpCWrong': r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpCWrong,\s+(\d+)",
+    # 'BpRRight': r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpRRight,\s+(\d+)",
+    # 'BpRWrong': r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.frontend\.ftq: BpRWrong,\s+(\d+)",
 
 }
 
 xs_cache_targets_22_04_nanhu = {
-    'l3_acc': (r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt: selfdir_A_req,\s+(\d+)", 4),
-    'l3_hit': (r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.l3cacheOpt: selfdir_A_hit,\s+(\d+)", 4),
+    'l3_acc': (r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.l3cacheOpt: selfdir_A_req,\s+(\d+)", 4),
+    'l3_hit': (r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.l3cacheOpt: selfdir_A_hit,\s+(\d+)", 4),
 
-    'l2_acc': (r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache: selfdir_A_req,\s+(\d+)", 4),
-    'l2_hit': (r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache: selfdir_A_hit,\s+(\d+)", 4),
+    'l2_acc': (r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.l2cache: selfdir_A_req,\s+(\d+)", 4),
+    'l2_hit': (r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.l2cache: selfdir_A_hit,\s+(\d+)", 4),
 
     'dcache_ammp': (r"dcache.missQueue.entries_\d+: load_miss_penalty_to_use,\s+(\d+)", 16),
 }
 
-xs_cache_targets = {
-}
+xs_cache_targets_no_l3 = {}
+xs_cache_targets = {}
 
 def add_nanhu_l1_dcache_targets():
     for load_pipeline in range(2):
-        xs_cache_targets['l1d_{}_miss'.format(load_pipeline)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.memBlock\.inner_LoadUnit_{}: s2_dcache_miss_first_issue,\s+(\d+)".format(load_pipeline)
-        xs_cache_targets['l1d_{}_acc'.format(load_pipeline)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.core\.memBlock\.inner_LoadUnit_{}: s2_in_fire_first_issue,\s+(\d+)".format(load_pipeline)
+        xs_cache_targets['l1d_{}_miss'.format(load_pipeline)] = r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.memBlock\.inner.LoadUnit_{}: s2_dcache_miss_first_issue,\s+(\d+)".format(load_pipeline)
+        xs_cache_targets['l1d_{}_acc'.format(load_pipeline)] = r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.memBlock\.inner.LoadUnit_{}: s2_in_fire_first_issue,\s+(\d+)".format(load_pipeline)
+    for mshr in range(16):
+        xs_cache_targets[f'l1d_mshr{mshr}_load_to_use_samples'] = rf"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.memBlock\.inner.dcache\.dcache\.missQueue\.entries_{mshr}: load_miss_penalty_to_use_sampled,\s+(\d+)"
+        xs_cache_targets[f'l1d_mshr{mshr}_load_to_use'] = rf"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.core\.memBlock\.inner.dcache\.dcache\.missQueue\.entries_{mshr}: load_miss_penalty_to_use,\s+(\d+)"
 
 
 def add_nanhu_l2_targets():
     for bank in range(4):
-        xs_cache_targets['l2b{}_acc'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}.directory: selfdir_A_req,\s+(\d+)".format(bank)
-        xs_cache_targets['l2b{}_hit'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}.directory: selfdir_A_hit,\s+(\d+)".format(bank)
-        xs_cache_targets['l2b{}_recv_pref'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}\.a_req_buffer: recv_prefetch,\s+(\d+)".format(bank)
+        xs_cache_targets['l2b{}_acc'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}.directory: selfdir_A_req,\s+(\d+)".format(bank)
+        xs_cache_targets['l2b{}_hit'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}.directory: selfdir_A_hit,\s+(\d+)".format(bank)
+        xs_cache_targets['l2b{}_recv_pref'.format(bank)] = r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2\.l2cache\.slices_{}\.a_req_buffer: recv_prefetch,\s+(\d+)".format(bank)
 
 xs_mem_acc_sources = ['CPUInst', 'CPULoadData', 'CPUStoreData', 'CPUAtomicData', 'L1InstPrefetch',
                       'L1DataPrefetch', 'PTW', 'Prefetch2L2BOP', 'Prefetch2L2PBOP', 'Prefetch2L2SMS',
@@ -300,14 +310,15 @@ def add_xs_l3_targets():
 add_nanhu_l1_dcache_targets()
 # add_nanhu_l2_targets()
 add_kmh_l2_targets()
+xs_cache_targets_no_l3 = copy.deepcopy(xs_cache_targets)
 add_xs_l3_targets()
 
 xs_mem_targets = {}
 
 def add_xs_mem_bw_targets():
-    xs_mem_targets['l3_bus_acq'] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\." + \
+    xs_mem_targets['l3_bus_acq'] = r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\." + \
             r"socMisc.busPMU: L3_Mem_L3_bank_0_D_channel_GrantData_fire,\s+(\d+)"
-    xs_mem_targets['l3_bus_rel'] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\." + \
+    xs_mem_targets['l3_bus_rel'] = r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\." + \
             r"socMisc.busPMU: L3_Mem_L3_bank_0_C_channel_ReleaseData_fire,\s+(\d+)"
 
 add_xs_mem_bw_targets()
@@ -315,8 +326,8 @@ add_xs_mem_bw_targets()
 def add_nanhu_multicore_ipc_targets(n):
     #add instr and clocks for other cores
     for core in range(1, n):
-        xs_ipc_target[f'commitInstr{core}'] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{}.core\.ctrlBlock\.rob: commitInstr,\s+(\d+)".format(core)
-        xs_ipc_target[f'total_cycles{core}'] = r"\[PERF \]\[time=\s+\d+\] TOP\.SimTop\.l_soc\.core_with_l2_{}.core\.ctrlBlock\.rob: clock_cycle,\s+(\d+)".format(core)
+        xs_ipc_target[f'commitInstr{core}'] = r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2_{}.core\.ctrlBlock\.rob: commitInstr,\s+(\d+)".format(core)
+        xs_ipc_target[f'total_cycles{core}'] = r"\[PERF \]\[time=\s+\d+\] SimTop\.l_soc\.core_with_l2_{}.core\.ctrlBlock\.rob: clock_cycle,\s+(\d+)".format(core)
 
 rvv_targets = {
     'unitStrideCrossed': 'system\.cpu\.lsq0\.unitStrideCross16Byte',
