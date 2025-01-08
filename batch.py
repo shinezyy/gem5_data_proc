@@ -4,6 +4,7 @@ from os.path import join as pjoin
 import os.path as osp
 import argparse
 import pandas as pd
+import json
 
 from utils import common as c
 from utils.target_stats import *
@@ -115,6 +116,9 @@ def main():
     parser.add_argument('-F', '--filter-bmk', action='store',
                         help='Only print select benchmark'
                        )
+    parser.add_argument('--json-filter', action='store',
+                        help='Only print select benchmark in json file'
+                       )
 
     parser.add_argument('-t', '--topdown', action='store_true',
                         help='handle topdown stats'
@@ -162,9 +166,21 @@ def main():
         prefix = 'xs_'
     else:
         prefix = ''
+
+    possible_paths = []
+    if opt.json_filter is not None:
+        json_filter = json.load(open(opt.json_filter))
+        for workload in json_filter:
+            wl_dict = json_filter[workload]
+            for point, weight in wl_dict['points'].items():
+                possible_paths.append('{}_{}'.format(workload, point))
+                possible_paths.append('{}_{}_{}'.format(workload, point, weight))
+        print(possible_paths)
     # for workload, path in paths:
     def extract_and_post_process(gloabl_dict, workload, path):
         if opt.filter_bmk and not workload.startswith(opt.filter_bmk):
+            return
+        if opt.json_filter is not None and workload not in possible_paths:
             return
         if xs_stat_fmt:
             flag_file = osp.join(osp.dirname(path), 'completed')
