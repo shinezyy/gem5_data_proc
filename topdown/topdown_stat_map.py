@@ -275,11 +275,13 @@ def mergeBadSpecInst(df):
 
 def rename_with_map(df: pd.DataFrame, hierarchy, level):
     mergeBadSpecInst(df)
+    to_drops = ['Cycles', 'Insts', 'coverage']
     if level == 3:
         # 当 level=3 时，我们不进行任何重命名或合并
+        print(f'level3 dropping {to_drops}')
+        df.drop(columns=to_drops, inplace=True)
         return
     rename_map = create_rename_map(hierarchy, level)
-    to_drops = []
     columns_to_keep = ['cpi', 'point', 'bmk', 'workload']
 
     for col in df.columns:

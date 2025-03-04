@@ -63,7 +63,7 @@ def calculate_percentages(df):
     df = preprocess_for_percentage(df)
     
     # 获取所有列的总和作为基准
-    total = df['base'] + df['Frontend'].fillna(0) + df['Backend'].fillna(0) + df['BadSpec'].fillna(0)
+    total = df.fillna(0).sum(axis=1)
     
     # 计算每列的百分比
     percentages = pd.DataFrame()
