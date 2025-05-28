@@ -72,8 +72,18 @@ python3 simpoint_cpt/compute_weighted.py \
 python3 simpoint_cpt/compute_weighted.py \
     -r results/example.csv \
     -j simpoint_cpt/resources/spec06_rv64gcb_o2_20m.json \
-    --score results/example-score.csv  # The SPEC score for each benchmark and overll score
+    --score results/example-score.csv  # The SPEC score for each benchmark and overall score
 
+```
+
+## Quick Scoring for (Deterload + gem5) Results 
+
+Since there are naming differences between Deterload and the programs in this repository for benchmarks, the following script renames the simulation results obtained from (Deterload + gem5) by removing related prefixes (e.g., 400.perlbench -> perlbench).
+
+Running this script will quickly rename the results and compute the scores.
+
+```shell
+bash example-scripts/gem5-deterload-score.sh $example_stats_dir $weighted.json $tag
 ```
 
 ## Analysis topdown performance
