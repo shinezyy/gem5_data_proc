@@ -171,12 +171,19 @@ def compute_weighted_metrics(csv_path: str, js_path: str, out_csv: str, args):
             print(weighted_df.loc[bmk])
             score[bmk]['time'] = float(weighted_df.loc[bmk, 'time'])
             score[bmk]['ref_time'] = float(reftime_js[bmk])
+            if score[bmk]['time'] == 0:
+                warnings.warn(f'{bmk} has 0 time, skip scoring')
+                print(f'{bmk} has 0 time, skip scoring')
+                score[bmk]['score'] = 0
+                score[bmk]['coverage'] = 0
+                continue
             score[bmk]['score'] = score[bmk]['ref_time'] / score[bmk]['time']
             score[bmk]['coverage'] = weighted_df.loc[bmk, 'coverage']
+        valid_scores = [x[1]['score'] for x in score.items() if x[1]['score'] != 0]
         score['mean'] = {
             'time':0,
             'ref_time':0,
-            'score': geometric_mean([x[1]['score'] for x in score.items()]),
+            'score': geometric_mean(valid_scores) if valid_scores else 0,
             'coverage':0
         }
         score_col = ['time','ref_time','score','coverage']
