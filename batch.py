@@ -246,31 +246,13 @@ def main():
     else:
         prefix = ''
 
-    possible_paths = set()
     if opt.json_filter is not None:
+        from analysis_inputs import filter_profile_paths
         with open(opt.json_filter) as json_file:
-            json_filter = json.load(json_file)
-        for workload in json_filter:
-            wl_dict = json_filter[workload]
-            for point, weight in wl_dict['points'].items():
-                possible_paths.add('{}_{}'.format(workload, point))
-                possible_paths.add('{}_{}_{}'.format(workload, point, weight))
-                # CI directory names round weights to six decimal places;
-                # profile JSONs may retain more precision or omit trailing zeros.
-                possible_paths.add(f'{workload}_{point}_{float(weight):.6f}')
-
-    def keep_path(workload, path):
-        if opt.filter_bmk and not workload.startswith(opt.filter_bmk):
-            return False
-        if opt.json_filter is not None:
-            # Preserve the weight suffix when selecting mixed RTL profiles.
-            directory = osp.relpath(path, opt.stat_dir).split(osp.sep)[0]
-            identifier = directory if directory.startswith(workload + '_') else workload
-            if identifier not in possible_paths:
-                return False
-        return True
-
-    paths = [(workload, path) for workload, path in paths if keep_path(workload, path)]
+            paths = filter_profile_paths(paths, opt.stat_dir, json.load(json_file))
+    if opt.filter_bmk:
+        paths = [(workload, path) for workload, path in paths
+                 if workload.startswith(opt.filter_bmk)]
 
     if opt.ipc_only:
         targets = yaml_xs_targets if xs_stat_fmt else yaml_gem5_targets

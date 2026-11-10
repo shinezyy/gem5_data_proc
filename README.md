@@ -77,6 +77,13 @@ bash example-scripts/gem5-topdown-tag.sh /path/to/results/tag
 bash example-scripts/gem5-topdown-tag.sh /path/to/results/tag -g basic,branch,tage,mbtb
 ```
 
+# Reusable analysis snapshots
+
+For raw-counter search and per-SimPoint queries, use `analysis_pipeline.py prepare|compare request.json`.
+It reuses `batch.py` and the existing weighting/scoring implementation; callers own source resolution,
+queue/cancellation, and cache lifecycle. See [the request/output contract](docs/analysis_pipeline.md).
+The existing `run.py` workflow remains available.
+
 # YAML targets (recommended for adding new counters)
 
 Targets can be defined in `targets/*.yaml` and enabled by group name.

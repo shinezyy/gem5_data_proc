@@ -84,8 +84,8 @@ class RtlMissingStatsTest(unittest.TestCase):
             output = root / 'output.csv'
             stdout = io.StringIO()
             argv = ['batch.py', '-s', str(root), '-X', '-g', 'basic,intel_topdown',
-                    '-o', str(output)]
-            with patch('sys.argv', argv), patch.object(batch, 'Manager', side_effect=OSError), \
+                    '--jobs', '1', '-o', str(output)]
+            with patch('sys.argv', argv), \
                     redirect_stdout(stdout):
                 batch.main()
             df = pd.read_csv(output)
@@ -111,8 +111,8 @@ class RtlMissingStatsTest(unittest.TestCase):
             profile.write_text(json.dumps({'namd': {'points': {'10': '0.25'}}}))
             output = root / 'output.csv'
             argv = ['batch.py', '-s', str(root), '-X', '-g', 'basic',
-                    '--json-filter', str(profile), '-o', str(output)]
-            with patch('sys.argv', argv), patch.object(batch, 'Manager', side_effect=OSError), \
+                    '--json-filter', str(profile), '--jobs', '1', '-o', str(output)]
+            with patch('sys.argv', argv), \
                     redirect_stdout(io.StringIO()):
                 batch.main()
             df = pd.read_csv(output)
